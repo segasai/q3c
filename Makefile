@@ -33,6 +33,10 @@ LD = ld
 
 all: q3c test test1 mini_test q3c.sql poly_test
 
+dist: 
+	mkdir -p dist
+	cp *.c *.h *.sql.in Makefile README.q3c COPYING dist
+
 q3c: q3c.o dump.o q3cube.o q3c_poly.o
 	$(LD) -shared -o lib$@.so $^
 
