@@ -136,7 +136,7 @@ int q3c_check_point_in_poly(struct q3c_poly *qp, q3c_coord_t x0,
           else
           {
             sign2 = (y0 - y[(i + 1) % n]) * ax [(i + 1) % n] -
-                      (x0 - x[(i + 1) % n]) * ay[(i+1) % n];
+                      (x0 - x[(i + 1) % n]) * ay[(i + 1) % n];
             if (sign2 <= 0)
             {
             /* on border */
@@ -290,7 +290,7 @@ char q3c_poly_intersection_check(struct q3c_poly *qp,
   q3c_coord_t *x = qp->x; 
   q3c_coord_t *y = qp->y; 
   q3c_coord_t txl, txr, tyb, tyt, axi, ayi, xi, yi, tmp, tmp1;
-  int ret = 0;
+  char ret = 0;
   for( i = 0; i <n ; i++)
   {
     xi = x[i];
@@ -432,7 +432,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
                                    int invocation)
 {
   q3c_coord_t xmin,xmax,ymin, ymax;
-  static int faces[6], multi_flag;
+  static char faces[6], multi_flag;
   q3c_ipix_t ipix;
   q3c_coord_t points[4];
   char face_num, face_num0, cur_face_num;
@@ -576,8 +576,8 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
       if (face_count > 0)
         /* This "if" works when we pass through the secondary faces */ 
       {
-        face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
-                      2 * points[2 * (face_count - 1) + 1], face_num0);
+        face_num = q3c_xy2facenum(2 * points[2 * face_count - 2],
+                      2 * points[2 * face_count - 1], face_num0);
               
         faces[face_count] = face_num;
 

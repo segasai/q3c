@@ -3388,18 +3388,18 @@ void q3c_poly_query(struct q3c_prm *hprm, struct q3c_poly *qp,
       {
         cur_square->x0 = ixmin;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;
+        cur_square->nside0 = (int) n0;
         work_nstack = 1;
       }
       else
       {
         cur_square->x0 = ixmin;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;
+        cur_square->nside0 = (int) n0;
         cur_square++;
         cur_square->x0 = ixmin;
         cur_square->y0 = iymax;
-        cur_square->nside0 = n0; 
+        cur_square->nside0 = (int) n0; 
         work_nstack = 2;
       }
     }
@@ -3409,26 +3409,26 @@ void q3c_poly_query(struct q3c_prm *hprm, struct q3c_poly *qp,
       {
         cur_square->x0 = ixmin;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;
+        cur_square->nside0 = (int) n0;
         cur_square++;
         cur_square->x0 = ixmax;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;      
+        cur_square->nside0 = (int) n0;      
         work_nstack = 2;
       }
       else
       {
         cur_square->x0 = ixmin;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;
+        cur_square->nside0 = (int) n0;
         cur_square++;
         cur_square->x0 = ixmin;
         cur_square->y0 = iymax;
-        cur_square->nside0 = n0; 
+        cur_square->nside0 = (int) n0; 
         cur_square++;
         cur_square->x0 = ixmax;
         cur_square->y0 = iymin;
-        cur_square->nside0 = n0;
+        cur_square->nside0 = (int) n0;
         cur_square++;
         cur_square->x0 = ixmax;
         cur_square->y0 = iymax;
@@ -3531,7 +3531,7 @@ void q3c_poly_query(struct q3c_prm *hprm, struct q3c_poly *qp,
             cur_square = work_stack + tmp_stack2;
             cur_square->x0 = xtmp + (k & 1);
             cur_square->y0 = ytmp + ((k & 2) >> 1);
-            cur_square->nside0 = ntmp;
+            cur_square->nside0 = (int) ntmp;
             tmp_stack2++;
           }
           
