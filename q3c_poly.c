@@ -440,7 +440,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
   static q3c_coord_t x[3][max_n_poly], y[3][max_n_poly], ax[3][max_n_poly],
                      ay[3][max_n_poly], x0, y0;
 #undef max_n_poly
-  int face_count, i;
+  int face_count = -1, i;
   
 
   struct q3c_poly qp;
