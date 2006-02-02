@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2005 Sergey Koposov
+	   Copyright (C) 2004-2006 Sergey Koposov
    
     Author: Sergey Koposov, Sternberg Astronomical Institute
     Email: math@sai.msu.ru 
@@ -354,7 +354,7 @@ void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
   get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
   get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
   */
-  q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
+  q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
   /* xmin, xmax, ymin, ymax are in the coordinate system of the cube face 
    * where -0.5<=x<=0.5 and -0.5<=y<=0.5 
    */
@@ -634,7 +634,7 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
         get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
         get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
         */
-        q3c_fast_get_xy_minmax(face_num,ra,dec,radius,&xmin,&xmax,&ymin,&ymax);
+        q3c_fast_get_circle_xy_minmax(face_num,ra,dec,radius,&xmin,&xmax,&ymin,&ymax);
         
         xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
         xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
@@ -744,7 +744,7 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
           get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
           get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
           */
-          q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax,
+          q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax,
                                  &ymin, &ymax);
           
           xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -787,7 +787,7 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
           get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
           get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
           //*/
-          q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax,
+          q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax,
                                  &ymin, &ymax);
           
           xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -889,7 +889,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
   face_num = q3c_getfacenum(ra, dec);
   face_num0 = face_num;
   
-  q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
+  q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
   /* xmin, xmax, ymin, ymax are in the coordinate system of the cube face 
    * where -0.5<=x<=0.5 and -0.5<=y<=0.5 
    */
@@ -1149,11 +1149,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
       }
 
       face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
-      /*
-      get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-      get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-      */
-      q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1254,11 +1250,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
       nistack = 1;
 
       face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
-      /*
-      get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-      get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-      */
-      q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1298,11 +1290,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 
 
       face_num = q3c_xy2facenum(2 * points[2], 2 * points[3], face_num0);
-      /*
-      get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-      get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-      //*/
-      q3c_fast_get_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1383,17 +1371,6 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
     *(ipix_cur++) = 1;
     *(ipix_cur++) = -1;
   }
-
-  /* Filling the buffer by values */
-/*  ra_buf=ra;
-  dec_buf=dec;
-  radius_buf=radius;
-
-  for(i=0;i<8;i++)
-  {
-    ipix_buf[i]=ipix[i];
-  }
-*/
 
 }
 
@@ -1501,7 +1478,7 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
   
   q3c_coord_t ra = 0, dec = 0; 
   /* I do the initialization since gcc warn about probable not 
-   * uninitialization of ra and dec 
+   * initialization of ra and dec 
    */
   
   /* This code have been cutted out from ipix2ang BEGIN */
@@ -1791,7 +1768,7 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
  * That function take as arguments only the ra, dec of the center of cone search 
  * and radius.
  */
-void q3c_fast_get_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0, 
+void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0, 
                             q3c_coord_t rad, q3c_coord_t *xmin, 
                             q3c_coord_t *xmax, q3c_coord_t *ymin,
                             q3c_coord_t *ymax)
@@ -1888,7 +1865,159 @@ void q3c_fast_get_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
   }
 }
 
-/* Function chechinkg whether the square with center xc_cur, yc_cur and the 
+void q3c_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
+	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax)
+{
+/* Thank you, Maple! */
+	q3c_coord_t      t1 = q3c_sin(alpha);
+	q3c_coord_t      t2 = q3c_cos(alpha);
+	q3c_coord_t      t21 = q3c_sin(delta);
+	q3c_coord_t      t4 = q3c_cos(delta);	
+	q3c_coord_t      t24 = q3c_sin(PA);
+	q3c_coord_t      t13 = q3c_cos(PA);
+	q3c_coord_t      t51 = q3c_sin(d);	
+	q3c_coord_t      t8 = q3c_cos(d);
+
+	q3c_coord_t      t3 = t1*t2;
+	q3c_coord_t      t5 = t4*t4;
+	q3c_coord_t      t7 = 2.0*t3*t5;
+	q3c_coord_t      t9 = t8*t8;
+	q3c_coord_t      t12 = t1*t5;
+	q3c_coord_t      t14 = t13*t13;
+	q3c_coord_t      t15 = t2*t14;
+	q3c_coord_t      t22 = t21*t13;
+	q3c_coord_t      t23 = t2*t2;
+	q3c_coord_t      t34 = t5*t9;
+	q3c_coord_t      t39 = t24*t9;
+	q3c_coord_t      t47 = -t7-2.0*t3*t9+2.0*t12*t15-2.0*t12*t15*t9+4.0*t22*t23*t24-4.0*t15*t1+4.0*t1*t9*t15+2.0*t3+2.0*t3*t34-2.0*t22*t24+2.0*t22*t39-4.0*t21*t9*t13*t23*t24;
+	q3c_coord_t      t48 = e*e;
+	q3c_coord_t      t52 = t51*t51;
+	q3c_coord_t      t54 = t5*t14*t9;
+	q3c_coord_t      t61 = t23*t5;
+	q3c_coord_t      t62 = 2.0*t61;
+	q3c_coord_t      t63 = t23*t14;
+	q3c_coord_t      t67 = t23*t9;
+	q3c_coord_t      t69 = t61*t9;
+	q3c_coord_t      t71 = t14*t9;
+	q3c_coord_t      t73 = t1*t21;
+	q3c_coord_t      t77 = t73*t13*t2*t24*t9;
+	q3c_coord_t      t79 = t71*t23;
+	q3c_coord_t      t85 = t63*t34;
+	q3c_coord_t      t89 = -t62-4.0*t63+2.0*t63*t5-2.0*t67+2.0*t69-2.0*t71+4.0*t77+4.0*t79-4.0*t73*t13*t2*t24-2.0*t85+2.0*t14+2.0*t23;
+	q3c_coord_t      t92 = t89*t48-2.0+2.0*t9+t62;
+	q3c_coord_t      t93 = t1*t13;
+	q3c_coord_t      t96 = t21*t2;
+	
+	q3c_coord_t      tmpy0 = t47*t48+t7;
+	q3c_coord_t      tmpy1 = -4.0*t52*(t9-1.0+t54+t5-t34)*t48+4.0*t52*(-1.0+t9+t5);
+	q3c_coord_t      tmpy2 = t92;
+
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
+
+	q3c_coord_t      tmpz0 = -2.0*(-t93*t24+t93*t39+t96+t96*t71-t96*t14-t96*t9)*t4*t48+2.0*t96*t4;
+	q3c_coord_t      tmpz1 = -4.0*t52*(t61-2.0*t79-t54+t67-2.0*t77-t5-t69+t71+t85+t34)*t48+4.0*t52*(t9+t61-t5);
+	q3c_coord_t      tmpz2 = t92;
+
+	tmpz1 = q3c_sqrt(tmpz1);
+	tmpz2 = (2 * tmpz2);
+
+	*ymin = (tmpy0 - tmpy1) / tmpy2;
+	*ymax = (tmpy0 + tmpy1) / tmpy2;
+	*zmin = (tmpz0 - tmpz1) / tmpz2;
+	*zmax = (tmpz0 + tmpz1) / tmpz2;
+
+}
+
+/*north and south pole 
+for south pole the ycoordinates (1st) should be inverted*/
+
+void q3c_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
+	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax)
+{
+/* Thank you, Maple! */
+	q3c_coord_t      t1 = q3c_sin(alpha);
+	q3c_coord_t      t14 = q3c_cos(alpha);	
+	q3c_coord_t      t2 = q3c_sin(delta);
+	q3c_coord_t      t19 = q3c_cos(delta);	
+	q3c_coord_t      t12 = q3c_sin(PA);	
+	q3c_coord_t      t7 = q3c_cos(PA);
+	q3c_coord_t      t25 = q3c_sin(d);
+	q3c_coord_t      t4 = q3c_cos(d);
+
+	q3c_coord_t      t3 = t1*t2;	
+	q3c_coord_t      t5 = t4*t4;
+	q3c_coord_t      t6 = t3*t5;
+	q3c_coord_t      t8 = t7*t7;
+	q3c_coord_t      t10 = t8*t5;
+	q3c_coord_t      t13 = t7*t12;
+	q3c_coord_t      t15 = t13*t14;
+	q3c_coord_t      t21 = e*e;
+	q3c_coord_t      t26 = t25*t25;
+	q3c_coord_t      t28 = 2.0*t6*t15;
+	q3c_coord_t      t29 = t19*t19;
+	q3c_coord_t      t30 = t14*t14;
+	q3c_coord_t      t31 = t29*t30;
+	q3c_coord_t      t32 = t31*t5;
+	q3c_coord_t      t34 = 2.0*t10*t30;
+	q3c_coord_t      t35 = t30*t5;
+	q3c_coord_t      t36 = t31*t10;
+	q3c_coord_t      t46 = t29*(1.0-t5-t8+t10)*t21+t5-t29;
+	q3c_coord_t      t47 = t7*t1;
+	q3c_coord_t      t51 = t14*t2;
+
+	q3c_coord_t      tmpy0 = 2.0*(t6+t3*t8-t3*t10-t15+t13*t14*t5-t3)*t19*t21+2.0*t3*t19;
+	q3c_coord_t      tmpy1 = 4.0*t26*(-t5-t28-t32-t34+t35+t36+t31+t10)*t21-4.0*t26*(-t5+t31);
+	q3c_coord_t      tmpy2 = 2.0*t46;
+
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
+
+	q3c_coord_t      tmpz0 = 2.0*(-t47*t12+t47*t12*t5+t51*t10-t51*t5-t51*t8+t51)*t19*t21-2.0*t51*t19;
+	q3c_coord_t      tmpz1 = -4.0*t26*(-t28-t29*t8*t5-t29-t32-t34+t35+t36+t31+t29*t5+t10)*t21+4.0*t26*(t5-t29+t31);
+	q3c_coord_t      tmpz2 = 2.0*t46;
+
+	tmpz1 = q3c_sqrt(tmpz1);
+	tmpz2 = (2 * tmpz2);
+
+	*ymin = (tmpy0 - tmpy1) / tmpy2;
+	*ymax = (tmpy0 + tmpy1) / tmpy2;
+	*zmin = (tmpz0 - tmpz1) / tmpz2;
+	*zmax = (tmpz0 + tmpz1) / tmpz2;
+}
+
+
+void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0, 
+                            q3c_coord_t rad0, q3c_coord_t e, q3c_coord_t PA0,
+                            q3c_coord_t *xmin, q3c_coord_t *xmax,
+                            q3c_coord_t *ymin, q3c_coord_t *ymax)
+{
+	q3c_coord_t ra1 = ra0 * q3c_DEGRA, dec1 = dec0 * q3c_DEGRA,
+			rad1 = rad0 * q3c_DEGRA, PA1 = PA0 * q3c_DEGRA,
+			tmpx;
+	if ((face_num > 0) && (face_num < 5))
+	{
+		q3c_get_equatorial_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
+						xmin, xmax, ymin, ymax);
+	}
+	else
+	{
+		q3c_get_polar_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
+						xmin, xmax, ymin, ymax);
+		if (face_num==5)
+		{
+			tmpx = *xmin;
+			*xmin = - (*xmax);
+			*xmax = tmpx;
+		}
+	}
+}
+
+
+
+/* Function cheching whether the square with center xc_cur, yc_cur and the 
  * size cur_size on the cube face lie inside, or intersects etc. with the ellipse
  * specified by the coefficients (axx, axy, ayy, ax, ay, a)
  */

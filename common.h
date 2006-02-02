@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2005 Sergey Koposov
+	   Copyright (C) 2004-2006 Sergey Koposov
    
     Author: Sergey Koposov, Sternberg Astronomical Institute
     Email: math@sai.msu.ru 
@@ -39,8 +39,8 @@
 #endif /* Q3C_INT8 */
 
 #ifndef q3c_ipix_t
-//#define q3c_ipix_t long long 
-//typedef long long q3c_ipix_t ;
+/*#define q3c_ipix_t long long 
+  typedef long long q3c_ipix_t ;*/
 typedef int64 q3c_ipix_t ;
 
 #endif /* q3c_ipix_t */
@@ -52,8 +52,8 @@ typedef int64 q3c_ipix_t ;
 #else 
 
 #ifndef q3c_ipix_t
-//#define q3c_ipix_t long int
-//typedef unsigned long int q3c_ipix_t;
+/*#define q3c_ipix_t long int
+  typedef unsigned long int q3c_ipix_t;*/
 typedef uint32 q3c_ipix_t;
 #endif /* q3c_ipix_t */
 
@@ -142,14 +142,14 @@ typedef long double q3c_coord_t;
 
 /* this probably will work only in the case of long double variables ?? */
 
-//#define q3c_PI    3.1415926535897932384626433832795029L
-/* #define q3c_2_PI  3.1415926535897932384626433832795029L */
-//#define q3c_2PI 6.2831853071795864769252867665590058L
-//#define q3c_PI_2  1.5707963267948966192313216916397514L
-//#define q3c_DEGRA 0.01745329251994329576923690768488612L
-//#define q3c_RADEG 57.295779513082320876798154814105170L
-//#define q3c_LG2   0.301029995663981195213738894724493026768L
-//#define q3c_LG2   0.6931471805599453094172321214581765680755L
+/*#define q3c_PI    3.1415926535897932384626433832795029L
+#define q3c_2_PI  3.1415926535897932384626433832795029L
+#define q3c_2PI 6.2831853071795864769252867665590058L
+#define q3c_PI_2  1.5707963267948966192313216916397514L
+#define q3c_DEGRA 0.01745329251994329576923690768488612L
+#define q3c_RADEG 57.295779513082320876798154814105170L
+#define q3c_LG2   0.301029995663981195213738894724493026768L
+#define q3c_LG2   0.6931471805599453094172321214581765680755L*/
 #define q3c_BOX_INTERSECT(x0, x1, y0, y1, a0, a1, b0, b1) ((((x0 < a0) && \
                                                           (x1 >= a0)) || \
                                                           (x0 <= a1)) && \
@@ -219,7 +219,7 @@ void q3c_get_poly_coefs(char, q3c_coord_t, q3c_coord_t,
                         q3c_coord_t *);
 char q3c_xy2facenum(q3c_coord_t, q3c_coord_t, char);
 char q3c_getfacenum(q3c_coord_t, q3c_coord_t);
-void q3c_fast_get_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
+void q3c_fast_get_circle_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
                             q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
                             q3c_coord_t *);
 q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
