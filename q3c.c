@@ -211,7 +211,7 @@ Datum q3c_strquery(PG_FUNCTION_ARGS)
 
 
 
-
+/* !!!!!!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */
 PG_FUNCTION_INFO_V1(pgq3c_nearby);
 Datum pgq3c_nearby(PG_FUNCTION_ARGS)
 {
@@ -219,7 +219,7 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
   Oid         element_type;
   q3c_ipix_t ipix_array[8];
   static q3c_ipix_t ipix_array_buf[8];
-  static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_cen_buf;
+  static q3c_coord_t ra_cen_buf, dec_cen_buf, rad_buf;
   static int invocation;
   Datum array[8];
   int16       typlen;
@@ -229,11 +229,12 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
   int         dims[MAXDIM];
   int         lbs[MAXDIM];
   int i;
-
+  q3c_circle_region circle;
+  
   extern struct q3c_prm hprm;
   q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
   q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t radius_cen = PG_GETARG_FLOAT8(2); // error radius
+  q3c_coord_t rad = PG_GETARG_FLOAT8(2); // error radius
 
 
   if (invocation == 0)
@@ -243,7 +244,7 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
   }
   else
   {
-    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius_cen == radius_cen_buf))
+    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (rad == rad_buf))
     {
       for(i = 0;i < 8; i++)
       {
@@ -260,7 +261,12 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
   element_type=INT8OID;
 #endif
 
-  q3c_get_nearby(&hprm,ra_cen,dec_cen,radius_cen,ipix_array);
+  //q3c_get_nearby(&hprm,ra_cen,dec_cen,radius_cen,ipix_array);
+  circle.ra = ra_cen;
+  circle.dec = dec_cen;
+  circle.rad = rad;
+  
+  q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
 
   for(i = 0;i < 8; i++)
   {
@@ -268,7 +274,7 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
   }
   ra_cen_buf=ra_cen;
   dec_cen_buf=dec_cen;
-  radius_cen_buf=dec_cen;
+  rad_buf=rad;
 
   
 
@@ -309,6 +315,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
   static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
   static int invocation;
   int i;
+  q3c_circle_region circle;
 
   extern struct q3c_prm hprm;
   q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
@@ -338,7 +345,11 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
     }
   }
 
-  q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);
+  //q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);
+  circle.ra = ra_cen;
+  circle.dec = dec_cen;
+  circle.rad = radius;
+  q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
 
   for(i = 0; i < 8; i++)
   {
@@ -364,7 +375,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 
 
 
-
+/* !!!!!!!!!!!!OBSOLETE!!!!!!!! */
 PG_FUNCTION_INFO_V1(pgq3c_nearby_split);
 Datum pgq3c_nearby_split(PG_FUNCTION_ARGS)
 {

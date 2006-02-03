@@ -210,7 +210,7 @@ void q3c_get_minmax_poly(struct q3c_poly *qp, q3c_coord_t *xmin,
 
 char q3c_get_facenum_poly(struct q3c_poly *qp)
 {
-  return q3c_getfacenum(qp->ra[0], qp->dec[0]);
+  return q3c_get_facenum(qp->ra[0], qp->dec[0]);
 }
 
 void q3c_project_poly(struct q3c_poly *qp, char face_num)

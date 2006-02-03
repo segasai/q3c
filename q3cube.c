@@ -290,44 +290,66 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 }
 
 
-/* The code extracted from ang2ipix for getting the cube face number
- */
-char q3c_getfacenum(q3c_coord_t ra, q3c_coord_t dec)
-                    /* ra in degrees, dec in degrees       */
-                    /* strictly 0<=ra<360 and -90<=dec<=90 */
+/* The code extracted from ang2ipix for getting the cube face number */
+char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
+	/* ra in degrees, dec in degrees       */
+	/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-  q3c_coord_t y0 = 0;
-  char face_num;
-  
-  if (dec == 90)
-  /* Poles */
-  {
-    return 0;
-  }
-  else if (dec == -90)
-  {
-    return 5;
-  }
-  face_num = q3c_fmod ((ra + 45) / 90, 4); //for equatorial pixels we'll have
-                                      //face_num from 1 to 4
-  y0 = q3c_tan(dec * q3c_DEGRA) /
-                    q3c_cos(q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-  face_num++;
-  
-  if (y0 > 1) 
-  { 
-    return 0; 
-  } 
-  else if (y0 < -1) 
-  { 
-      return 5;
-  }
-  else 
-  {
-    return face_num;
-  }
+	q3c_coord_t y0 = 0;
+	char face_num;
+	
+	if (dec == 90)
+	/* Poles */
+	{
+		return 0;
+	}
+	else if (dec == -90)
+	{
+		return 5;
+	}
+	
+	face_num = q3c_fmod ((ra + 45) / 90, 4);
+	/*for equatorial pixels we'll have face_num from 1 to 4 */
+	
+	y0 = q3c_tan(dec * q3c_DEGRA) /
+			q3c_cos(q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	
+	face_num++;
+	
+	if (y0 > 1)
+	{
+		return 0;
+	}
+	else if (y0 < -1)
+	{
+		return 5;
+	}
+	else
+	{
+		return face_num;
+	}
 }
 
+inline char q3c_get_region_facenum(q3c_region region, void *data)
+{
+	switch(region)
+	{
+		case Q3C_CIRCLE:
+		{
+			q3c_circle_region circle = *(q3c_circle_region*)data;
+			return q3c_get_facenum(circle.ra, circle.dec);
+		}
+		case Q3C_ELLIPSE:
+		{
+			q3c_ellipse_region ellipse = *(q3c_ellipse_region*)data;
+			return q3c_get_facenum(ellipse.ra, ellipse.dec);
+		}
+		case Q3C_POLYGON:
+		{
+			;
+		}
+	}
+}
 
 void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
                            q3c_coord_t dec, q3c_coord_t radius,
@@ -348,12 +370,8 @@ void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
   
   const q3c_coord_t q3c_lg2 = q3c_LG2;
   
-  face_num = q3c_getfacenum(ra, dec);
+  face_num = q3c_get_facenum(ra, dec);
 
-  /*
-  get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-  get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-  */
   q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
   /* xmin, xmax, ymin, ymax are in the coordinate system of the cube face 
    * where -0.5<=x<=0.5 and -0.5<=y<=0.5 
@@ -872,8 +890,8 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 
 
 
-void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
-                q3c_coord_t radius, q3c_ipix_t *ipix)
+void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
+		q3c_ipix_t *ipix)
                 /* ra in degrees, dec in degrees, radius in degrees */
                 /* strictly 0<=ra<360 and -90<=dec<=90 */
 {
@@ -886,10 +904,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
   int i, nistack = 0;
   const q3c_coord_t q3c_lg2 = q3c_LG2;
 
-  face_num = q3c_getfacenum(ra, dec);
+  face_num = q3c_get_region_facenum(region, region_data);
   face_num0 = face_num;
   
-  q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
+  q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax);
   /* xmin, xmax, ymin, ymax are in the coordinate system of the cube face 
    * where -0.5<=x<=0.5 and -0.5<=y<=0.5 
    */
@@ -1149,7 +1167,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
       }
 
       face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
-      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1250,7 +1268,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
       nistack = 1;
 
       face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
-      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1290,7 +1308,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 
 
       face_num = q3c_xy2facenum(2 * points[2], 2 * points[3], face_num0);
-      q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin,
+      q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin,
                              &ymax);
       
       xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
@@ -1516,7 +1534,7 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
   }
   /* This code have been cutted out from ipix2ang END */
 
-  return q3c_getfacenum(ra,dec)  ;  
+  return q3c_get_facenum(ra,dec)  ;  
 }
 
 
@@ -1763,18 +1781,46 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 
 }
 
+
+inline void q3c_fast_get_xy_minmax(char face_num, q3c_region region,
+				void *region_data,
+				q3c_coord_t *xmin, q3c_coord_t *xmax, 
+				q3c_coord_t *ymin, q3c_coord_t *ymax)
+{
+
+	switch (region)
+	{
+		case Q3C_CIRCLE: 
+		{
+			q3c_circle_region circle = *(q3c_circle_region *)region_data; 
+			q3c_fast_get_circle_xy_minmax(face_num, circle.ra, circle.dec, circle.rad, xmin, xmax, ymin, ymax);
+			break;
+		}
+		case Q3C_ELLIPSE:
+		{
+			q3c_ellipse_region ellipse = *(q3c_ellipse_region *)region_data;
+			q3c_fast_get_ellipse_xy_minmax(face_num, ellipse.ra, ellipse.dec, ellipse.rad, ellipse.e, ellipse.PA, xmin, xmax, ymin, ymax);
+			break;
+		}
+		case Q3C_POLYGON:
+		{
+		} 
+	}
+}
+
+
 /* That function get the minimal, maximal x and y of the ellipse with the given
  * coefficients (axx,ayy,axy...). All the computations are done on the cube face.
  * That function take as arguments only the ra, dec of the center of cone search 
  * and radius.
  */
-void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0, 
-                            q3c_coord_t rad, q3c_coord_t *xmin, 
-                            q3c_coord_t *xmax, q3c_coord_t *ymin,
-                            q3c_coord_t *ymax)
+void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
+				q3c_coord_t rad, q3c_coord_t *xmin,
+				q3c_coord_t *xmax, q3c_coord_t *ymin,
+				q3c_coord_t *ymax)
 {
-  q3c_coord_t tmp0, tmp1, tmp2, ra1, dec1, sr, cr ,sd, cd, srad, crad, crad2, 
-              cd2, scd;
+	q3c_coord_t tmp0, tmp1, tmp2, ra1, dec1, sr, cr ,sd, cd, srad, crad, crad2,
+		cd2, scd;
 
   if ((face_num >= 1) && (face_num <= 4))
   {
@@ -1865,7 +1911,7 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
   }
 }
 
-void q3c_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
 	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax)
 {
@@ -1933,7 +1979,7 @@ void q3c_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 /*north and south pole 
 for south pole the ycoordinates (1st) should be inverted*/
 
-void q3c_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
 	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax)
 {
@@ -1999,12 +2045,12 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t 
 			tmpx;
 	if ((face_num > 0) && (face_num < 5))
 	{
-		q3c_get_equatorial_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
+		q3c_fast_get_equatorial_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
 						xmin, xmax, ymin, ymax);
 	}
 	else
 	{
-		q3c_get_polar_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
+		q3c_fast_get_polar_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
 						xmin, xmax, ymin, ymax);
 		if (face_num==5)
 		{
@@ -2210,7 +2256,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
   where_part[0] = 0;
   where_cover[0] = 0;
   
-  face_num = q3c_getfacenum(ra0, dec0);
+  face_num = q3c_get_facenum(ra0, dec0);
   
   q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
   /* The coefficients of the polynome are obtained for the projection 
@@ -2789,7 +2835,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
    * It seems that each of stacks should have the size 4*(2^(depth-1))
    */
   
-  face_num = q3c_getfacenum(ra0, dec0);
+  face_num = q3c_get_facenum(ra0, dec0);
   
   q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
   /* The coefficients of the polynome are obtained for the projection 

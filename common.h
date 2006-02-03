@@ -195,6 +195,24 @@ struct q3c_poly
 };
 
 
+typedef struct 
+{
+	q3c_coord_t ra;
+	q3c_coord_t dec;
+	q3c_coord_t rad;
+} q3c_circle_region;
+
+typedef struct 
+{
+	q3c_coord_t ra;
+	q3c_coord_t dec;
+	q3c_coord_t rad; /* major axis */
+	q3c_coord_t e; /* e””entricity */
+	q3c_coord_t PA;
+} q3c_ellipse_region;
+
+typedef enum {Q3C_CIRCLE, Q3C_POLYGON, Q3C_ELLIPSE} q3c_region;
+
 void init_q3c(struct q3c_prm *, q3c_ipix_t);
 void init_q3c1(struct q3c_prm *, q3c_ipix_t);
 void q3c_dump_prm(struct q3c_prm *,char *);
@@ -204,8 +222,7 @@ void q3c_radial_query(struct q3c_prm *, char *, char *, char *,
                       q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);
 void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
                       q3c_coord_t, q3c_ipix_t *, int);
-void q3c_get_nearby(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
-                    q3c_coord_t, q3c_ipix_t *);
+void q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
 void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, 
                        q3c_coord_t, q3c_coord_t, q3c_coord_t,
                        q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
@@ -218,10 +235,26 @@ void q3c_get_poly_coefs(char, q3c_coord_t, q3c_coord_t,
                         q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
                         q3c_coord_t *);
 char q3c_xy2facenum(q3c_coord_t, q3c_coord_t, char);
-char q3c_getfacenum(q3c_coord_t, q3c_coord_t);
+char q3c_get_facenum(q3c_coord_t, q3c_coord_t);
+void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
+	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax);
+
+void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
+	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
+	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax);
+
+inline void q3c_fast_get_xy_minmax(char, q3c_region, void *,
+                            q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
+                            q3c_coord_t *);
+
 void q3c_fast_get_circle_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
                             q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
                             q3c_coord_t *);
+void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
+                            q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
+                            q3c_coord_t *);
+
 q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
