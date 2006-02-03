@@ -351,6 +351,7 @@ inline char q3c_get_region_facenum(q3c_region region, void *data)
 	}
 }
 
+/* !!!!!!!!!!! OBSOLETE !!!!!!!!!!!!!!!!!!!! */
 void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
                            q3c_coord_t dec, q3c_coord_t radius,
                            q3c_ipix_t *ipix, int iteration)

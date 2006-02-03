@@ -27,6 +27,12 @@ CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision,
         AS 'MODULE_PATHNAME', 'pgq3c_nearby_it'
         LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION q3c_ellipse_nearby_it(double precision, double precision, 
+		double precision, double precision, double precision, integer)
+        RETURNS bigint
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_nearby_it'
+        LANGUAGE C IMMUTABLE STRICT;
+
 
 CREATE OR REPLACE FUNCTION q3c_radial_query_it(double precision, 
 					       double precision, 
@@ -60,25 +66,20 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
--- $1 left.ra
--- $2 left.dec
--- $3 right.ra
--- $4 right.dec
--- $5 radius
 
-CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision, 
-					rightra double precision, rightdec double precision,
-					radius double precision, axisratio double precision,
-					PA double precision)
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision,
+				rightra double precision, rightdec double precision,
+				majoraxis double precision, axisratio double precision,
+				pa double precision)
         RETURNS boolean AS
 '
-SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,1))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,3))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
+SELECT (((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,1))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,3))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,5))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
-
 
 
 

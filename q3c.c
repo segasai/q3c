@@ -211,101 +211,6 @@ Datum q3c_strquery(PG_FUNCTION_ARGS)
 
 
 
-/* !!!!!!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */
-PG_FUNCTION_INFO_V1(pgq3c_nearby);
-Datum pgq3c_nearby(PG_FUNCTION_ARGS)
-{
-  ArrayType  *result;
-  Oid         element_type;
-  q3c_ipix_t ipix_array[8];
-  static q3c_ipix_t ipix_array_buf[8];
-  static q3c_coord_t ra_cen_buf, dec_cen_buf, rad_buf;
-  static int invocation;
-  Datum array[8];
-  int16       typlen;
-  bool        typbyval;
-  char        typalign;
-  int         ndims;
-  int         dims[MAXDIM];
-  int         lbs[MAXDIM];
-  int i;
-  q3c_circle_region circle;
-  
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t rad = PG_GETARG_FLOAT8(2); // error radius
-
-
-  if (invocation == 0)
-  //* If this is the first invocation of the function */
-  {
-    invocation = 1;  
-  }
-  else
-  {
-    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (rad == rad_buf))
-    {
-      for(i = 0;i < 8; i++)
-      {
-        ipix_array[i] = ipix_array_buf[i];
-      }
-    }
-  }
-
-
-#ifdef Q3C_INT4 
-  element_type=INT4OID;
-#endif
-#ifdef Q3C_INT8 
-  element_type=INT8OID;
-#endif
-
-  //q3c_get_nearby(&hprm,ra_cen,dec_cen,radius_cen,ipix_array);
-  circle.ra = ra_cen;
-  circle.dec = dec_cen;
-  circle.rad = rad;
-  
-  q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
-
-  for(i = 0;i < 8; i++)
-  {
-    ipix_array_buf[i] = ipix_array[i];
-  }
-  ra_cen_buf=ra_cen;
-  dec_cen_buf=dec_cen;
-  rad_buf=rad;
-
-  
-
-  for (i = 0; i < 8; i++)
-  {
-#ifdef Q3C_INT4 
-    array[i] = Int32GetDatum(ipix_array[i]);
-#endif
-#ifdef Q3C_INT8 
-    array[i] = Int64GetDatum(ipix_array[i]);
-#endif
-  }
-
-  /* we have one dimension */
-  ndims = 1;
-  /* and one element */
-  dims[0] = 8;
-  /* and lower bound is 1 */
-  lbs[0] = 1;
-
-  /* get required info about the element type */
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
-
-  /* now build the array */
-  result = construct_md_array(array, ndims, dims, lbs,
-                              element_type, typlen, typbyval, typalign);
-
-  PG_RETURN_ARRAYTYPE_P(result);
-}
-
-
 
 PG_FUNCTION_INFO_V1(pgq3c_nearby_it);
 Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
@@ -371,65 +276,75 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 
 
 
-
-
-
-
-/* !!!!!!!!!!!!OBSOLETE!!!!!!!! */
-PG_FUNCTION_INFO_V1(pgq3c_nearby_split);
-Datum pgq3c_nearby_split(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_nearby_it);
+Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 {
-  ArrayType  *result;
-  Oid         element_type;
-  q3c_ipix_t input_array[2];
-  Datum array[2];
-  int16       typlen;
-  bool        typbyval;
-  char        typalign;
-  int         ndims;
-  int         dims[MAXDIM];
-  int         lbs[MAXDIM];  
-  
+  q3c_ipix_t ipix_array[8];
+  static q3c_ipix_t ipix_array_buf[8];
+  static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+  static int invocation;
+  int i;
+  q3c_ellipse_region ellipse;
+
   extern struct q3c_prm hprm;
-  q3c_coord_t arg0 = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t arg1 = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t arg2 = PG_GETARG_FLOAT8(2); // error radius
-  int arg3 = PG_GETARG_INT32(3); //iteration number
+  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
+  q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); // axis_ratio
+  q3c_coord_t PA = PG_GETARG_FLOAT8(4); // PA
 
+  int iteration = PG_GETARG_INT32(5); // iteration
+
+
+  if (invocation == 0)
+  /* If this is the first invocation of the function */
+  {
+  /* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
+   * ipix_buf. Because if the program will be canceled or crashed 
+   * for some reason the invocation should be == 0
+   */
+  }
+  else
+  {
+    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+    {
 #ifdef Q3C_INT4 
-  element_type=INT4OID;
+      PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
 #ifdef Q3C_INT8 
-  element_type=INT8OID;
+      PG_RETURN_INT64(ipix_array_buf[iteration]);
 #endif
+    }
+  }
 
-  q3c_get_nearby_split(&hprm,arg0,arg1,arg2,input_array,arg3);   
+  //q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);
+  ellipse.ra = ra_cen;
+  ellipse.dec = dec_cen;
+  ellipse.rad = radius;
+  ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
+  ellipse.PA = PA;
 
+  q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
+
+  for(i = 0; i < 8; i++)
+  {
+    ipix_array_buf[i] = ipix_array[i];
+  }
+
+  ra_cen_buf = ra_cen;
+  dec_cen_buf = dec_cen;
+  radius_buf = radius;
+
+  invocation=1;
 #ifdef Q3C_INT4 
-    array[0]=Int32GetDatum(input_array[0]);
-    array[1]=Int32GetDatum(input_array[1]);
+  PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
 #ifdef Q3C_INT8 
-    array[0]=Int64GetDatum(input_array[0]);
-    array[1]=Int64GetDatum(input_array[1]);
-#endif
-
-  /* we have one dimension */
-  ndims = 1;
-  /* and one element */
-  dims[0] = 2;
-  /* and lower bound is 1 */
-  lbs[0] = 1;
-
-  /* get required info about the element type */
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
-
-  /* now build the array */
-  result = construct_md_array(array, ndims, dims, lbs,
-                              element_type, typlen, typbyval, typalign);
-
-  PG_RETURN_ARRAYTYPE_P(result);
+  PG_RETURN_INT64(ipix_array_buf[iteration]);
+#endif  
 }
+
+
 
 
 
@@ -865,3 +780,153 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 }
 
 
+/* !!!!!!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */
+PG_FUNCTION_INFO_V1(pgq3c_nearby);
+Datum pgq3c_nearby(PG_FUNCTION_ARGS)
+{
+  ArrayType  *result;
+  Oid         element_type;
+  q3c_ipix_t ipix_array[8];
+  static q3c_ipix_t ipix_array_buf[8];
+  static q3c_coord_t ra_cen_buf, dec_cen_buf, rad_buf;
+  static int invocation;
+  Datum array[8];
+  int16       typlen;
+  bool        typbyval;
+  char        typalign;
+  int         ndims;
+  int         dims[MAXDIM];
+  int         lbs[MAXDIM];
+  int i;
+  q3c_circle_region circle;
+  
+  extern struct q3c_prm hprm;
+  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t rad = PG_GETARG_FLOAT8(2); // error radius
+
+
+  if (invocation == 0)
+  //* If this is the first invocation of the function */
+  {
+    invocation = 1;  
+  }
+  else
+  {
+    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (rad == rad_buf))
+    {
+      for(i = 0;i < 8; i++)
+      {
+        ipix_array[i] = ipix_array_buf[i];
+      }
+    }
+  }
+
+
+#ifdef Q3C_INT4 
+  element_type=INT4OID;
+#endif
+#ifdef Q3C_INT8 
+  element_type=INT8OID;
+#endif
+
+  //q3c_get_nearby(&hprm,ra_cen,dec_cen,radius_cen,ipix_array);
+  circle.ra = ra_cen;
+  circle.dec = dec_cen;
+  circle.rad = rad;
+  
+  q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+
+  for(i = 0;i < 8; i++)
+  {
+    ipix_array_buf[i] = ipix_array[i];
+  }
+  ra_cen_buf=ra_cen;
+  dec_cen_buf=dec_cen;
+  rad_buf=rad;
+
+  
+
+  for (i = 0; i < 8; i++)
+  {
+#ifdef Q3C_INT4 
+    array[i] = Int32GetDatum(ipix_array[i]);
+#endif
+#ifdef Q3C_INT8 
+    array[i] = Int64GetDatum(ipix_array[i]);
+#endif
+  }
+
+  /* we have one dimension */
+  ndims = 1;
+  /* and one element */
+  dims[0] = 8;
+  /* and lower bound is 1 */
+  lbs[0] = 1;
+
+  /* get required info about the element type */
+  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+
+  /* now build the array */
+  result = construct_md_array(array, ndims, dims, lbs,
+                              element_type, typlen, typbyval, typalign);
+
+  PG_RETURN_ARRAYTYPE_P(result);
+}
+
+
+/* !!!!!!!!!!!!OBSOLETE!!!!!!!! */
+PG_FUNCTION_INFO_V1(pgq3c_nearby_split);
+Datum pgq3c_nearby_split(PG_FUNCTION_ARGS)
+{
+  ArrayType  *result;
+  Oid         element_type;
+  q3c_ipix_t input_array[2];
+  Datum array[2];
+  int16       typlen;
+  bool        typbyval;
+  char        typalign;
+  int         ndims;
+  int         dims[MAXDIM];
+  int         lbs[MAXDIM];  
+  
+  extern struct q3c_prm hprm;
+  q3c_coord_t arg0 = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t arg1 = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t arg2 = PG_GETARG_FLOAT8(2); // error radius
+  int arg3 = PG_GETARG_INT32(3); //iteration number
+
+#ifdef Q3C_INT4 
+  element_type=INT4OID;
+#endif
+#ifdef Q3C_INT8 
+  element_type=INT8OID;
+#endif
+
+  q3c_get_nearby_split(&hprm,arg0,arg1,arg2,input_array,arg3);   
+
+#ifdef Q3C_INT4 
+    array[0]=Int32GetDatum(input_array[0]);
+    array[1]=Int32GetDatum(input_array[1]);
+#endif
+#ifdef Q3C_INT8 
+    array[0]=Int64GetDatum(input_array[0]);
+    array[1]=Int64GetDatum(input_array[1]);
+#endif
+
+  /* we have one dimension */
+  ndims = 1;
+  /* and one element */
+  dims[0] = 2;
+  /* and lower bound is 1 */
+  lbs[0] = 1;
+
+  /* get required info about the element type */
+  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+
+  /* now build the array */
+  result = construct_md_array(array, ndims, dims, lbs,
+                              element_type, typlen, typbyval, typalign);
+
+  PG_RETURN_ARRAYTYPE_P(result);
+}
