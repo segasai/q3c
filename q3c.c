@@ -275,72 +275,69 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_ellipse_nearby_it);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 {
-  q3c_ipix_t ipix_array[8];
-  static q3c_ipix_t ipix_array_buf[8];
-  static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-  static int invocation;
-  int i;
-  q3c_ellipse_region ellipse;
-
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
-  q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); // axis_ratio
-  q3c_coord_t PA = PG_GETARG_FLOAT8(4); // PA
-
-  int iteration = PG_GETARG_INT32(5); // iteration
-
-
-  if (invocation == 0)
-  /* If this is the first invocation of the function */
-  {
-  /* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-   * ipix_buf. Because if the program will be canceled or crashed 
-   * for some reason the invocation should be == 0
-   */
-  }
-  else
-  {
-    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
-    {
+	q3c_ipix_t ipix_array[8];
+	static q3c_ipix_t ipix_array_buf[8];
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static int invocation;
+	int i;
+	q3c_ellipse_region ellipse;
+	
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); /* ra_cen */
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); /* dec_cen */
+	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* error radius */
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* axis_ratio */
+	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
+	int iteration = PG_GETARG_INT32(5); /* iteration */
+	
+	
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
+	 * ipix_buf. Because if the program will be canceled or crashed 
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		{
 #ifdef Q3C_INT4 
-      PG_RETURN_INT32(ipix_array_buf[iteration]);
+			PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
 #ifdef Q3C_INT8 
-      PG_RETURN_INT64(ipix_array_buf[iteration]);
+			PG_RETURN_INT64(ipix_array_buf[iteration]);
 #endif
-    }
-  }
-
-  //q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);
-  ellipse.ra = ra_cen;
-  ellipse.dec = dec_cen;
-  ellipse.rad = radius;
-  ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
-  ellipse.PA = PA;
-
-  q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
-
-  for(i = 0; i < 8; i++)
-  {
-    ipix_array_buf[i] = ipix_array[i];
-  }
-
-  ra_cen_buf = ra_cen;
-  dec_cen_buf = dec_cen;
-  radius_buf = radius;
-
-  invocation=1;
+		}
+	}
+	
+	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
+	ellipse.ra = ra_cen;
+	ellipse.dec = dec_cen;
+	ellipse.rad = radius;
+	ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
+	ellipse.PA = PA;
+	
+	q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
+	
+	for(i = 0; i < 8; i++)
+	{
+		ipix_array_buf[i] = ipix_array[i];
+	}
+	
+	ra_cen_buf = ra_cen;
+	dec_cen_buf = dec_cen;
+	radius_buf = radius;
+	
+	invocation=1;
 #ifdef Q3C_INT4 
-  PG_RETURN_INT32(ipix_array_buf[iteration]);
+	PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
 #ifdef Q3C_INT8 
-  PG_RETURN_INT64(ipix_array_buf[iteration]);
+	PG_RETURN_INT64(ipix_array_buf[iteration]);
 #endif  
 }
-
-
 
 
 
