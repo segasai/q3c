@@ -254,6 +254,9 @@ void q3c_fast_get_circle_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
 void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
                             q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
                             q3c_coord_t *);
+char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
+	q3c_coord_t alpha1, q3c_coord_t delta01, q3c_coord_t d0,
+	q3c_coord_t e, q3c_coord_t PA0);
 
 q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);

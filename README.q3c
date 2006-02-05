@@ -84,6 +84,19 @@ my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, a.err);
 
 
+The ellipse join example: 
+
+It is possible to do the join when the error area of each record of the 
+catalogue is an ellipse. Then you can do the query like this
+
+my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
+		q3c_join(a.ra, a.dec, b.ra, b.dec, a.err, a.axis_ratio,
+			 a.PA);
+
+where axis_ratio is the column with  axis ratio of the ellipses and PA is the 
+column with the positional angles of them.
+
+
 The example with polygon query:
 
 To query everything in the polygon ((0,0),(1,0),(1,1),(0,1)) ):

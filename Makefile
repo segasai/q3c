@@ -1,6 +1,6 @@
-OPT=-O3 #-mcpu=pentium4 -march=pentium4 -msse -msse2 -mfpmath=sse -mmmx
-OPT_LOW=-O2
-#DEBUG=-g3 -ggdb -DQ3C_DEBUG
+#OPT=-O3 #-mcpu=pentium4 -march=pentium4 -msse -msse2 -mfpmath=sse -mmmx
+#OPT_LOW=-O2
+DEBUG=-g3 -ggdb -DQ3C_DEBUG
 #STATIC=-static
 #PROF=-pg
 #GCOV_PROF=-fprofile-arcs -ftest-coverage

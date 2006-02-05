@@ -707,6 +707,22 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
+Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
+{
+
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1); // dec_cen
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3); // dec_cen
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4); // error radius
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5); // axis_ratio
+	q3c_coord_t PA = PG_GETARG_FLOAT8(6); // PA
+	q3c_coord_t e = q3c_sqrt(1 - axis_ratio * axis_ratio);
+	bool result = q3c_in_ellipse(ra_cen, dec_cen, ra,dec, radius, e, PA);
+	PG_RETURN_BOOL(result);
+}
+
 PG_FUNCTION_INFO_V1(pgq3c_in_poly);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
