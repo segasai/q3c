@@ -32,39 +32,39 @@
 inline q3c_coord_t q3c_dist (q3c_coord_t ra1, q3c_coord_t dec1,
                             q3c_coord_t ra2, q3c_coord_t dec2)
 {
-  /* The FASTEST!!! (and precise) way to compute the distance on the sphere
-   * it uses just 3 !!! computation of trigonometric functions
-   */
-
-  q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA );
-  x *= x;
-  q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
-  y *= y;
-
-  /* Seem to be more precise :) */
-  q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
-  z*=z;
-
-  return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * q3c_RADEG;
+	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
+	 * it uses just 3 !!! computation of trigonometric functions
+	 */
+	
+	q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA );
+	x *= x;
+	q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y *= y;
+	
+	/* Seem to be more precise :) */
+	q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z*=z;
+	
+	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * q3c_RADEG;
 }
 
 
 inline q3c_coord_t q3c_sindist (q3c_coord_t ra1, q3c_coord_t dec1,
                                q3c_coord_t ra2, q3c_coord_t dec2)
 {
-  /* The FASTEST!!! (and precise) way to compute the distance on the sphere
-   * it uses just 3 !!! computation of trigonometric functions
-   */
-  q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA);
-  x *= x;
-  q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
-  y *= y;
-
-  /* Seem to be more precise :) */
-  q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
-  z*=z;
-
-  return x * (z - y) + y;
+	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
+	 * it uses just 3 !!! computation of trigonometric functions
+	 */
+	q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA);
+	x *= x;
+	q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y *= y;
+	
+	/* Seem to be more precise :) */
+	q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z*=z;
+	
+	return x * (z - y) + y;
 }
 
 
