@@ -52,49 +52,48 @@
 PG_FUNCTION_INFO_V1(pgq3c_ang2ipix);
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 {
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra = PG_GETARG_FLOAT8(0);
-  q3c_coord_t dec = PG_GETARG_FLOAT8(1);
-  q3c_ipix_t ipix;
-  static int invocation;
-  static q3c_coord_t ra_buf, dec_buf;
-  static q3c_ipix_t ipix_buf;
-  
-//  fprintf(stderr,"XXXXXXXXXXXXXXXX\n");
-  if (invocation==0)
-  {
-    
-  }
-  else
-  {
-    if ((ra == ra_buf) && (dec == dec_buf))
-    {
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_ipix_t ipix;
+	static int invocation;
+	static q3c_coord_t ra_buf, dec_buf;
+	static q3c_ipix_t ipix_buf;
+	
+	//fprintf(stderr,"XXXXXXXXXXXXXXXX\n");
+	if (invocation==0)
+	{
+		
+	}
+	else
+	{
+		if ((ra == ra_buf) && (dec == dec_buf))
+		{
 #ifdef Q3C_INT8
-      return PointerGetDatum((&ipix_buf));
-//      PG_RETURN_INT64(ipix_buf);
+			return PointerGetDatum((&ipix_buf));
+			//PG_RETURN_INT64(ipix_buf);
 #endif
 #ifdef Q3C_INT4
-      PG_RETURN_INT32(ipix_buf);
+			PG_RETURN_INT32(ipix_buf);
 #endif
-    } 
-  } 
-  
-  q3c_ang2ipix(&hprm, ra, dec, &ipix);
-
-  ra_buf = ra;
-  dec_buf = dec;
-  ipix_buf = ipix;
-  invocation=1;
-
-
+		} 
+	} 
+	
+	q3c_ang2ipix(&hprm, ra, dec, &ipix);
+	
+	ra_buf = ra;
+	dec_buf = dec;
+	ipix_buf = ipix;
+	invocation=1;
+	
+	
 #ifdef Q3C_INT8
-//  PG_RETURN_INT64(ipix);
-      return PointerGetDatum((&ipix_buf));
+	//PG_RETURN_INT64(ipix);
+	return PointerGetDatum((&ipix_buf));
 #endif
 #ifdef Q3C_INT4
-//  PG_RETURN_INT32(ipix);
+	//PG_RETURN_INT32(ipix);
 #endif
-
 }
 
 
@@ -102,50 +101,49 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_ang2ipix_real);
 Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 {
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra = PG_GETARG_FLOAT4(0);
-  q3c_coord_t dec = PG_GETARG_FLOAT4(1);
-  q3c_ipix_t ipix;
-  static int invocation;
-  static q3c_coord_t ra_buf, dec_buf;
-  static q3c_ipix_t ipix_buf;
-  
-//  fprintf(stderr,"Y");
-
-  if (invocation==0)
-  {
-    
-  }
-  else
-  {
-    if ((ra == ra_buf) && (dec == dec_buf))
-    {
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_ipix_t ipix;
+	static int invocation;
+	static q3c_coord_t ra_buf, dec_buf;
+	static q3c_ipix_t ipix_buf;
+	
+	//fprintf(stderr,"Y");
+	
+	if (invocation==0)
+	{
+	
+	}
+	else
+	{
+		if ((ra == ra_buf) && (dec == dec_buf))
+		{
 #ifdef Q3C_INT8
-      return PointerGetDatum((&ipix_buf));
-//      PG_RETURN_INT64(ipix_buf);
+			return PointerGetDatum((&ipix_buf));
+			//PG_RETURN_INT64(ipix_buf);
 #endif
 #ifdef Q3C_INT4
-      PG_RETURN_INT32(ipix_buf);
+			PG_RETURN_INT32(ipix_buf);
 #endif
-    } 
-  } 
-  
-  q3c_ang2ipix(&hprm, ra, dec, &ipix);
-
-  ra_buf = ra;
-  dec_buf = dec;
-  ipix_buf = ipix;
-  invocation=1;
-
-
+		} 
+	} 
+	
+	q3c_ang2ipix(&hprm, ra, dec, &ipix);
+	
+	ra_buf = ra;
+	dec_buf = dec;
+	ipix_buf = ipix;
+	invocation=1;
+	
 #ifdef Q3C_INT8
-//  PG_RETURN_INT64(ipix);
-      return PointerGetDatum((&ipix_buf));
+	//PG_RETURN_INT64(ipix);
+	return PointerGetDatum((&ipix_buf));
 #endif
 #ifdef Q3C_INT4
-  PG_RETURN_INT32(ipix);
+	PG_RETURN_INT32(ipix);
 #endif
-
+	
 }
 
 
@@ -154,59 +152,57 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_dist);
 Datum pgq3c_dist(PG_FUNCTION_ARGS)
 {
-  q3c_coord_t ra1 = PG_GETARG_FLOAT8(0);
-  q3c_coord_t dec1 = PG_GETARG_FLOAT8(1);
-  q3c_coord_t ra2 = PG_GETARG_FLOAT8(2);
-  q3c_coord_t dec2 = PG_GETARG_FLOAT8(3);
-  q3c_coord_t res;
-  res=q3c_dist(ra1,dec1,ra2,dec2);//sin(ra1)*sin(ra2)*sin(dec1)*sin(dec2);
-  PG_RETURN_FLOAT8(res);
+	q3c_coord_t ra1 = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec1 = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra2 = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec2 = PG_GETARG_FLOAT8(3);
+	q3c_coord_t res;
+	res = q3c_dist(ra1, dec1, ra2, dec2);
+	PG_RETURN_FLOAT8(res);
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_sindist);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS)
 {
-  q3c_coord_t ra1 = PG_GETARG_FLOAT8(0);
-  q3c_coord_t dec1 = PG_GETARG_FLOAT8(1);
-  q3c_coord_t ra2 = PG_GETARG_FLOAT8(2);
-  q3c_coord_t dec2 = PG_GETARG_FLOAT8(3);
-  q3c_coord_t res;
-  res=q3c_sindist(ra1,dec1,ra2,dec2);//sin(ra1)*sin(ra2)*sin(dec1)*sin(dec2);
-  PG_RETURN_FLOAT8(res);
+	q3c_coord_t ra1 = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec1 = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra2 = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec2 = PG_GETARG_FLOAT8(3);
+	q3c_coord_t res;
+	res = q3c_sindist(ra1, dec1, ra2, dec2);
+	PG_RETURN_FLOAT8(res);
 }
-
-
 
 PG_FUNCTION_INFO_V1(q3c_strquery);
 Datum q3c_strquery(PG_FUNCTION_ARGS)
 {
-  extern struct q3c_prm hprm;
-  text  *arg0 = PG_GETARG_TEXT_P(0);
-  text  *ra_col0 = PG_GETARG_TEXT_P(1);
-  text  *dec_col0 = PG_GETARG_TEXT_P(2);
-  q3c_coord_t arg = PG_GETARG_FLOAT8(3);
-  q3c_coord_t arg1 = PG_GETARG_FLOAT8(4);
-  q3c_coord_t arg2 = PG_GETARG_FLOAT8(5);
-  static char qstring[30000+VARHDRSZ];  
-  static char tab_name[256], ra_col[256], dec_col[256];
-  
-  strncpy(tab_name,(char *)VARDATA(arg0),256);
-  tab_name[VARSIZE(arg0)-VARHDRSZ]=0;
-
-  strncpy(ra_col,(char *)VARDATA(ra_col0),256);
-  ra_col[VARSIZE(ra_col0)-VARHDRSZ]=0;
-
-  strncpy(dec_col,(char *)VARDATA(dec_col0),256);
-  dec_col[VARSIZE(dec_col0)-VARHDRSZ]=0;
-  
-  VarChar *tt = (VarChar *)(qstring);
-  VARATT_SIZEP(tt) = 30000;
-  
-  /* not more then 30000 characters */
-  q3c_radial_query(&hprm, tab_name, ra_col, dec_col, arg, arg1, arg2,
-                  qstring + VARHDRSZ);
-  PG_RETURN_TEXT_P(tt);
-
+	extern struct q3c_prm hprm;
+	text *arg0 = PG_GETARG_TEXT_P(0);
+	text *ra_col0 = PG_GETARG_TEXT_P(1);
+	text *dec_col0 = PG_GETARG_TEXT_P(2);
+	q3c_coord_t arg = PG_GETARG_FLOAT8(3);
+	q3c_coord_t arg1 = PG_GETARG_FLOAT8(4);
+	q3c_coord_t arg2 = PG_GETARG_FLOAT8(5);
+	static char qstring[30000+VARHDRSZ];  
+	static char tab_name[256], ra_col[256], dec_col[256];
+	
+	strncpy(tab_name,(char *)VARDATA(arg0),256);
+	tab_name[VARSIZE(arg0)-VARHDRSZ]=0;
+	
+	strncpy(ra_col,(char *)VARDATA(ra_col0),256);
+	ra_col[VARSIZE(ra_col0)-VARHDRSZ]=0;
+	
+	strncpy(dec_col,(char *)VARDATA(dec_col0),256);
+	dec_col[VARSIZE(dec_col0)-VARHDRSZ]=0;
+	
+	VarChar *tt = (VarChar *)(qstring);
+	VARATT_SIZEP(tt) = 30000;
+	
+	/* not more then 30000 characters */
+	q3c_radial_query(&hprm, tab_name, ra_col, dec_col, arg, arg1, arg2,
+					qstring + VARHDRSZ);
+	PG_RETURN_TEXT_P(tt);
+	
 }
 
 
