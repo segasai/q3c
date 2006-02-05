@@ -73,113 +73,114 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
                    /* ra in degrees, dec in degrees       */
                    /* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-  q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;
-  
-  q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
-            xi, yi, i1;
-  char face_num;
-
-  if (dec == 90)
-  /* Poles */
-  {
-    face_num = 0;
-    x0 = q3c_HALF;
-    y0 = q3c_HALF;
-    goto END1;
-  }
-  else if (dec == -90)
-  {
-    face_num = 5;
-    x0 = q3c_HALF;
-    y0 = q3c_HALF;
-    goto END1;
-  }
-
-  face_num = q3c_fmod ((ra + 45) / 90, 4); //for equatorial pixels we'll have
-                                      //face_num from 1 to 4
-  ra1 = q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num);
-  dec1 = q3c_DEGRA * dec;
-  x0 = q3c_tan (ra1);
-  y0 = q3c_tan (dec1) / q3c_cos (ra1);
-  face_num++;
-  
-  if (y0 > 1) 
-  { 
-    face_num = 0; 
-    ra1 = q3c_DEGRA * ra;
-    tmp0 = 1 / q3c_tan (dec1);
+	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;	
+	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
+		*ybits = hprm->ybits, xi, yi, i1;
+	char face_num;
+	
+	if (dec == 90)
+	/* Poles */
+	{
+		face_num = 0;
+		x0 = q3c_HALF;
+		y0 = q3c_HALF;
+		goto END1;
+	}
+	else if (dec == -90)
+	{
+		face_num = 5;
+		x0 = q3c_HALF;
+		y0 = q3c_HALF;
+		goto END1;
+	}
+	
+	face_num = q3c_fmod ((ra + 45) / 90, 4);
+	/* for equatorial pixels we'll have face_num from 1 to 4 */
+	ra1 = q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num);
+	dec1 = q3c_DEGRA * dec;
+	x0 = q3c_tan (ra1);
+	y0 = q3c_tan (dec1) / q3c_cos (ra1);
+	face_num++;
+	
+	if (y0 > 1) 
+	{ 
+		face_num = 0; 
+		ra1 = q3c_DEGRA * ra;
+		tmp0 = 1 / q3c_tan (dec1);
 #ifdef __USE_GNU
-    q3c_sincos (ra1, &x0, &y0);
+		q3c_sincos (ra1, &x0, &y0);
 #else
-    x0 = q3c_sin (ra1);
-    y0 = q3c_cos (ra1);
+		x0 = q3c_sin (ra1);
+		y0 = q3c_cos (ra1);
 #endif
-    x0 *= tmp0;
-    y0 *= (-tmp0);
-//    x0 = q3c_sin(ra1) / q3c_tan(dec1); 
-//    y0 = -q3c_cos(ra1) / q3c_tan(dec1);
-    /* I don't know 
-     * Probably I should write (sin(ra)/sin(dec))*cos(dec) to
-     * not loose the precision in the region where dec ~=90deg
-     */
-  } 
-  else 
-  {
-    if (y0 < -1) 
-    { 
-      face_num = 5;
-      ra1 = q3c_DEGRA * ra;
-      tmp0 = 1 / q3c_tan (dec1);
+		x0 *= tmp0;
+		y0 *= (-tmp0);
+		/*x0 = q3c_sin(ra1) / q3c_tan(dec1);*/
+		/*y0 = -q3c_cos(ra1) / q3c_tan(dec1);*/
+		/* I don't know 
+		 * Probably I should write (sin(ra)/sin(dec))*cos(dec) to
+		 * not loose the precision in the region where dec ~=90deg
+		 */
+	}
+	else if (y0 < -1) 
+	{ 
+		face_num = 5;
+		ra1 = q3c_DEGRA * ra;
+		tmp0 = 1 / q3c_tan (dec1);
 #ifdef __USE_GNU
-      q3c_sincos (ra1, &x0, &y0);
+		q3c_sincos (ra1, &x0, &y0);
 #else
-      x0 = q3c_sin (ra1);
-      y0 = q3c_cos (ra1);
+		x0 = q3c_sin (ra1);
+		y0 = q3c_cos (ra1);
 #endif
+		x0 *= (-tmp0);
+		y0 *= (-tmp0);
+		/*x0 = -q3c_sin(ra1) / q3c_tan(dec1);*/
+		/*y0 = -q3c_cos(ra1) / q3c_tan(dec1);*/
+	}
+	
+	x0 = (x0 + 1) / 2; y0 = (y0 + 1) / 2;
+	
+	END1:
+	
+	/* Now I produce the final pixel value by converting x and y values 
+	 * to bitfields and combining them by interleaving, using the 
+	 * predefined arrays xbits and ybits
+	 */
+	
+	xi = (q3c_ipix_t)(x0 * nside);
+	yi = (q3c_ipix_t)(y0 * nside);
 
-      x0 *= (-tmp0);
-      y0 *= (-tmp0);
-//      x0 = -q3c_sin(ra1) / q3c_tan(dec1);
-//      y0 = -q3c_cos(ra1) / q3c_tan(dec1);
-    }
-  }
-    
-  x0 = (x0 + 1) / 2; y0 = (y0 + 1) / 2;
-
-  END1:
-  
-  /* Now I produce the final pixel value by converting x and y values to bitfields
-    and combining them by interleaving, using the predefined arrays xbits and ybits
-  */
-
-  xi = (q3c_ipix_t)(x0 * nside);
-  yi = (q3c_ipix_t)(y0 * nside);
-  if (xi == nside) xi--; /* This two strings are written to handle the case */
-  if (yi == nside) yi--; /* of upper right corner of base square */
-  
-  i1 = 1 << (q3c_interleaved_nbits);
-
-
+  	 /* This two following statements are written to handle the 
+  	  * case of upper right corner of base square */
+	if (xi == nside) 
+	{
+		xi--;
+	}
+  	if (yi == nside)
+  	{
+  		yi--;
+  	}
+	
+	i1 = 1 << (q3c_interleaved_nbits);
+	
+	
 #ifdef Q3C_INT4 
-  {
-    *ipix = ((q3c_ipix_t)face_num) * nside * nside +
-            xbits[xi % i1] + ybits[yi % i1];
-  /*4byte computation*/
-  }
+	*ipix = ((q3c_ipix_t)face_num) * nside * nside +
+		xbits[xi % i1] + ybits[yi % i1];
+	/*4byte computation*/
 #endif /* Q3C_INT4 */
 #ifdef Q3C_INT8
-  {
-    *ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-            ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
-            ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
-  /*8byte computation*/
-  }
+	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
+		ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
+		ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+	/*8byte computation*/
 #endif /* Q3C_INT8 */
 
-//  fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
-//  BIT_PRINT8(*ipix); 
-//  BIT_PRINT8ix(xi); 
-//  BIT_PRINT8iy(yi);
+	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
+	BIT_PRINT8(*ipix); 
+	BIT_PRINT8ix(xi); 
+	BIT_PRINT8iy(yi);*/
 }
 
 
@@ -192,101 +193,95 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
                  /* ra in degrees, dec in degrees       */
                  /* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-  q3c_coord_t x0 = 0,y0 = 0;
-  q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
-             xi, yi, i1;
-  char face_num;
-  if (dec == 90)
-  /* Poles */
-  {
-    face_num = 0;
-    x0 = q3c_HALF;
-    y0 = q3c_HALF;
-    *x_out = 0;
-    *y_out = 0;
-    goto END1;
-  }
-  else if (dec == -90)
-  {
-    face_num = 5;
-    x0 = q3c_HALF;
-    y0 = q3c_HALF;
-    *x_out = 0;
-    *y_out = 0;
-    goto END1;
-  }
-  
-  face_num = q3c_fmod ((ra + 45) / 90, 4); 
-  /*for equatorial pixels we'll have face_num from 1 to 4 */
-  x0 = q3c_tan (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-  y0 = q3c_tan (dec * q3c_DEGRA) /
-       q3c_cos (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-  face_num++;
-  
-  if (y0 > 1) 
-  { 
-    face_num = 0; 
-    x0 = q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec); 
-    y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec); 
-  } 
-  else 
-  {
-    if (y0 < -1) 
-    { 
-      face_num = 5;
-      x0 = -q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
-      y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
-    }
-  }
-  
-  *x_out = x0 / 2;
-  *y_out = y0 / 2;
-  x0 = (x0 + 1) / 2;
-  y0 = (y0 + 1) / 2;
-
-  END1:
-  
-  /* Now I produce the final pixel value by converting x and y values to bitfields
-   * and combining them by interleaving, using the predefined arrays xbits and ybits
-   */
-
-  xi = (q3c_ipix_t)(x0 * nside);
-  yi = (q3c_ipix_t)(y0 * nside);
-  
-  /* This two strings are written to handle the case of edges of base square */
-  if (xi == nside) 
-  {
-    xi--; 
-  }
-  if (yi == nside)
-  {
-    yi--; 
-  }
-  
-  i1 = 1 << (q3c_interleaved_nbits);
-
-
+	q3c_coord_t x0 = 0,y0 = 0;
+	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
+				*ybits = hprm->ybits, xi, yi, i1;
+	char face_num;
+	if (dec == 90)
+	/* Poles */
+	{
+		face_num = 0;
+		x0 = q3c_HALF;
+		y0 = q3c_HALF;
+		*x_out = 0;
+		*y_out = 0;
+		goto END1;
+	}
+	else if (dec == -90)
+	{
+		face_num = 5;
+		x0 = q3c_HALF;
+		y0 = q3c_HALF;
+		*x_out = 0;
+		*y_out = 0;
+		goto END1;
+	}
+	
+	face_num = q3c_fmod ((ra + 45) / 90, 4); 
+	/*for equatorial pixels we'll have face_num from 1 to 4 */
+	x0 = q3c_tan (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	y0 = q3c_tan (dec * q3c_DEGRA) /
+		q3c_cos (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	face_num++;
+	
+	if (y0 > 1) 
+	{ 
+ 		face_num = 0; 
+		x0 = q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec); 
+		y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec); 
+	} 
+	else if (y0 < -1) 
+	{ 
+		face_num = 5;
+		x0 = -q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
+		y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
+	}
+	
+	*x_out = x0 / 2;
+	*y_out = y0 / 2;
+	x0 = (x0 + 1) / 2;
+	y0 = (y0 + 1) / 2;
+	
+	END1:
+	
+	/* Now I produce the final pixel value by converting x and y values to bitfields
+	 * and combining them by interleaving, using the predefined arrays xbits and ybits
+	 */
+	
+	xi = (q3c_ipix_t)(x0 * nside);
+	yi = (q3c_ipix_t)(y0 * nside);
+	
+	/* This two strings are written to handle the case of edges of base square */
+	if (xi == nside) 
+	{
+		xi--; 
+	}
+	if (yi == nside)
+	{
+		yi--; 
+	}
+	
+	i1 = 1 << (q3c_interleaved_nbits);
+	
+	
 #ifdef Q3C_INT4 
-  {
-    *ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-            ybits[yi % i1];
-  /*4byte computation*/
-  }
+	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
+		ybits[yi % i1];
+	/*4byte computation*/
 #endif /* Q3C_INT4 */
 #ifdef Q3C_INT8
-  {
-    *ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-            ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
-            ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
-  /*8byte computation*/
-  }
+	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
+		ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
+		ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+	/*8byte computation*/
 #endif /* Q3C_INT8 */
-
-  *out_face_num = face_num;
-//  fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
-//  BIT_PRINT8(*ipix); 
-//  BIT_PRINT8ix(xi); 
-//  BIT_PRINT8iy(yi);
+	
+	*out_face_num = face_num;
+	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
+	BIT_PRINT8(*ipix); 
+	BIT_PRINT8ix(xi); 
+	BIT_PRINT8iy(yi);
+	*/
 }
 
 
