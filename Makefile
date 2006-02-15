@@ -10,15 +10,20 @@ PG_CPPFLAGS = -DQ3C_INT8 $(DEBUG) $(OPT) -D_GNU_SOURCE
 SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN=dump.c prepare prepare.o
 
-USE_PGXS=1
-ifdef USE_PGXS
-PGXS := $(shell pg_config --pgxs)
-include $(PGXS)
-else
+ifdef NO_PGXS
 subdir = contrib/q3c
 top_builddir = ../..
 include $(top_builddir)/src/Makefile.global
 include $(top_srcdir)/contrib/contrib-global.mk
+else
+PGXS := $(shell pg_config --pgxs)
+ifndef PGXS
+$(error You should have `pg_config` program in your PATH or compile Q3C with\
+'make NO_PGXS=1' \
+after putting it in the contrib subdirectory of Postgres sources)
+endif
+include $(PGXS)
+
 endif
 
 prepare: prepare.o q3cube.o q3c_poly.o

@@ -29,6 +29,10 @@ of the Postgres installation.
 2) make install
 3) Do "\i q3c.sql" in postgres 
 
+Note: To successfully compile you need to have the program pg_config in 
+your path, or
+
+
 After that you will have 
 several new functions in postgres with the q3c_ prefix.
 

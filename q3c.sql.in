@@ -1,3 +1,5 @@
+BEGIN;
+SET search_path = public;
 CREATE OR REPLACE FUNCTION q3c_ang2ipix(double precision, double precision)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_ang2ipix'
@@ -19,7 +21,7 @@ CREATE OR REPLACE FUNCTION q3c_dist(double precision, double precision,
         LANGUAGE C IMMUTABLE STRICT;
 COMMENT ON FUNCTION q3c_dist(double precision, double precision,
 				double precision, double precision)
-	IS 'Function q3c_dist(ra1, dec1, ra2, dec2) computing the distanse between points (ra1, dec1) and (ra2, dec2)';
+	IS 'Function q3c_dist(ra1, dec1, ra2, dec2) computing the distance between points (ra1, dec1) and (ra2, dec2)';
 
 CREATE OR REPLACE FUNCTION q3c_sindist(double precision, double precision,
                                        double precision, double precision)
@@ -417,12 +419,10 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,0)) 
 )
 AND  q3c_in_poly($1,$2,$3);
--- AND 1>0
 ' LANGUAGE SQL IMMUTABLE;
 
 
-
-
+END;
 
 
 -- Old
