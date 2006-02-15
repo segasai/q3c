@@ -30,10 +30,11 @@ of the Postgres installation.
 3) Do "\i q3c.sql" in postgres 
 
 Note: To successfully compile you need to have the program pg_config in 
-your path, or
+your path, or if not, you can put the directory with q3c in the contrib
+subdirectory of Postgres sources and do 
+"make NO_PGXS=1" instead of make.
 
-
-After that you will have 
+After that installation you will have 
 several new functions in postgres with the q3c_ prefix.
 
 The useful ones are: 
