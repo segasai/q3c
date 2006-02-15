@@ -10,14 +10,13 @@ PG_CPPFLAGS = -DQ3C_INT8 $(DEBUG) $(OPT) -D_GNU_SOURCE
 SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN=dump.c prepare prepare.o
 
-libdir = /home/math/skyindex/q3cube/q3c/
-USE_PGXS:=1
+USE_PGXS=1
 ifdef USE_PGXS
 PGXS := $(shell pg_config --pgxs)
 include $(PGXS)
 else
 subdir = contrib/q3c
-top_builddir = /root/pgsql/postgresql-8.1.2
+top_builddir = ../..
 include $(top_builddir)/src/Makefile.global
 include $(top_srcdir)/contrib/contrib-global.mk
 endif
