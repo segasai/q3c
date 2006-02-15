@@ -572,7 +572,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
   qp.ax = ax;
   qp.ay = ay;
 
-  fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]);  
+//  fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]);  
   q3c_poly_query(&hprm, &qp, fulls, partials);
   
   invocation = 1;
