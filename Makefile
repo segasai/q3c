@@ -32,20 +32,19 @@ prepare: prepare.o q3cube.o q3c_poly.o
 oldclean: 
 	rm -f *~
 
-
-#all: q3c test test1 mini_test q3c.sql poly_test
-
 dist: 
 	mkdir -p dist
 	cp *.c *.h *.sql.in Makefile README.q3c COPYING dist
 	cat q3c.sql.in | perl create_drops.pl > dist/drop_q3c.sql
+
+#all: q3c test test1 mini_test q3c.sql poly_test
 
 #q3c: q3c.o dump.o q3cube.o q3c_poly.o
 #	$(LD) -shared -o lib$@.so $^
 
 #q3c_fast: q3c.o q3cube.o
 #	$(LD) -shared -o libq3c.so $^ dump.o
-#
+
 #q3c.o: q3c.c common.h 
 #	$(CC) -c $< $(PIC) $(CFLAGS1) -o $@
 
@@ -81,7 +80,6 @@ dist:
 
 #binclean:
 #	rm -f test mini_test prepare test test1
-
 		
 #test.o: test.c common.h
 #	$(CC) -c $< $(CFLAGS2) -o $@

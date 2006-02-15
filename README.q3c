@@ -1,10 +1,13 @@
 				Q3C
 
-    Author: Sergey Koposov, Sternberg Astronomical Institute
+    Author: Sergey Koposov, Sternberg Astronomical Institute, 
+                            Max Planck Institute for Astronomy
     Email: math@sai.msu.ru 
     http://lnfm1.sai.msu.ru/~math
 
-About Q3C:
+---------------------------------------------------------------------
+			ABOUT
+
 To read more about the whole Q3C scheme, look into the paper on Q3C from the
 ADASS proceedings. The URL of the paper: 
 http://lnfm1.sai.msu.ru/~math/docs/adass_proceedings.pdf
@@ -12,19 +15,19 @@ If you will use Q3C you are kindly asked to cite this paper. Also, I
 (Sergey Koposov) will be also happy to hear about any usage of Q3C.
 
 ----------------------------------------------------------------------
+			PREREQUISITES
 
-Small note: To work successfully with Q3C you need to have the version of 
-PostgreSQL 8.1 and later. (in principal, the cone search queries will 
-probably work even with earlier version, but the 8.1+ version is strongly 
-recommended).
+To work successfully with Q3C you need to have the version of PostgreSQL 8.1
+and later. To successfully install PostgreSQL you should be root or owner 
+of the Postgres installation. 
 
 ----------------------------------------------------------------------
 
-Installation: 
+			INSTALLATION
 
 1) make 
-
-2) Do "\i q3c.sql" in postgres 
+2) make install
+3) Do "\i q3c.sql" in postgres 
 
 After that you will have 
 several new functions in postgres with the q3c_ prefix.
@@ -33,20 +36,32 @@ The useful ones are:
 
 q3c_ang2ipix -- the function which converts the ra and dec to ipix value
 
-q3c_join -- the function for the spatial join on the sphere
+q3c_join -- the function for the spatial cross-match on the sky
+
+q3c_ellipse_join -- the function for the spatial cross-match with ellipse
+	error area
 
 q3c_radial_query -- the function for the radial queries
 
-Examples: 
+q3c_poly_query -- the function for queries in polygonal regions
 
-If you have the table with ra and dec columns
 
-You can first create the spatial index:
+---------------------------------------------------------------------
+
+		PREPARATION OF TABLES before using Q3C
+
+To begin use Q3C for searches and cross-matches you should create the indexes
+on the tables.
+
+If you have the table "mytable" with "ra" and "dec" columns (right ascension 
+and declination in degrees).
+
+You should first create the spatial index:
 
 my_db# CREATE INDEX q3c_mytable_idx ON mytable (q3c_ang2ipix(ra, dec)); 
 
 And after that it is better to cluster that table using that index. 
-(Clustering procedure mainly order the data on the disk according to the 
+(Clustering procedure is mainly order the data on the disk according to the 
 Q3C spatial index values). If the data is already loaded in the DB ordered by 
 some spherical zones or something similar, the clustering step can be ommited.
 
@@ -58,20 +73,36 @@ my_db# ANALYZE my_table;
 
 Now the power of Q3C is available for you!!! :) 
 
-To perform the query around ra0 = 11 and dec0 = 12 with radius0 = 0.1 
+-----------------------------------------------------------------
+
+			EXAMPLES OF USAGE
+
+x) The cone search: (the query in the circular region on the sky)
+
+To perform the query around ra0 = 11deg and dec0 = 12deg with radius0 = 0.1deg 
 from the table mytable you can do:
  
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 
+x) The polygonal query (the query of the objects which lie inside the region
+bounded by the polygon on the sphere)
 
-The join example:
+To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) )
+(this is the spherical polygon with following vertices:
+(ra=0, dec=0) ; (ra=2, dec=0); (ra=2, dec=1); (ra=0, dec=1)):
+
+my_table# SELECT * FROM mytable WHERE
+		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
+
+
+x) The positional cross-match of the tables:
 
 Assuming that we have a huge table "table2" with already created ipix index
 and with ra and dec columns and the smaller one "table1" with ra and dec 
 columns.
 
-If we want now to join "table1" with "table2" with error circle with the size
-0.001 degrees, we do:
+If we want now to cross-match the tables "table1" and "table2" with error 
+circle with the size 0.001 degrees, we do:
 
 my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, 0.001) 
@@ -83,24 +114,18 @@ then you can run the query:
 my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, a.err);
 
-
-The ellipse join example: 
+x) The positional cross-match of the tables with the ellipse error-area:
+(for example if you want to find all the objects from one catalogue which lies
+inside the bodies of the galaxies from the second catalogue)
+The example: 
 
 It is possible to do the join when the error area of each record of the 
 catalogue is an ellipse. Then you can do the query like this
 
 my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
-		q3c_join(a.ra, a.dec, b.ra, b.dec, a.err, a.axis_ratio,
-			 a.PA);
+		q3c_ellipse_join(a.ra, a.dec, b.ra, b.dec, a.maj_ax
+		a.axis_ratio, a.PA);
 
-where axis_ratio is the column with  axis ratio of the ellipses and PA is the 
-column with the positional angles of them.
-
-
-The example with polygon query:
-
-To query everything in the polygon ((0,0),(1,0),(1,1),(0,1)) ):
-
-my_table# SELECT * FROM mytable WHERE
-		q3c_poly_query(ra, dec, '{0, 0, 1, 0, 1, 1, 0, 1}');
-
+where axis_ratio is the column with axis ratio of the ellipses and PA is the 
+column with the positional angles of them, and maj_ax is the column with major
+axises of those ellipses.

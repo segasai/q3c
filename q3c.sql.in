@@ -2,18 +2,24 @@ CREATE OR REPLACE FUNCTION q3c_ang2ipix(double precision, double precision)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_ang2ipix'
         LANGUAGE C IMMUTABLE STRICT;
+COMMENT ON FUNCTION q3c_ang2ipix (double precision, double precision)
+	IS 'Function converting Ra and Dec to the Q3C ipix value';
 
-CREATE OR REPLACE FUNCTION q3c_ang2ipix(real, real) 
+CREATE OR REPLACE FUNCTION q3c_ang2ipix(real, real)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_ang2ipix_real'
         LANGUAGE C IMMUTABLE STRICT;
-
+COMMENT ON FUNCTION q3c_ang2ipix(real, real)
+	IS 'Function converting Ra and Dec(floats) to the Q3C ipix value';
 
 CREATE OR REPLACE FUNCTION q3c_dist(double precision, double precision,
-                                    double precision, double precision)
+				double precision, double precision)
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_dist'
         LANGUAGE C IMMUTABLE STRICT;
+COMMENT ON FUNCTION q3c_dist(double precision, double precision,
+				double precision, double precision)
+	IS 'Function q3c_dist(ra1, dec1, ra2, dec2) computing the distanse between points (ra1, dec1) and (ra2, dec2)';
 
 CREATE OR REPLACE FUNCTION q3c_sindist(double precision, double precision,
                                        double precision, double precision)
