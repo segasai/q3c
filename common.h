@@ -28,8 +28,6 @@
 #include "postgres.h"
 #ifndef Q3C_COMMON_H
 #define Q3C_COMMON_H
-#define _GNU_SOURCE
-
 
 /* If You have not specified the Q3C_INT4 then use the Q3C_INT8 instead */
 #ifndef Q3C_INT4 
@@ -282,6 +280,10 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
                                    q3c_coord_t in_ra[], q3c_coord_t in_dec[],
                                    q3c_coord_t ra0, q3c_coord_t dec0,
                                    int invocation);
+inline char q3c_get_region_facenum(q3c_region region, void *data);
+inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
+                                q3c_ipix_t *ybits, char face_num, 
+                                q3c_ipix_t xi, q3c_ipix_t yi);
 
                 
 #endif/*  Q3C_COMMON_H  */

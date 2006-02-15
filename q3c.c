@@ -49,6 +49,23 @@
 
 #include "common.h"
 
+
+
+/* Postgres functions */
+Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
+Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS);
+Datum pgq3c_dist(PG_FUNCTION_ARGS);
+Datum pgq3c_sindist(PG_FUNCTION_ARGS);
+Datum q3c_strquery(PG_FUNCTION_ARGS);
+Datum pgq3c_nearby_it(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
+Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
+
+
 PG_FUNCTION_INFO_V1(pgq3c_ang2ipix);
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 {
@@ -216,9 +233,9 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 	static int invocation;
 	int i;
-	q3c_circle_region circle;
-	
 	extern struct q3c_prm hprm;
+	q3c_circle_region circle;
+
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
@@ -341,123 +358,6 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 
 
 
-
-PG_FUNCTION_INFO_V1(pgq3c_radial_array);
-Datum pgq3c_radial_array(PG_FUNCTION_ARGS)
-{
-  ArrayType  *partial_array_result;
-  ArrayType  *full_array_result;
-
-  Oid         element_type;
-//  q3c_ipix_t input_array[2];
-  Datum output_columns[2];
-  int16       typlen;
-  bool        typbyval;
-  char        typalign;
-  int         ndims;
-  int         dims[MAXDIM];
-  int         lbs[MAXDIM];
-  bool is_null[2]={0,0};
-  
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra0 = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t dec0 = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t rad = PG_GETARG_FLOAT8(2); // error radius
-  TupleDesc       tupdesc;
-  if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-  {
-    elog(ERROR, "return type must be a row type");
-  }
-  BlessTupleDesc(tupdesc);   
-
-  int n_partials=1600, n_fulls=1600, i;
-
-#ifdef Q3C_INT4 
-  element_type=INT4OID;
-#endif
-#ifdef Q3C_INT8 
-  element_type=INT8OID;
-#endif
-
-//  q3c_get_nearby_split(&hprm,arg0,arg1,arg2,input_array,arg3);   
-
-#ifdef Q3C_INT4 
-//    array[0]=Int32GetDatum(input_array[0]);
-//    array[1]=Int32GetDatum(input_array[1]);
-#endif
-#ifdef Q3C_INT8 
-  Datum *partial_array_ptr = palloc(n_partials * sizeof(int64 *));
-  int64 *partial_array = palloc(n_partials * sizeof(int64));
-
-/*  for(i = 0; i < n_partials; i++)
-  {
-    partial_array_ptr[i] = PointerGetDatum(partial_array + i * sizeof(int64));
-  }
-*/
-
-  Datum *full_array_ptr = palloc(n_fulls * sizeof(int64 *));
-  int64 *full_array = palloc(n_fulls * sizeof(int64));
-
-/*  for(i = 0; i < n_fulls; i++)
-  {
-    full_array_ptr[i] = PointerGetDatum(full_array + i * sizeof(int64));
-  }
-*/  
-  q3c_new_radial_query(&hprm, ra0, dec0, rad, (q3c_ipix_t *) full_array, (q3c_ipix_t *)partial_array);
-  for(i = 0; i < n_partials; i++)
-  {
-    partial_array_ptr[i] = Int64GetDatum(partial_array[i]);
-  }
-  for(i = 0; i < n_fulls; i++)
-  {
-    full_array_ptr[i] = Int64GetDatum(full_array[i]);
-  }
-
-//    array[0]=Int64GetDatum(input_array[0]);
-//    array[1]=Int64GetDatum(input_array[1]);
-#endif
-
-  /* we have one dimension */
-  ndims = 1;
-  /* and one element */
-  dims[0] = n_partials;
-  /* and lower bound is 1 */
-  lbs[0] = 1;
-
-  /* get required info about the element type */
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
-
-  /* now build the array */
-  partial_array_result = construct_md_array(partial_array_ptr, ndims, dims, 
-                                            lbs, element_type, typlen,
-                                            typbyval, typalign);
-
-  /* we have one dimension */
-  ndims = 1;
-  /* and one element */
-  dims[0] = n_fulls;
-  /* and lower bound is 1 */
-  lbs[0] = 1;
-
-  /* get required info about the element type */
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
-
-  /* now build the array */
-  full_array_result = construct_md_array(full_array_ptr, ndims, dims, lbs,
-                                         element_type, typlen, typbyval,
-                                         typalign);
-
-  output_columns[0] = PointerGetDatum(partial_array_result);
-  output_columns[1] = PointerGetDatum(full_array_result);
-
-  HeapTuple heaptup = heap_form_tuple (tupdesc, output_columns, is_null);
-  pfree(partial_array_ptr);
-  pfree(partial_array);
-  pfree(full_array_ptr);
-  pfree(full_array);
-
-  return HeapTupleGetDatum(heaptup);
-}
 
 
 
@@ -716,80 +616,81 @@ Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
+
 PG_FUNCTION_INFO_V1(pgq3c_in_poly);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
-  extern struct q3c_prm hprm;
-
+	extern struct q3c_prm hprm;
+	
 #define max_n_poly 100
-  static q3c_coord_t in_ra[max_n_poly], in_dec[max_n_poly];
+	static q3c_coord_t in_ra[max_n_poly], in_dec[max_n_poly];
 #undef max_n_poly
-  static int invocation ;
+	static int invocation ;
+	
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	int16 typlen;
+	bool typbyval;
+	char typalign;  
+	
+	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
+	int n, i;
+	q3c_coord_t ra_cur, dec_cur;
+	Oid element_type=FLOAT8OID;
+	
+	char *p;
+	
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
 
-  ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
-  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-  int16 typlen;
-  bool typbyval;
-  char typalign;  
-
-  int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-  int n, i;
-  q3c_coord_t ra_cur, dec_cur;
-  Oid element_type=FLOAT8OID;
-  
-  char *p;
-  
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
-
-/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c 
- function deconstruct_array*/
-
-  if (poly_nitems % 2 != 0)
-  {
-    elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
-  }
-  else  if (poly_nitems <=4)
-  {
-    elog(ERROR, "Invalid polygon! Less then 3 vertexes");
-  }
-
-  p = ARR_DATA_PTR(poly_arr);
-  poly_nitems /= 2;
-  n = poly_nitems;
-  invocation=1;
-  
-  for (i = 0; i < poly_nitems; i++)
-  {
-    ra_cur  = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-    if (in_ra[i] != ra_cur)
-    {
-      invocation = 0;
-      in_ra[i] = ra_cur;
-    }
-    
-    p = att_addlength(p, typlen, PointerGetDatum(p));
-    p = (char *) att_align(p, typalign);
-    dec_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-    if (in_dec[i] != dec_cur)
-    {
-      invocation = 0;
-      in_dec[i] = dec_cur;
-    }
-    
-    p = att_addlength(p, typlen, PointerGetDatum(p));
-    p = (char *) att_align(p, typalign);
-  }
-
-  bool result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
-                                                ra_cen, dec_cen, invocation))>0;
-  
-  PG_RETURN_BOOL((result));      
-
+	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c 
+	 * function deconstruct_array
+	 */
+	
+	 if (poly_nitems % 2 != 0)
+	 {
+	 	elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
+	}
+	else if (poly_nitems <= 4)
+	{
+		elog(ERROR, "Invalid polygon! Less then 3 vertexes");
+	}
+	
+	p = ARR_DATA_PTR(poly_arr);
+	poly_nitems /= 2;
+	n = poly_nitems;
+	invocation = 1;
+	
+	for (i = 0; i < poly_nitems; i++)
+	{
+		ra_cur  = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		if (in_ra[i] != ra_cur)
+		{
+			invocation = 0;
+			in_ra[i] = ra_cur;
+		}
+		p = att_addlength(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align(p, typalign);
+		dec_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		if (in_dec[i] != dec_cur)
+		{
+			invocation = 0;
+			in_dec[i] = dec_cur;
+		}
+		
+		p = att_addlength(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align(p, typalign);
+	}
+	
+	bool result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
+											ra_cen, dec_cen, invocation)) > 0;
+	
+	PG_RETURN_BOOL((result));      
 }
 
 
 /* !!!!!!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */
+#if 0
 PG_FUNCTION_INFO_V1(pgq3c_nearby);
 Datum pgq3c_nearby(PG_FUNCTION_ARGS)
 {
@@ -882,9 +783,10 @@ Datum pgq3c_nearby(PG_FUNCTION_ARGS)
 
   PG_RETURN_ARRAYTYPE_P(result);
 }
-
+#endif
 
 /* !!!!!!!!!!!!OBSOLETE!!!!!!!! */
+#if 0
 PG_FUNCTION_INFO_V1(pgq3c_nearby_split);
 Datum pgq3c_nearby_split(PG_FUNCTION_ARGS)
 {
@@ -939,3 +841,128 @@ Datum pgq3c_nearby_split(PG_FUNCTION_ARGS)
 
   PG_RETURN_ARRAYTYPE_P(result);
 }
+#endif
+
+/* !!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */
+#if 0
+PG_FUNCTION_INFO_V1(pgq3c_radial_array);
+Datum pgq3c_radial_array(PG_FUNCTION_ARGS)
+{
+	ArrayType *partial_array_result;
+	ArrayType *full_array_result;
+	
+	Oid element_type;
+	//q3c_ipix_t input_array[2];
+	Datum output_columns[2];
+	int16 typlen;
+	bool typbyval;
+	char typalign;
+	int ndims, dims[MAXDIM], lbs[MAXDIM];
+	bool is_null[2]={0,0};
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra0 = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec0 = PG_GETARG_FLOAT8(1); // dec_cen
+	q3c_coord_t rad = PG_GETARG_FLOAT8(2); // error radius
+	TupleDesc       tupdesc;
+	if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
+	{
+		elog(ERROR, "return type must be a row type");
+	}
+	
+	BlessTupleDesc(tupdesc);
+	
+	int n_partials = 1600, n_fulls = 1600, i;
+	
+#ifdef Q3C_INT4 
+	element_type=INT4OID;
+#endif
+#ifdef Q3C_INT8 
+	element_type=INT8OID;
+#endif
+
+	/* q3c_get_nearby_split(&hprm,arg0,arg1,arg2,input_array,arg3);*/
+	
+#ifdef Q3C_INT4 
+	/* array[0]=Int32GetDatum(input_array[0]);
+	array[1]=Int32GetDatum(input_array[1]);
+	*/
+#endif
+#ifdef Q3C_INT8 
+	Datum *partial_array_ptr = palloc(n_partials * sizeof(int64 *));
+	int64 *partial_array = palloc(n_partials * sizeof(int64));
+	
+	/*
+	for(i = 0; i < n_partials; i++)
+	{
+		partial_array_ptr[i] = PointerGetDatum(partial_array + i * sizeof(int64));
+	}
+	*/
+	
+	Datum *full_array_ptr = palloc(n_fulls * sizeof(int64 *));
+	int64 *full_array = palloc(n_fulls * sizeof(int64));
+	
+	/*
+	for(i = 0; i < n_fulls; i++)
+	{
+		full_array_ptr[i] = PointerGetDatum(full_array + i * sizeof(int64));
+	}
+	*/  
+	
+	q3c_new_radial_query(&hprm, ra0, dec0, rad, (q3c_ipix_t *) full_array, (q3c_ipix_t *)partial_array);
+	
+	for(i = 0; i < n_partials; i++)
+	{
+		partial_array_ptr[i] = Int64GetDatum(partial_array[i]);
+	}
+	
+	for(i = 0; i < n_fulls; i++)
+	{
+		full_array_ptr[i] = Int64GetDatum(full_array[i]);
+	}
+
+	//array[0]=Int64GetDatum(input_array[0]);
+	//array[1]=Int64GetDatum(input_array[1]);
+#endif
+	
+	/* we have one dimension */
+	ndims = 1;
+	/* and one element */
+	dims[0] = n_partials;
+	/* and lower bound is 1 */
+	lbs[0] = 1;
+	
+	/* get required info about the element type */
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+	
+	/* now build the array */
+	partial_array_result = construct_md_array(partial_array_ptr, ndims, dims, 
+                                            lbs, element_type, typlen,
+                                            typbyval, typalign);
+
+	/* we have one dimension */
+	ndims = 1;
+	/* and one element */
+	dims[0] = n_fulls;
+	/* and lower bound is 1 */
+	lbs[0] = 1;
+	
+	/* get required info about the element type */
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+	
+	/* now build the array */
+	full_array_result = construct_md_array(full_array_ptr, ndims, dims, lbs,
+                                         element_type, typlen, typbyval,
+                                         typalign);
+	
+	output_columns[0] = PointerGetDatum(partial_array_result);
+	output_columns[1] = PointerGetDatum(full_array_result);
+	
+	HeapTuple heaptup = heap_form_tuple (tupdesc, output_columns, is_null);
+	pfree(partial_array_ptr);
+	pfree(partial_array);
+	pfree(full_array_ptr);
+	pfree(full_array);
+	
+	return HeapTupleGetDatum(heaptup);
+}
+#endif

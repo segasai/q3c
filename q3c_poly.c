@@ -27,133 +27,129 @@
 
 void q3c_init_poly(struct q3c_poly *qp, int n)
 {
+	qp->ra = malloc(n * sizeof(q3c_coord_t));
+	qp->dec = malloc(n * sizeof(q3c_coord_t));
 
-  qp->ra = malloc(n * sizeof(q3c_coord_t));
-  qp->dec = malloc(n * sizeof(q3c_coord_t));
+	qp->ax = malloc(n * sizeof(q3c_coord_t));
+	qp->ay = malloc(n * sizeof(q3c_coord_t));
 
-  qp->ax = malloc(n * sizeof(q3c_coord_t));
-  qp->ay = malloc(n * sizeof(q3c_coord_t));
-
-  qp->x = malloc(n * sizeof(q3c_coord_t));
-  qp->y = malloc(n * sizeof(q3c_coord_t));
-  qp->n = n;
+	qp->x = malloc(n * sizeof(q3c_coord_t));
+	qp->y = malloc(n * sizeof(q3c_coord_t));
+	qp->n = n;
 }
 
 void q3c_prepare_poly(struct q3c_poly *qp)
 {
-  int n = qp->n - 1 ;
-  int i;
-  q3c_coord_t *ax = qp->ax;
-  q3c_coord_t *ay = qp->ay;
-  q3c_coord_t *x = qp->x;
-  q3c_coord_t *y = qp->y;
+	int n = qp->n - 1 ;
+	int i;
+	q3c_coord_t *ax = qp->ax;
+	q3c_coord_t *ay = qp->ay;
+	q3c_coord_t *x = qp->x;
+	q3c_coord_t *y = qp->y;
 
-  for(i = 0 ; i < n; i++)
-  {
-    ax[i] = x[i + 1] - x[i];
-    ay[i] = y[i + 1] - y[i];
-  }
-    ax[i] = x[0] - x[i];
-    ay[i] = y[0] - y[i];
+	for(i = 0 ; i < n; i++)
+	{
+		ax[i] = x[i + 1] - x[i];
+		ay[i] = y[i + 1] - y[i];
+	}
+	ax[i] = x[0] - x[i];
+	ay[i] = y[0] - y[i];
 }
 
 
 int q3c_check_point_in_poly(struct q3c_poly *qp, q3c_coord_t x0,
                             q3c_coord_t y0)
 {
-  int i, n = qp->n;
-  q3c_coord_t *ax = qp->ax;
-  q3c_coord_t *ay = qp->ay;
-  q3c_coord_t *x = qp->x;
-  q3c_coord_t *y = qp->y;
-
-  q3c_coord_t sign0, sign1, sign2, sign3;
-
-  sign0 = (y0 - y[0]) * ax[0] - (x0 - x[0]) * ay[0];   
-  
-  if (sign0 == 0) 
-  {
-    sign1 = (y0 - y[1]) * ax[1] - (x0 - x[1]) * ay[1];   
-    sign2 = (y0 - y[n - 1]) * ax[n - 1] - (x0 - x[n - 1]) * ay[n - 1];
-    sign3 = sign1 * sign2; 
-    if (sign3 >= 0)
-    {
-      /* on border */
-      return q3c_EDGE;
-    }
-    else
-    {
-      /* outside */
-      return q3c_DISJUNCT;
-    }
-  }
-  else
-  {
-    if (sign0 > 0)
-    {
-      for(i = 1 ; i < n ; i++)
-      {
-        sign1 = (y0 - y[i]) * ax[i] - (x0 - x[i]) * ay[i];   
-        if (sign1 <= 0)
-        {
-          if (sign1 < 0)
-          {
-            /* outside */
-            return q3c_DISJUNCT;
-          }  
-          else
-          {
-            sign2 = (y0 - y[(i + 1) % n]) * ax [(i + 1) % n] -
-                      (x0 - x[(i + 1) % n]) * ay[(i + 1) % n];
-            if (sign2 >= 0)
-            {
-            /* on border */
-              return q3c_EDGE;
-            }
-            else 
-            {
-            /* outside */
-              return q3c_DISJUNCT;
-            }
-          }
-        }
-      }
-      /* inside */
-      return q3c_COVER;
-    }
-    else
-    {
-      for(i = 1 ; i < n ; i++)
-      {
-        sign1 = (y0 - y[i]) * ax[i] - (x0 - x[i]) * ay[i];   
-        if (sign1 >= 0)
-        {
-          if (sign1 > 0)
-          {
-            /* outside */
-            return q3c_DISJUNCT;
-          }  
-          else
-          {
-            sign2 = (y0 - y[(i + 1) % n]) * ax [(i + 1) % n] -
-                      (x0 - x[(i + 1) % n]) * ay[(i + 1) % n];
-            if (sign2 <= 0)
-            {
-            /* on border */
-              return q3c_EDGE;
-            }
-            else 
-            {
-            /* outside */
-              return q3c_DISJUNCT;
-            }
-          }
-        }
-      }
-      /* inside */
-      return q3c_COVER;   
-    }
-  }
+	int i, n = qp->n;
+	q3c_coord_t *ax = qp->ax;
+	q3c_coord_t *ay = qp->ay;
+	q3c_coord_t *x = qp->x;
+	q3c_coord_t *y = qp->y;
+	
+	q3c_coord_t sign0, sign1, sign2, sign3;
+	
+	sign0 = (y0 - y[0]) * ax[0] - (x0 - x[0]) * ay[0];   
+	
+	if (sign0 == 0) 
+	{
+		sign1 = (y0 - y[1]) * ax[1] - (x0 - x[1]) * ay[1];   
+		sign2 = (y0 - y[n - 1]) * ax[n - 1] - (x0 - x[n - 1]) * ay[n - 1];
+		sign3 = sign1 * sign2; 
+		if (sign3 >= 0)
+		{
+			/* on border */
+			return q3c_EDGE;
+		}
+		else
+		{
+			/* outside */
+			return q3c_DISJUNCT;
+		}
+	}
+	else if (sign0 > 0)
+	{
+		for(i = 1 ; i < n ; i++)
+		{
+			sign1 = (y0 - y[i]) * ax[i] - (x0 - x[i]) * ay[i];
+			if (sign1 <= 0)
+			{
+				if (sign1 < 0)
+				{
+					/* outside */
+					return q3c_DISJUNCT;
+				}
+				else
+				{
+					sign2 = (y0 - y[(i + 1) % n]) * ax [(i + 1) % n] -
+						(x0 - x[(i + 1) % n]) * ay[(i + 1) % n];
+					if (sign2 >= 0)
+					{
+						/* on border */
+						return q3c_EDGE;
+					}
+					else
+					{
+						/* outside */
+						return q3c_DISJUNCT;
+					}
+				}
+			}
+		}
+		/* inside */
+		return q3c_COVER;
+	}
+	else
+	{
+		for(i = 1 ; i < n ; i++)
+		{
+			sign1 = (y0 - y[i]) * ax[i] - (x0 - x[i]) * ay[i];
+			if (sign1 >= 0)
+			{
+				if (sign1 > 0)
+				{
+					/* outside */
+					return q3c_DISJUNCT;
+				}
+				else
+				{
+					sign2 = (y0 - y[(i + 1) % n]) * ax [(i + 1) % n] -
+						(x0 - x[(i + 1) % n]) * ay[(i + 1) % n];
+					if (sign2 <= 0)
+					{
+						/* on border */
+						return q3c_EDGE;
+					}
+					else
+					{
+						/* outside */
+						return q3c_DISJUNCT;
+					}
+				}
+			}
+		}
+		/* inside */
+		return q3c_COVER;
+	}
 }
 
 
@@ -161,128 +157,118 @@ void q3c_get_minmax_poly(struct q3c_poly *qp, q3c_coord_t *xmin,
                          q3c_coord_t *xmax, q3c_coord_t *ymin, 
                          q3c_coord_t *ymax)
 {
-  int i;
-  const int n = qp->n;
-  q3c_coord_t *x = qp->x, *y = qp->y, t;
-  q3c_coord_t xmi, xma, ymi, yma;
-  
-  xmi = x[0]; 
-  xma = x[0]; 
-  ymi = y[0];
-  yma = y[0];
-  
-  for(i = 1; i < n; i++)
-  {
-    t = x[i];
-    if (t > xma)
-    {
-      xma = t;
-    }
-    else 
-    {
-      if (t < xmi)
-      {
-        xmi = t;
-      }
-    }
-    
-    t = y[i];
-    if (t > yma)
-    {
-      yma = t;
-    }
-    else 
-    {
-      if (t < ymi)
-      {
-        ymi = t;
-      }
-    }
-    
-  } 
-  *xmin = xmi;
-  *xmax = xma;
-  *ymin = ymi;
-  *ymax = yma;
-
+	int i;
+	const int n = qp->n;
+	q3c_coord_t *x = qp->x, *y = qp->y, t;
+	q3c_coord_t xmi, xma, ymi, yma;
+	
+	xmi = x[0];
+	xma = x[0];
+	ymi = y[0];
+	yma = y[0];
+	
+	for(i = 1; i < n; i++)
+	{
+		t = x[i];
+		if (t > xma)
+		{
+			xma = t;
+		}
+		else if (t < xmi)
+		{
+			xmi = t;
+		}
+		
+		t = y[i];
+		
+		if (t > yma)
+		{
+			yma = t;
+		}
+		else if (t < ymi)
+		{
+			ymi = t;
+		}
+	}
+	
+	*xmin = xmi;
+	*xmax = xma;
+	*ymin = ymi;
+	*ymax = yma;
 }
 
 
 char q3c_get_facenum_poly(struct q3c_poly *qp)
 {
-  return q3c_get_facenum(qp->ra[0], qp->dec[0]);
+	return q3c_get_facenum(qp->ra[0], qp->dec[0]);
 }
 
 void q3c_project_poly(struct q3c_poly *qp, char face_num)
 {
-  q3c_coord_t ra1, dec1, tmp0;
-  q3c_coord_t *ra = qp->ra, *dec = qp->dec;
-  q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
-  
-  int i, n = qp->n;
-  if ((face_num > 0) && (face_num < 5))
-  {
-    face_num--; /* Just computation trick */
-    for (i = 0; i < n; i++)
-    {
-      ra1 = q3c_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
-      dec1 = q3c_DEGRA * dec[i];
-      x[i] = (q3c_tan(ra1)) / 2;
-      y[i] = (q3c_tan(dec1) / q3c_cos(ra1)) / 2;      
-    }
-    /* Now x[i] and y[i] are coordinates on cube face [-0.5:0.5]x[-0.5:0.5] */
-  }
-  else
-  {
-    if (face_num == 0) 
-    { 
-      for (i = 0; i < n; i++)
-      {
-        ra1 = q3c_DEGRA * ra[i];
-        dec1 = q3c_DEGRA * dec[i];
-
-        tmp0 = 1 / q3c_tan(dec1);
+	q3c_coord_t ra1, dec1, tmp0;
+	q3c_coord_t *ra = qp->ra, *dec = qp->dec;
+	q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
+	
+	int i, n = qp->n;
+	if ((face_num > 0) && (face_num < 5))
+	{
+		face_num--; /* Just computation trick */
+		for (i = 0; i < n; i++)
+		{
+			ra1 = q3c_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
+			dec1 = q3c_DEGRA * dec[i];
+			x[i] = (q3c_tan(ra1)) / 2;
+			y[i] = (q3c_tan(dec1) / q3c_cos(ra1)) / 2;
+		}
+		/* Now x[i] and y[i] are coordinates on cube face [-0.5:0.5]x[-0.5:0.5] */
+	}
+	else if (face_num == 0)
+	{
+		for (i = 0; i < n; i++)
+		{
+			ra1 = q3c_DEGRA * ra[i];
+			dec1 = q3c_DEGRA * dec[i];
+			
+			tmp0 = 1 / q3c_tan(dec1);
 #ifdef __USE_GNU
-        q3c_sincos(ra1, &x0, &y0);
+			q3c_sincos(ra1, &x0, &y0);
 #else
-        x0 = q3c_sin(ra1);
-        y0 = q3c_cos(ra1);
+			x0 = q3c_sin(ra1);
+			y0 = q3c_cos(ra1);
 #endif
-        x0 *= tmp0;
-        y0 *= (-tmp0);
-        x[i] = x0 / 2;
-        y[i] = y0 / 2;
-      }
-    } 
-    else 
-    {
-      for (i = 0; i < n; i++)
-      {
-        ra1 = q3c_DEGRA * ra[i];
-        dec1 = q3c_DEGRA * dec[i];
+			x0 *= tmp0;
+			y0 *= (-tmp0);
+			x[i] = x0 / 2;
+			y[i] = y0 / 2;
+		}
+	} 
+	else 
+	{
+		for (i = 0; i < n; i++)
+		{
+			ra1 = q3c_DEGRA * ra[i];
+			dec1 = q3c_DEGRA * dec[i];
 
-        tmp0 = 1 / q3c_tan(dec1);
+			tmp0 = 1 / q3c_tan(dec1);
 #ifdef __USE_GNU
-        q3c_sincos(ra1, &x0, &y0);
+			q3c_sincos(ra1, &x0, &y0);
 #else
-        x0 = q3c_sin(ra1);
-        y0 = q3c_cos(ra1);
+			x0 = q3c_sin(ra1);
+			y0 = q3c_cos(ra1);
 #endif
-
-        x0 *= (-tmp0);
-        y0 *= (-tmp0);
-        x[i] = x0 / 2;
-        y[i] = y0 / 2;
-      }
-    }
-  }
+			x0 *= (-tmp0);
+			y0 *= (-tmp0);
+			x[i] = x0 / 2;
+			y[i] = y0 / 2;
+		}
+	}
 }
 
 
-char q3c_poly_intersection_check(struct q3c_poly *qp,
-                                 q3c_coord_t xl, q3c_coord_t xr, 
-                                 q3c_coord_t yb, q3c_coord_t yt,
-                                 q3c_coord_t cur_size) 
+static char q3c_poly_intersection_check(struct q3c_poly *qp,
+	q3c_coord_t xl, q3c_coord_t xr,
+	q3c_coord_t yb, q3c_coord_t yt,
+	q3c_coord_t cur_size) 
 {
   int i, n = qp->n;
   q3c_coord_t *ax = qp->ax; 

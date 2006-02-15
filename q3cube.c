@@ -22,7 +22,6 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define _GNU_SOURCE
 #include "common.h"
 #include <math.h>
 #include <stdio.h>
@@ -2125,9 +2124,9 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t 
  * size cur_size on the cube face lie inside, or intersects etc. with the ellipse
  * specified by the coefficients (axx, axy, ayy, ax, ay, a)
  */
-inline char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
+static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
                                    q3c_coord_t cur_size, q3c_coord_t xmin,
-                                   q3c_coord_t xmax, q3c_coord_t ymin, 
+                                   q3c_coord_t xmax, q3c_coord_t ymin,
                                    q3c_coord_t ymax, q3c_coord_t axx,
                                    q3c_coord_t axy, q3c_coord_t ayy,
                                    q3c_coord_t ax, q3c_coord_t ay,
