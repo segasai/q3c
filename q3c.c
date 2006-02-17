@@ -486,7 +486,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	 */    
 	static q3c_ipix_t partials[2 * n_partials];
 	static q3c_ipix_t fulls[2 * n_fulls];
-	static struct q3c_poly qp;
+	static q3c_poly qp;
 #undef n_partials
 #undef n_fulls
 

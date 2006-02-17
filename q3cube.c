@@ -3476,7 +3476,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 
 
-void q3c_poly_query(struct q3c_prm *hprm, struct q3c_poly *qp,
+void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials)
 {

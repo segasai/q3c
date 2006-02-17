@@ -25,7 +25,7 @@
 
 #include "common.h"
 
-void q3c_init_poly(struct q3c_poly *qp, int n)
+void q3c_init_poly(q3c_poly *qp, int n)
 {
 	qp->ra = malloc(n * sizeof(q3c_coord_t));
 	qp->dec = malloc(n * sizeof(q3c_coord_t));
@@ -38,7 +38,7 @@ void q3c_init_poly(struct q3c_poly *qp, int n)
 	qp->n = n;
 }
 
-void q3c_prepare_poly(struct q3c_poly *qp)
+void q3c_prepare_poly(q3c_poly *qp)
 {
 	int n = qp->n - 1 ;
 	int i;
@@ -57,7 +57,7 @@ void q3c_prepare_poly(struct q3c_poly *qp)
 }
 
 
-int q3c_check_point_in_poly(struct q3c_poly *qp, q3c_coord_t x0,
+int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
                             q3c_coord_t y0)
 {
 	int i, n = qp->n;
@@ -153,7 +153,7 @@ int q3c_check_point_in_poly(struct q3c_poly *qp, q3c_coord_t x0,
 }
 
 
-void q3c_get_minmax_poly(struct q3c_poly *qp, q3c_coord_t *xmin,
+void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin,
                          q3c_coord_t *xmax, q3c_coord_t *ymin, 
                          q3c_coord_t *ymax)
 {
@@ -198,12 +198,12 @@ void q3c_get_minmax_poly(struct q3c_poly *qp, q3c_coord_t *xmin,
 }
 
 
-char q3c_get_facenum_poly(struct q3c_poly *qp)
+char q3c_get_facenum_poly(q3c_poly *qp)
 {
 	return q3c_get_facenum(qp->ra[0], qp->dec[0]);
 }
 
-void q3c_project_poly(struct q3c_poly *qp, char face_num)
+void q3c_project_poly(q3c_poly *qp, char face_num)
 {
 	q3c_coord_t ra1, dec1, tmp0;
 	q3c_coord_t *ra = qp->ra, *dec = qp->dec;
@@ -265,7 +265,7 @@ void q3c_project_poly(struct q3c_poly *qp, char face_num)
 }
 
 
-static char q3c_poly_intersection_check(struct q3c_poly *qp,
+static char q3c_poly_intersection_check(q3c_poly *qp,
 	q3c_coord_t xl, q3c_coord_t xr,
 	q3c_coord_t yb, q3c_coord_t yt,
 	q3c_coord_t cur_size) 
@@ -326,7 +326,7 @@ static char q3c_poly_intersection_check(struct q3c_poly *qp,
 
 
 
-int q3c_poly_cover_check(struct q3c_poly *qp, q3c_coord_t xc_cur, 
+int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, 
                          q3c_coord_t yc_cur, q3c_coord_t cur_size)
 {
     q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;
@@ -429,7 +429,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
   int face_count = -1, i;
   
 
-  struct q3c_poly qp;
+  q3c_poly qp;
   
   ang2ipix_xy(hprm, ra0, dec0, &cur_face_num, &ipix, &x0, &y0);
 

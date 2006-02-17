@@ -167,30 +167,30 @@ typedef long double q3c_coord_t;
 
 struct q3c_prm 
 {
-  q3c_ipix_t nside;
-  q3c_ipix_t *xbits;
-  q3c_ipix_t *ybits;
-  q3c_ipix_t *xbits1;
-  q3c_ipix_t *ybits1;
+	q3c_ipix_t nside;
+	q3c_ipix_t *xbits;
+	q3c_ipix_t *ybits;
+	q3c_ipix_t *xbits1;
+	q3c_ipix_t *ybits1;
 };
 
 struct q3c_square 
 {
-  q3c_ipix_t x0,y0; /* Integer coordinates of the center of the square for */
-  int nside0;       /* the nside0 segmentation */
-  char status;
+	q3c_ipix_t x0,y0; /* Integer coordinates of the center of the square for */
+	int nside0;       /* the nside0 segmentation */
+	char status;
 };
 
-struct q3c_poly
+typedef struct
 {
-  int n;
-  q3c_coord_t *ra;	/* array of RAs of vertices */
-  q3c_coord_t *dec;	/* array of DECs of vertices */
-  q3c_coord_t *x;		/* array of X coords on the cube face of vertices */
-  q3c_coord_t *y;		/* array of Y coords on the cube face of vertices */
-  q3c_coord_t *ax;		/* array of x projections of the edge between vertices */
-  q3c_coord_t *ay;		/* array of y projections of the edge between vertices */
-};
+	int n;
+	q3c_coord_t *ra;	/* array of RAs of vertices */
+	q3c_coord_t *dec;	/* array of DECs of vertices */
+	q3c_coord_t *x;		/* array of X coords on the cube face of vertices */
+	q3c_coord_t *y;		/* array of Y coords on the cube face of vertices */
+	q3c_coord_t *ax;	/* array of x projections of the edge between vertices */
+	q3c_coord_t *ay;	/* array of y projections of the edge between vertices */
+} q3c_poly;
 
 
 typedef struct 
@@ -262,18 +262,18 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                           q3c_coord_t dec0, q3c_coord_t rad,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials);
-void q3c_init_poly(struct q3c_poly *qp, int n);
-void q3c_prepare_poly(struct q3c_poly *qp);
-void q3c_project_poly(struct q3c_poly *qp, char facenum);
-char q3c_get_facenum_poly(struct q3c_poly *qp);
-int q3c_check_point_in_poly(struct q3c_poly *qp, q3c_coord_t x0,
+void q3c_init_poly(q3c_poly *qp, int n);
+void q3c_prepare_poly(q3c_poly *qp);
+void q3c_project_poly(q3c_poly *qp, char facenum);
+char q3c_get_facenum_poly(q3c_poly *qp);
+int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
                             q3c_coord_t y0);
-int q3c_poly_cover_check(struct q3c_poly *qp, q3c_coord_t xc_cur,
+int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
                          q3c_coord_t yc_cur, q3c_coord_t cur_size);                         
-void q3c_get_minmax_poly(struct q3c_poly *qp, q3c_coord_t *xmin,
+void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin,
                          q3c_coord_t *xmax, q3c_coord_t *ymin, 
                          q3c_coord_t *ymax);
-void q3c_poly_query(struct q3c_prm *hprm, struct q3c_poly *qp,
+void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials);
 int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
