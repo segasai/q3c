@@ -354,54 +354,82 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 	q3c_coord_t alpha1, q3c_coord_t delta01, q3c_coord_t d0,
 	q3c_coord_t e, q3c_coord_t PA0)
 {
-q3c_coord_t d_alpha = (alpha1 - alpha) * q3c_DEGRA;
-q3c_coord_t delta1 = delta01 * q3c_DEGRA;
-q3c_coord_t delta = delta0 * q3c_DEGRA;
-q3c_coord_t PA = PA0 * q3c_DEGRA;
-q3c_coord_t d = d0 * q3c_DEGRA;
-
-q3c_coord_t      t1 = cos(d_alpha);
-q3c_coord_t      t22 = sin(d_alpha);
-q3c_coord_t      t3 = cos(delta1);
-q3c_coord_t      t32 = sin(delta1);
-q3c_coord_t      t6 = cos(delta);
-q3c_coord_t      t26 = sin(delta);
-q3c_coord_t      t9 = cos(d);
-q3c_coord_t      t55 = sin(d);
-
-if ((t3*t6*t1+t32*t26)<0) {return 0;}
-
-q3c_coord_t      t2 = t1*t1;
-
-q3c_coord_t      t4 = t3*t3;
-q3c_coord_t      t5 = t2*t4;
-
-q3c_coord_t      t7 = t6*t6;
-q3c_coord_t      t8 = t5*t7;
-
-q3c_coord_t      t10 = t9*t9;
-q3c_coord_t      t11 = t7*t10;
-q3c_coord_t      t13 = cos(PA);
-q3c_coord_t      t14 = t13*t13;
-q3c_coord_t      t15 = t14*t10;
-q3c_coord_t      t18 = t7*t14;
-q3c_coord_t      t19 = t18*t10;
-
-q3c_coord_t      t24 = sin(PA);
-
-q3c_coord_t      t31 = t1*t3;
-
-q3c_coord_t      t36 = 2.0*t31*t32*t26*t6;
-q3c_coord_t      t37 = t31*t32;
-q3c_coord_t      t38 = t26*t6;
-q3c_coord_t      t45 = t4*t10;
-
-q3c_coord_t      t56 = t55*t55;
-q3c_coord_t      t57 = t4*t7;
-q3c_coord_t      t60 = -t8+t5*t11+2.0*t5*t15-t5*t19-2.0*t1*t4*t22*t10*t24*t13*t26-t36+2.0*t37*t38*t10-2.0*t37*t38*t15-t45*t14-t45*t2+2.0*t22*t3*t32*t6*t24*t10*t13-t56+t7-t11+t4-t57+t57*t10+t19-t18*t45;
-q3c_coord_t      t61 = e*e;
-q3c_coord_t      t63 = t60*t61+t8+t57-t4-t7+t56+t36;
-return t63>0;
+	q3c_coord_t d_alpha = (alpha1 - alpha) * q3c_DEGRA;
+	q3c_coord_t delta1 = delta01 * q3c_DEGRA;
+	q3c_coord_t delta = delta0 * q3c_DEGRA;
+	q3c_coord_t PA = PA0 * q3c_DEGRA;
+	q3c_coord_t d = d0 * q3c_DEGRA;
+	
+	q3c_coord_t t1 = cos(d_alpha);
+	q3c_coord_t t22 = sin(d_alpha);
+	q3c_coord_t t3 = cos(delta1);
+	q3c_coord_t t32 = sin(delta1);
+	q3c_coord_t t6 = cos(delta);
+	q3c_coord_t t26 = sin(delta);
+	q3c_coord_t t9 = cos(d);
+	q3c_coord_t t55 = sin(d);
+	
+	q3c_coord_t t2;
+	q3c_coord_t t4;
+	q3c_coord_t t5;
+	q3c_coord_t t7;
+	q3c_coord_t t8;
+	q3c_coord_t t10;
+	q3c_coord_t t11;
+	q3c_coord_t t13;
+	q3c_coord_t t14;
+	q3c_coord_t t15;
+	q3c_coord_t t18;
+	q3c_coord_t t19;
+	q3c_coord_t t24;
+	q3c_coord_t t31;
+	q3c_coord_t t36;
+	q3c_coord_t t37;
+	q3c_coord_t t38;
+	q3c_coord_t t45;
+	
+	q3c_coord_t t56;
+	q3c_coord_t t57;
+	q3c_coord_t t60;
+	q3c_coord_t t61;
+	q3c_coord_t t63;
+	
+	if ((t3 * t6 * t1 + t32 * t26) < 0) 
+	{
+		return 0;
+	}
+	
+	t2 = t1*t1;
+	
+	t4 = t3*t3;
+	t5 = t2*t4;
+	
+	t7 = t6*t6;
+	t8 = t5*t7;
+	
+	t10 = t9*t9;
+	t11 = t7*t10;
+	t13 = cos(PA);
+	t14 = t13*t13;
+	t15 = t14*t10;
+	t18 = t7*t14;
+	t19 = t18*t10;
+	
+	t24 = sin(PA);
+	
+	t31 = t1*t3;
+	
+	t36 = 2.0*t31*t32*t26*t6;
+	t37 = t31*t32;
+	t38 = t26*t6;
+	t45 = t4*t10;
+	
+	t56 = t55*t55;
+	t57 = t4*t7;
+	t60 = -t8+t5*t11+2.0*t5*t15-t5*t19-2.0*t1*t4*t22*t10*t24*t13*t26-t36+2.0*t37*t38*t10-2.0*t37*t38*t15-t45*t14-t45*t2+2.0*t22*t3*t32*t6*t24*t10*t13-t56+t7-t11+t4-t57+t57*t10+t19-t18*t45;
+	t61 = e*e;
+	t63 = t60*t61+t8+t57-t4-t7+t56+t36;
+	return t63 > 0;
 }
 
 
