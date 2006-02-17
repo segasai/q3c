@@ -365,97 +365,97 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_radial_query_it);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 {
-  extern struct q3c_prm hprm;
-  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
-  int iteration = PG_GETARG_INT32(3); // iteration
-  int full_flag = PG_GETARG_INT32(4); // full_flag
-                                              // 1 means full
-                                              // 0 means partial
-//  const int n_partials = 800, n_fulls = 800;
-  
- 
-  
-  static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-//  static q3c_ipix_t partials[2 * n_partials];
-//  static q3c_ipix_t fulls[2 * n_fulls];
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); 
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* error radius */
+	int iteration = PG_GETARG_INT32(3); /* iteration */
+	int full_flag = PG_GETARG_INT32(4); /* full_flag */
+	/* 1 means full, 0 means partial */
 
-# define n_partials  50
+	/* const int n_partials = 800, n_fulls = 800;*/
+	
+ 
+	
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	/* static q3c_ipix_t partials[2 * n_partials]; */
+	/* static q3c_ipix_t fulls[2 * n_fulls]; */
+	
+#define n_partials 50
 #define n_fulls 50
-  static q3c_ipix_t partials[2 * n_partials];
-  static q3c_ipix_t fulls[2 * n_fulls];
-  /*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
-   * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
-   * So we should have the array with the size twice bigger
-   */
+	static q3c_ipix_t partials[2 * n_partials];
+	static q3c_ipix_t fulls[2 * n_fulls];
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	 * So we should have the array with the size twice bigger
+	 */
  
 #undef n_fulls
 #undef n_partials
 
-  static int invocation;
-  
-  if (invocation == 0)
-  /* If this is the first invocation of the function */
-  {
-  /* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-   * ipix_buf. Because if the program will be canceled or crashed 
-   * for some reason the invocation should be == 0
-   */
-  }
-  else
-  {
-    if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
-    {
+	static int invocation;
+	
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
+	 * ipix_buf. Because if the program will be canceled or crashed 
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		{
 #ifdef Q3C_INT4 
-      if (full_flag)
-      {
-        PG_RETURN_INT32(fulls[iteration]);
-      }
-      else
-      {
-        PG_RETURN_INT32(partials[iteration]);      
-      }
+			if (full_flag)
+			{
+				PG_RETURN_INT32(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT32(partials[iteration]);
+			}
 #endif
 #ifdef Q3C_INT8 
-      if (full_flag)
-      {
-        PG_RETURN_INT64(fulls[iteration]);
-      }
-      else
-      {
-        PG_RETURN_INT64(partials[iteration]);      
-      }
+			if (full_flag)
+			{
+				PG_RETURN_INT64(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT64(partials[iteration]);			
+			}
 #endif
-    }
-  }
-    
-  q3c_new_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+		}
+	}
+		
+	q3c_new_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
 
-  ra_cen_buf = ra_cen;
-  dec_cen_buf = dec_cen;
-  radius_buf = radius;
-  invocation = 1;
+	ra_cen_buf = ra_cen;
+	dec_cen_buf = dec_cen;
+	radius_buf = radius;
+	invocation = 1;
 
 #ifdef Q3C_INT4 
-  if (full_flag)
-  {
-    PG_RETURN_INT32(fulls[iteration]);
-  }
-  else
-  {
-    PG_RETURN_INT32(partials[iteration]);      
-  }
+	if (full_flag)
+	{
+		PG_RETURN_INT32(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT32(partials[iteration]);			
+	}
 #endif
 #ifdef Q3C_INT8
-  if (full_flag)
-  {
-    PG_RETURN_INT64(fulls[iteration]);
-  }
-  else
-  {
-    PG_RETURN_INT64(partials[iteration]);      
-  }
+	if (full_flag)
+	{
+		PG_RETURN_INT64(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT64(partials[iteration]);			
+	}
 #endif
 }
 
@@ -464,141 +464,140 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 {
-  ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0); // ra_cen
-  extern struct q3c_prm hprm;
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0);
+	extern struct q3c_prm hprm;
 
-  int iteration = PG_GETARG_INT32(1); // iteration
-  int full_flag = PG_GETARG_INT32(2); // full_flag
-                                              // 1 means full
-                                              // 0 means partial
-  int16 typlen;
-  bool typbyval;
-  char typalign;
-  int i;
-  int poly_nitems;
-  Oid element_type;
-  char *p;
-  
-#define n_partials  50
+	int iteration = PG_GETARG_INT32(1); /* iteration */
+	int full_flag = PG_GETARG_INT32(2); /* full_flag */
+	/* 1 means full, 0 means partial*/
+	int16 typlen;
+	bool typbyval;
+	char typalign;
+	int i;
+	int poly_nitems;
+	Oid element_type;
+	char *p;
+	
+#define n_partials 50
 #define n_fulls 50
-  /*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
-   * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
-   * So we should have the array with the size twice bigger
-   */    
-  static q3c_ipix_t partials[2 * n_partials];
-  static q3c_ipix_t fulls[2 * n_fulls];
-  static struct q3c_poly qp;
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	 * So we should have the array with the size twice bigger
+	 */    
+	static q3c_ipix_t partials[2 * n_partials];
+	static q3c_ipix_t fulls[2 * n_fulls];
+	static struct q3c_poly qp;
 #undef n_partials
 #undef n_fulls
 
 
 #define max_n_poly 100
-  static q3c_coord_t ra[max_n_poly], dec[max_n_poly], x[max_n_poly],
-                     y[max_n_poly], ax[max_n_poly], ay[max_n_poly];
+	static q3c_coord_t ra[max_n_poly], dec[max_n_poly], x[max_n_poly],
+			y[max_n_poly], ax[max_n_poly], ay[max_n_poly];
 #undef max_n_poly
 
-  static int invocation;
-  
-  if (invocation == 0)
-  /* If this is the first invocation of the function */
-  {
-  /* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-   * ipix_buf. Because if the program will be canceled or crashed 
-   * for some reason the invocation should be == 0
-   */
-  }
-  else
-  {
-    /* TODO !!!!!!!!!! */
-    /* bad realization currently .... */
-    /* Probably I should check that the polygon is the same ... */
-    if (iteration > 0)
-    {
+	static int invocation;
+	
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
+	 * ipix_buf. Because if the program will be canceled or crashed 
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		/* TODO !!!!!!!!!! */
+		/* bad realization currently .... */
+		/* Probably I should check that the polygon is the same ... */
+		if (iteration > 0)
+		{
 #ifdef Q3C_INT4 
-      if (full_flag)
-      {
-        PG_RETURN_INT32(fulls[iteration]);
-      }
-      else
-      {
-        PG_RETURN_INT32(partials[iteration]);      
-      }
+			if (full_flag)
+			{
+				PG_RETURN_INT32(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT32(partials[iteration]);			
+			}
 #endif
 #ifdef Q3C_INT8 
-      if (full_flag)
-      {
-        PG_RETURN_INT64(fulls[iteration]);
-      }
-      else
-      {
-        PG_RETURN_INT64(partials[iteration]);      
-      }
+			if (full_flag)
+			{
+				PG_RETURN_INT64(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT64(partials[iteration]);			
+			}
 #endif
-    }
-  }
+		}
+	}
 
-  poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-  element_type = FLOAT8OID;
-  
-  get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
+	poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
+	element_type = FLOAT8OID;
+	
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);				
 
 /* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c 
  function deconstruct_array*/
 
-  p = ARR_DATA_PTR(poly_arr);
-  
-  if (poly_nitems % 2 != 0)
-  {
-    elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
-  }
-  else  if (poly_nitems <=4)
-  {
-    elog(ERROR, "Invalid polygon! Less then 4 vertexes");
-  }
-  
-  poly_nitems /= 2;
-  qp.n = poly_nitems;
-  for (i = 0; i < poly_nitems; i++)
-  {
-    ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-    p = att_addlength(p, typlen, PointerGetDatum(p));
-    p = (char *) att_align(p, typalign);
-    dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-    p = att_addlength(p, typlen, PointerGetDatum(p));
-    p = (char *) att_align(p, typalign);
-  }
-  
-  qp.ra = ra;
-  qp.dec = dec;
-  qp.x = x;
-  qp.y = y;
-  qp.ax = ax;
-  qp.ay = ay;
+	p = ARR_DATA_PTR(poly_arr);
+	
+	if (poly_nitems % 2 != 0)
+	{
+		elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
+	}
+	else if (poly_nitems <=4)
+	{
+		elog(ERROR, "Invalid polygon! Less then 4 vertexes");
+	}
+	
+	poly_nitems /= 2;
+	qp.n = poly_nitems;
+	for (i = 0; i < poly_nitems; i++)
+	{
+		ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align(p, typalign);
+		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align(p, typalign);
+	}
+	
+	qp.ra = ra;
+	qp.dec = dec;
+	qp.x = x;
+	qp.y = y;
+	qp.ax = ax;
+	qp.ay = ay;
 
-//  fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]);  
-  q3c_poly_query(&hprm, &qp, fulls, partials);
-  
-  invocation = 1;
+	/* fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]); */
+	q3c_poly_query(&hprm, &qp, fulls, partials);
+	
+	invocation = 1;
 
 #ifdef Q3C_INT4 
-  if (full_flag)
-  {
-    PG_RETURN_INT32(fulls[iteration]);
-  }
-  else
-  {
-    PG_RETURN_INT32(partials[iteration]);      
-  }
+	if (full_flag)
+	{
+		PG_RETURN_INT32(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT32(partials[iteration]);			
+	}
 #endif
 #ifdef Q3C_INT8
-  if (full_flag)
-  {
-    PG_RETURN_INT64(fulls[iteration]);
-  }
-  else
-  {
-    PG_RETURN_INT64(partials[iteration]);      
-  }
+	if (full_flag)
+	{
+		PG_RETURN_INT64(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT64(partials[iteration]);			
+	}
 #endif
 }
 

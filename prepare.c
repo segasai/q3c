@@ -27,19 +27,18 @@
 #include "common.h"
 int main()
 {
-
-struct q3c_prm hprm1;
-
+	struct q3c_prm hprm1;
+	
 #ifdef Q3C_INT8
-init_q3c1(&hprm1,1073741824);
+	init_q3c1(&hprm1,1073741824);
 #endif
-
+	
 #ifdef Q3C_INT4
-init_q3c1(&hprm1,16384);
+	init_q3c1(&hprm1,16384);
 #endif
-
-q3c_dump_prm(&hprm1,"dump.c");
-
-return 0;
-
+	
+	q3c_dump_prm(&hprm1,"dump.c");
+	
+	return 0;
+	
 }
