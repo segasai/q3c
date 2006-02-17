@@ -37,7 +37,7 @@ prepare: prepare.o q3cube.o q3c_poly.o
 oldclean: 
 	rm -f *~
 
-dist: 
+dist: clean
 	mkdir -p dist
 	cp *.c *.h *.sql.in Makefile README.q3c COPYING dist
 	cat q3c.sql.in | perl create_drops.pl > dist/drop_q3c.sql

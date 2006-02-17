@@ -203,6 +203,7 @@ Datum q3c_strquery(PG_FUNCTION_ARGS)
 	q3c_coord_t arg2 = PG_GETARG_FLOAT8(5);
 	static char qstring[30000+VARHDRSZ];  
 	static char tab_name[256], ra_col[256], dec_col[256];
+	VarChar *tt;
 	
 	strncpy(tab_name,(char *)VARDATA(arg0),256);
 	tab_name[VARSIZE(arg0)-VARHDRSZ]=0;
@@ -213,7 +214,7 @@ Datum q3c_strquery(PG_FUNCTION_ARGS)
 	strncpy(dec_col,(char *)VARDATA(dec_col0),256);
 	dec_col[VARSIZE(dec_col0)-VARHDRSZ]=0;
 	
-	VarChar *tt = (VarChar *)(qstring);
+	tt = (VarChar *)(qstring);
 	VARATT_SIZEP(tt) = 30000;
 	
 	/* not more then 30000 characters */
@@ -474,6 +475,9 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
   bool typbyval;
   char typalign;
   int i;
+  int poly_nitems;
+  Oid element_type;
+  char *p;
   
 #define n_partials  50
 #define n_fulls 50
@@ -533,9 +537,8 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
     }
   }
 
-  int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-  Oid element_type=FLOAT8OID;
-  char *p;
+  poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
+  element_type = FLOAT8OID;
   
   get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
 
@@ -638,8 +641,8 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	int n, i;
 	q3c_coord_t ra_cur, dec_cur;
 	Oid element_type=FLOAT8OID;
-	
 	char *p;
+	bool result;
 	
 	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
 
@@ -682,7 +685,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 		p = (char *) att_align(p, typalign);
 	}
 	
-	bool result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
+	result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
 											ra_cen, dec_cen, invocation)) > 0;
 	
 	PG_RETURN_BOOL((result));      

@@ -35,13 +35,14 @@ inline q3c_coord_t q3c_dist (q3c_coord_t ra1, q3c_coord_t dec1,
 	 * it uses just 3 !!! computation of trigonometric functions
 	 */
 	
-	q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA );
+	q3c_coord_t x, y, z;
+	x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA );
 	x *= x;
-	q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
 	y *= y;
 	
 	/* Seem to be more precise :) */
-	q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
 	z*=z;
 	
 	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * q3c_RADEG;
@@ -54,13 +55,14 @@ inline q3c_coord_t q3c_sindist (q3c_coord_t ra1, q3c_coord_t dec1,
 	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
 	 * it uses just 3 !!! computation of trigonometric functions
 	 */
-	q3c_coord_t x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA);
+	q3c_coord_t x, y, z;
+	x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA);
 	x *= x;
-	q3c_coord_t y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
 	y *= y;
 	
 	/* Seem to be more precise :) */
-	q3c_coord_t z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
 	z*=z;
 	
 	return x * (z - y) + y;
@@ -2014,13 +2016,12 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t de
 	q3c_coord_t      tmpy1 = -4.0*t52*(t9-1.0+t54+t5-t34)*t48+4.0*t52*(-1.0+t9+t5);
 	q3c_coord_t      tmpy2 = t92;
 
-	tmpy1 = q3c_sqrt(tmpy1);
-	tmpy2 = (2 * tmpy2);
-
 	q3c_coord_t      tmpz0 = -2.0*(-t93*t24+t93*t39+t96+t96*t71-t96*t14-t96*t9)*t4*t48+2.0*t96*t4;
 	q3c_coord_t      tmpz1 = -4.0*t52*(t61-2.0*t79-t54+t67-2.0*t77-t5-t69+t71+t85+t34)*t48+4.0*t52*(t9+t61-t5);
 	q3c_coord_t      tmpz2 = t92;
 
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
 
@@ -2073,13 +2074,12 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	q3c_coord_t      tmpy1 = 4.0*t26*(-t5-t28-t32-t34+t35+t36+t31+t10)*t21-4.0*t26*(-t5+t31);
 	q3c_coord_t      tmpy2 = 2.0*t46;
 
-	tmpy1 = q3c_sqrt(tmpy1);
-	tmpy2 = (2 * tmpy2);
-
 	q3c_coord_t      tmpz0 = 2.0*(-t47*t12+t47*t12*t5+t51*t10-t51*t5-t51*t8+t51)*t19*t21-2.0*t51*t19;
 	q3c_coord_t      tmpz1 = -4.0*t26*(-t28-t29*t8*t5-t29-t32-t34+t35+t36+t31+t29*t5+t10)*t21+4.0*t26*(t5-t29+t31);
 	q3c_coord_t      tmpz2 = 2.0*t46;
 
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
 
@@ -2287,16 +2287,6 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
       where_cover[30000], radius_formulae[1000],
       ipix_col_name[256]="ipix", face_count, face_num0,
       q3c_sindist_func_name[]="q3c_sindist";
-
-
-/* Old, low precision and/or SQL formulae   
-  sprintf(radius_formulae, "cos(RADIANS(dec))*cos(RADIANS("Q3C_COORD_FMT"))*(cos(RADIANS(ra-"Q3C_COORD_FMT")))+sin(RADIANS(dec))*sin(RADIANS("Q3C_COORD_FMT"))", 
-           dec0, ra0, dec0);
-   sprintf(radius_formulae, "2 * ASIN(SQRT(POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)+POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)*COS(RADIANS(%s))*COS(RADIANS("Q3C_COORD_FMT"))))",dec_col_name,dec0,ra_col_name,ra0,dec_col_name,dec0);
-   sprintf(radius_formulae, "(POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)+POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)*COS(RADIANS(%s))*COS(RADIANS("Q3C_COORD_FMT")))",dec_col_name,dec0,ra_col_name,ra0,dec_col_name,dec0);
-  */
-
-  sprintf(radius_formulae, "%s(%s,%s,"Q3C_COORD_FMT","Q3C_COORD_FMT")", q3c_sindist_func_name, ra_col_name, dec_col_name, ra0, dec0);
   
   int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
       cover_len = 0, part_len = 0, res_depth;
@@ -2309,6 +2299,15 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
    * value of res_depth variable !
    * It seems that each of stacks should have the size 3*4*(2^(depth+1)-1)
    */
+
+
+/* Old, low precision and/or SQL formulae   
+  sprintf(radius_formulae, "cos(RADIANS(dec))*cos(RADIANS("Q3C_COORD_FMT"))*(cos(RADIANS(ra-"Q3C_COORD_FMT")))+sin(RADIANS(dec))*sin(RADIANS("Q3C_COORD_FMT"))", 
+           dec0, ra0, dec0);
+   sprintf(radius_formulae, "2 * ASIN(SQRT(POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)+POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)*COS(RADIANS(%s))*COS(RADIANS("Q3C_COORD_FMT"))))",dec_col_name,dec0,ra_col_name,ra0,dec_col_name,dec0);
+   sprintf(radius_formulae, "(POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)+POW(SIN(RADIANS((%s-("Q3C_COORD_FMT"))/2)),2)*COS(RADIANS(%s))*COS(RADIANS("Q3C_COORD_FMT")))",dec_col_name,dec0,ra_col_name,ra0,dec_col_name,dec0);
+  */
+  sprintf(radius_formulae, "%s(%s,%s,"Q3C_COORD_FMT","Q3C_COORD_FMT")", q3c_sindist_func_name, ra_col_name, dec_col_name, ra0, dec0);
   
   where_part[0] = 0;
   where_cover[0] = 0;
