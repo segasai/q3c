@@ -1592,50 +1592,50 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 
 char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 {
-  /* The input x, y should be >=-1  and <=1 */
-  
-  
-  q3c_coord_t ra = 0, dec = 0; 
-  /* I do the initialization since gcc warn about probable not 
-   * initialization of ra and dec 
-   */
-  
-  /* This code have been cutted out from ipix2ang BEGIN */
-  if ((face_num0 >= 1) && (face_num0 <= 4))
-  {
-    ra = q3c_atan(x);
-    dec = q3c_RADEG * q3c_atan(y * q3c_cos(ra));
-    ra = ra * q3c_RADEG + ((q3c_coord_t)face_num0 - 1) * 90;
-    if (ra < 0) 
-    {
-      ra += (q3c_coord_t)360;
-    }
-  }
-  else 
-  {
-    if (face_num0 == 0)
-    {
-      ra = q3c_RADEG * q3c_atan2(x, -y);
-      dec = q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
-      if (ra < 0) 
-      {
-        ra += (q3c_coord_t)360;
-      }
-    }
-    if (face_num0 == 5)
-    {
-      ra = q3c_RADEG * q3c_atan2(x, y);
-      dec = -q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
-      if (ra < 0) 
-      {
-        ra += (q3c_coord_t)360;
-      }
+	/* The input x, y should be >=-1  and <=1 */
+	
+	
+	q3c_coord_t ra = 0, dec = 0; 
+	/* I do the initialization since gcc warn about probable not 
+	 * initialization of ra and dec 
+	 */
+	
+	/* This code have been cutted out from ipix2ang BEGIN */
+	if ((face_num0 >= 1) && (face_num0 <= 4))
+	{
+		ra = q3c_atan(x);
+		dec = q3c_RADEG * q3c_atan(y * q3c_cos(ra));
+		ra = ra * q3c_RADEG + ((q3c_coord_t)face_num0 - 1) * 90;
+		if (ra < 0) 
+		{
+			ra += (q3c_coord_t)360;
+		}
+	}
+	else 
+	{
+		if (face_num0 == 0)
+		{
+			ra = q3c_RADEG * q3c_atan2(x, -y);
+			dec = q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
+			if (ra < 0) 
+			{
+				ra += (q3c_coord_t)360;
+			}
+		}
+		if (face_num0 == 5)
+		{
+			ra = q3c_RADEG * q3c_atan2(x, y);
+			dec = -q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
+			if (ra < 0) 
+			{
+				ra += (q3c_coord_t)360;
+			}
 
-    }
-  }
-  /* This code have been cutted out from ipix2ang END */
-
-  return q3c_get_facenum(ra,dec)  ;  
+		}
+	}
+	/* This code have been cutted out from ipix2ang END */
+	
+	return q3c_get_facenum(ra,dec);  
 }
 
 
@@ -1643,104 +1643,118 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 
 /* Initialization of the Q3CUBE structure */
 void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
-/* hprm -- Pointer to main Q3C structure 
- * nside -- Nside parameter (number of quadtree subdivisions) 
- */
+	/* hprm -- Pointer to main Q3C structure 
+	 * nside -- Nside parameter (number of quadtree subdivisions) 
+	 */
 {
-  int i, k, m, l;
-  const q3c_ipix_t nbits = q3c_interleaved_nbits;
-                      /* Number of bits used when interleaving bits
-                       * so the size of each allocated array will be 2^16 */
-  q3c_ipix_t *xbits, *ybits, *xbits1, *ybits1, xybits_size = 1 << nbits;
-  hprm->nside = nside;
-  xbits = malloc((xybits_size) * sizeof(q3c_ipix_t));
-  hprm->xbits = xbits;
-  ybits = malloc((xybits_size) * sizeof(q3c_ipix_t));
-  hprm->ybits = ybits;
-  xbits1 = malloc((xybits_size) * sizeof(q3c_ipix_t));
-  hprm->xbits1 = xbits1;
-  ybits1 = malloc((xybits_size) * sizeof(q3c_ipix_t));
-  hprm->ybits1 = ybits1;
+	int i, k, m, l;
+	const q3c_ipix_t nbits = q3c_interleaved_nbits;
+	/* Number of bits used when interleaving bits
+	 * so the size of each allocated array will be 2^16
+	 */
+	q3c_ipix_t *xbits, *ybits, *xbits1, *ybits1, xybits_size = 1 << nbits;
+	hprm->nside = nside;
+	xbits = malloc((xybits_size) * sizeof(q3c_ipix_t));
+	hprm->xbits = xbits;
+	ybits = malloc((xybits_size) * sizeof(q3c_ipix_t));
+	hprm->ybits = ybits;
+	xbits1 = malloc((xybits_size) * sizeof(q3c_ipix_t));
+	hprm->xbits1 = xbits1;
+	ybits1 = malloc((xybits_size) * sizeof(q3c_ipix_t));
+	hprm->ybits1 = ybits1;
 
-  xbits[0] = 0; xbits[1] = 1;
-  ybits[0] = 0; ybits[1] = 2;
-  /*BIT_PRINT8(xbits[0]);
-  BIT_PRINT8(xbits[1]);*/
-  for(i = 2, m = 1; i < xybits_size; i++)
-  {
-    k = i / m;
-    if (k == 2)
-    {
-      xbits[i] = xbits[i / 2] * 4;
-      ybits[i] = 2 * xbits[i];    
-      m *= 2;
-      //BIT_PRINT8(xbits[i]); 
-      /* fprintf(stdout,"%lld\n",ybits[i]); */
-      continue;
-    }
-    else
-    {
-      xbits[i] = xbits[m] + xbits[i % m];
-      ybits[i] = 2 * xbits[i];
-      //BIT_PRINT8(xbits[i]);
-      /*fprintf(stdout,"%lld\n",ybits[i]);*/
-      continue;
-    }
-  }
-  xbits1[0] = 0; xbits1[1] = 1;
-  
-  //fprintf(stdout,"%lld\n",xbits1[0]);
-  //fprintf(stdout,"%lld\n",xbits1[1]);
-  /*BIT_PRINT8(xbits[0]);
-  BIT_PRINT8(xbits[1]);*/
-  
-  for(i = 2, m = 2, l = 2; i < xybits_size; i++)
-  {
-    k = i / m;
-    
-    if (k < 2)
-    {
-      xbits1[i] = xbits1[i - m];
-    }
-    else
-    {
-      if (k == 4)
-      {
-        xbits1[i] = xbits1[0];
-        m *= 4;
-        l *= 2;
-      }
-      else 
-        xbits1[i] = xbits1[i - 2 * m] + l;
-    }
-   //fprintf(stdout,"%lld\n",xbits1[i]);
-  }
-  
-  ybits1[0] = 0; ybits1[1] = 0;
-  //fprintf(stdout,"%lld\n",ybits1[0]);
-  //fprintf(stdout,"%lld\n",ybits1[1]);
-  
-  for(i = 2, m = 1, l = 1; i < xybits_size; i++)
-  {
-    k = i / m;
-    
-    if (k < 2)
-    {
-      ybits1[i] = ybits1[i - m];
-    }
-    else
-    {
-      if (k == 4)
-      {
-        ybits1[i] = ybits1[0];
-        m *= 4;
-        l *= 2;
-      }
-      else 
-        ybits1[i] = ybits1[i - 2 * m] + l;
-    }
-   //fprintf(stdout,"%lld\n",ybits1[i]);
-  }
+	xbits[0] = 0;
+	xbits[1] = 1;
+	ybits[0] = 0; 
+	ybits[1] = 2;
+	/*
+	BIT_PRINT8(xbits[0]);
+	BIT_PRINT8(xbits[1]);
+	*/
+	for(i = 2, m = 1; i < xybits_size; i++)
+	{
+		k = i / m;
+		if (k == 2)
+		{
+			xbits[i] = xbits[i / 2] * 4;
+			ybits[i] = 2 * xbits[i];
+			m *= 2;
+			/*
+			BIT_PRINT8(xbits[i]); 
+			fprintf(stdout,"%lld\n",ybits[i]);
+			*/
+			continue;
+		}
+		else
+		{
+			xbits[i] = xbits[m] + xbits[i % m];
+			ybits[i] = 2 * xbits[i];
+			/*
+			BIT_PRINT8(xbits[i]);
+			fprintf(stdout,"%lld\n",ybits[i]);
+			*/
+			continue;
+		}
+	}
+	xbits1[0] = 0;
+	xbits1[1] = 1;
+	
+	/*
+	fprintf(stdout,"%lld\n",xbits1[0]);
+	fprintf(stdout,"%lld\n",xbits1[1]);
+	BIT_PRINT8(xbits[0]);
+	BIT_PRINT8(xbits[1]);
+	*/
+	
+	for(i = 2, m = 2, l = 2; i < xybits_size; i++)
+	{
+		k = i / m;
+		
+		if (k < 2)
+		{
+			xbits1[i] = xbits1[i - m];
+		}
+		else
+		{
+			if (k == 4)
+			{
+				xbits1[i] = xbits1[0];
+				m *= 4;
+				l *= 2;
+			}
+			else 
+				xbits1[i] = xbits1[i - 2 * m] + l;
+		}
+		/* fprintf(stdout,"%lld\n",xbits1[i]); */
+	}
+	
+	ybits1[0] = 0; ybits1[1] = 0;
+	/*
+	fprintf(stdout,"%lld\n",ybits1[0]);
+	fprintf(stdout,"%lld\n",ybits1[1]);
+	*/
+	
+	for(i = 2, m = 1, l = 1; i < xybits_size; i++)
+	{
+		k = i / m;
+		
+		if (k < 2)
+		{
+			ybits1[i] = ybits1[i - m];
+		}
+		else
+		{
+			if (k == 4)
+			{
+				ybits1[i] = ybits1[0];
+				m *= 4;
+				l *= 2;
+			}
+			else 
+				ybits1[i] = ybits1[i - 2 * m] + l;
+		}
+	 /*fprintf(stdout,"%lld\n",ybits1[i]);*/
+	}
 }
 
 
