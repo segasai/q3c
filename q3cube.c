@@ -163,7 +163,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
   		yi--;
   	}
 	
-	i1 = 1 << (q3c_interleaved_nbits);
+	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 	
 #ifdef Q3C_INT4
@@ -173,8 +173,8 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 #endif /* Q3C_INT4 */
 #ifdef Q3C_INT8
 	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-		ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
-		ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+		ybits[yi % i1] + (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
+		ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
 	/*8byte computation*/
 #endif /* Q3C_INT8 */
 
@@ -262,7 +262,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 		yi--;
 	}
 	
-	i1 = 1 << (q3c_interleaved_nbits);
+	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 	
 #ifdef Q3C_INT4
@@ -272,8 +272,8 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 #endif /* Q3C_INT4 */
 #ifdef Q3C_INT8
 	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-		ybits[yi % i1] + (xbits[(xi >> q3c_interleaved_nbits) % i1] +
-		ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+		ybits[yi % i1] + (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
+		ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
 	/*8byte computation*/
 #endif /* Q3C_INT8 */
 	
@@ -943,7 +943,7 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 	 */
 
 
-	i1 = 1 << (q3c_interleaved_nbits);
+	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 #ifdef Q3C_INT4
 	{
@@ -956,8 +956,8 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 	{
 		ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
 				xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> q3c_interleaved_nbits) % i1] +
-				ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
+				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
 	/*8byte computation*/
 	}
 #endif /* Q3C_INT8 */
@@ -1441,7 +1441,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		and combining them by interleaving, using the predefined arrays xbits and ybits
 	*/
 
-	i1 = 1 << (q3c_interleaved_nbits);
+	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 
 	for(i = 0; i < nistack ; i++)
 	{
@@ -1461,8 +1461,8 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		{
 			ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
 					xbits[xi % i1] + ybits[yi % i1] +
-					(xbits[(xi >> q3c_interleaved_nbits) % i1] +
-					ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+					(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
+					ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
 		/*8byte computation*/
 		}
 #endif /* Q3C_INT8 */
@@ -1485,7 +1485,7 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi)
 {
-	const q3c_ipix_t  i1 = 1 << (q3c_interleaved_nbits);
+	const q3c_ipix_t  i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 #ifdef Q3C_INT4
 	{
@@ -1498,8 +1498,8 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 	{
 		return ((q3c_ipix_t)face_num) * nside * nside +
 				xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> q3c_interleaved_nbits) % i1] +
-				ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
+				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
 	/*8byte computation*/
 	}
 #endif /* Q3C_INT8 */
@@ -1515,8 +1515,8 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	
 	q3c_coord_t x, y, ra0;
 	char face_num = ipix / (nside * nside);
-	const q3c_ipix_t i1 = 1 << q3c_interleaved_nbits;
-	const q3c_ipix_t ii1 = 1 << (q3c_interleaved_nbits / 2);
+	const q3c_ipix_t i1 = 1 << Q3C_INTERLEAVED_NBITS;
+	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
 	ipix1 = ipix % (nside * nside);
 	
 #ifdef Q3C_INT4 
@@ -1648,7 +1648,7 @@ void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
 	 */
 {
 	int i, k, m, l;
-	const q3c_ipix_t nbits = q3c_interleaved_nbits;
+	const q3c_ipix_t nbits = Q3C_INTERLEAVED_NBITS;
 	/* Number of bits used when interleaving bits
 	 * so the size of each allocated array will be 2^16
 	 */
@@ -1762,7 +1762,7 @@ void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
 void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 {
   FILE *fp = fopen(filename, "w");
-  int i, x = 1 << q3c_interleaved_nbits;
+  int i, x = 1 << Q3C_INTERLEAVED_NBITS;
   q3c_ipix_t *xbits = hprm->xbits, *ybits = hprm->ybits,
              *xbits1 = hprm->xbits1, *ybits1 = hprm->ybits1;
   fprintf(fp, "#include \"common.h\"\n/*struct q3c_prm \n{\n q3c_ipix_t nside;\nq3c_ipix_t *xbits;\nq3c_ipix_t *ybits;\nq3c_ipix_t *xbits1;\nq3c_ipix_t *ybits1;\n};*/");
@@ -2233,7 +2233,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
   
     if (val < 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
   
     /* UNDEF_CHECK10: */
@@ -2244,7 +2244,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
         
     if (val < 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
 
 
@@ -2256,7 +2256,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
         
     if (val < 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
     else
     {
@@ -2267,8 +2267,8 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
     
      
       if (
-            (q3c_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
-             q3c_INTERSECT(ymin, ymax, yb_cur, yt_cur)
+            (Q3C_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
+             Q3C_INTERSECT(ymin, ymax, yb_cur, yt_cur)
             )&&
           ((((2 * axx * xl_cur + axy * yt_cur + ax) *
             (2 * axx * xr_cur + axy * yt_cur + ax)) < 0) ||
@@ -2281,11 +2281,11 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
           ))
       {
        
-        return q3c_PARTIAL;
+        return Q3C_PARTIAL;
       }
       else
       {
-        return q3c_DISJUNCT;
+        return Q3C_DISJUNCT;
       }
     }
   //((x0<xr_cur)&&(x0>xl_cur)&&(y0<yt_cur)&&(y0>yb_cur))
@@ -2303,7 +2303,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
    
     if (val >= 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
 
 
@@ -2314,7 +2314,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
           y_cur * (ayy * y_cur + ay) + a;
     if (val >= 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
 
 
@@ -2325,11 +2325,11 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
           y_cur * (ayy * y_cur + ay) + a;
     if (val >= 0)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
     else
     {
-      return q3c_COVER;
+      return Q3C_COVER;
     }
 
 }
@@ -2653,7 +2653,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
       {
         cur_square = work_stack + j;
         //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-        if (cur_square->status == q3c_PARTIAL)
+        if (cur_square->status == Q3C_PARTIAL)
         /* If this square partially intersects with the ellipse
          * I should split this square farther
          */
@@ -2694,7 +2694,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
         }
         else
         {
-          if (cur_square->status == q3c_COVER)
+          if (cur_square->status == Q3C_COVER)
           /* I put this square in the output list and
            * free one place in the stack
            */
@@ -2703,7 +2703,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
             tmp_stack1++;
           }
           else
-          /* This branch can be reached only if status==q3c_DISJUNCT */
+          /* This branch can be reached only if status==Q3C_DISJUNCT */
           {
             tmp_stack1++;
             /* I just drop this square and free the place in the stack */
@@ -2757,7 +2757,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
     {
       cur_square = work_stack + i;
 #ifdef Q3C_DEBUG
-      if (cur_square->status == q3c_PARTIAL)
+      if (cur_square->status == Q3C_PARTIAL)
         fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
 #endif
     }
@@ -2765,7 +2765,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
    
    
     ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-    i1 = 1 << q3c_interleaved_nbits;
+    i1 = 1 << Q3C_INTERLEAVED_NBITS;
    
     /* Run through fully covered squares (we take them from out_stack) */
     for(i = 0; i < out_nstack; i++)
@@ -2787,7 +2787,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */
@@ -2831,12 +2831,12 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
 
 
     /* Run through partly covered squares (we take them from work_stack where
-     * the cur_square->status == q3c_PARTIAL)
+     * the cur_square->status == Q3C_PARTIAL)
      */
     for(i = 0, j = -1; i < work_nstack; i++)
     {
       cur_square = work_stack + i;
-      if (cur_square->status!=q3c_PARTIAL)
+      if (cur_square->status!=Q3C_PARTIAL)
         continue;
       else
         j+=1; 
@@ -2856,7 +2856,7 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */
@@ -3234,7 +3234,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
       {
         cur_square = work_stack + j;
         //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-        if (cur_square->status == q3c_PARTIAL)
+        if (cur_square->status == Q3C_PARTIAL)
         /* If this square partially intersects with the ellipse
          * I should split this square farther
          */
@@ -3275,7 +3275,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
         }
         else
         {
-          if (cur_square->status == q3c_COVER)
+          if (cur_square->status == Q3C_COVER)
           /* I put this square in the output list and
            * free one place in the stack
            */
@@ -3284,7 +3284,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
             tmp_stack1++;
           }
           else
-          /* This branch can be reached only if status==q3c_DISJUNCT */
+          /* This branch can be reached only if status==Q3C_DISJUNCT */
           {
             tmp_stack1++;
             /* I just drop this square and free the place in the stack */
@@ -3337,7 +3337,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
     {
       cur_square = work_stack + i;
 #ifdef Q3C_DEBUG
-      if (cur_square->status == q3c_PARTIAL)
+      if (cur_square->status == Q3C_PARTIAL)
         fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
 #endif
     }
@@ -3345,7 +3345,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
    
    
     ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-    i1 = 1 << q3c_interleaved_nbits;
+    i1 = 1 << Q3C_INTERLEAVED_NBITS;
    
     /* Run through fully covered squares (we take them from out_stack) */
     for(i = 0; i < out_nstack; i++)
@@ -3367,7 +3367,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */
@@ -3394,12 +3394,12 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 
     /* Run through partly covered squares (we take them from work_stack where
-     * the cur_square->status == q3c_PARTIAL)
+     * the cur_square->status == Q3C_PARTIAL)
      */
     for(i = 0, j = -1; i < work_nstack; i++)
     {
       cur_square = work_stack + i;
-      if (cur_square->status!=q3c_PARTIAL)
+      if (cur_square->status!=Q3C_PARTIAL)
         continue;
       else
         j+=1; 
@@ -3419,7 +3419,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */
@@ -3795,7 +3795,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
       {
         cur_square = work_stack + j;
         //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-        if (cur_square->status == q3c_PARTIAL)
+        if (cur_square->status == Q3C_PARTIAL)
         /* If this square partially intersects with the ellipse
          * I should split this square farther
          */
@@ -3836,7 +3836,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
         }
         else
         {
-          if (cur_square->status == q3c_COVER)
+          if (cur_square->status == Q3C_COVER)
           /* I put this square in the output list and
            * free one place in the stack
            */
@@ -3845,7 +3845,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
             tmp_stack1++;
           }
           else
-          /* This branch can be reached only if status==q3c_DISJUNCT */
+          /* This branch can be reached only if status==Q3C_DISJUNCT */
           {
             tmp_stack1++;
             /* I just drop this square and free the place in the stack */
@@ -3898,7 +3898,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
     {
       cur_square = work_stack + i;
 #ifdef Q3C_DEBUG
-      if (cur_square->status == q3c_PARTIAL)
+      if (cur_square->status == Q3C_PARTIAL)
         fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
 #endif
     }
@@ -3906,7 +3906,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
    
    
     ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-    i1 = 1 << q3c_interleaved_nbits;
+    i1 = 1 << Q3C_INTERLEAVED_NBITS;
    
     /* Run through fully covered squares (we take them from out_stack) */
     for(i = 0; i < out_nstack; i++)
@@ -3928,7 +3928,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */
@@ -3955,12 +3955,12 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 
 
     /* Run through partly covered squares (we take them from work_stack where
-     * the cur_square->status == q3c_PARTIAL)
+     * the cur_square->status == Q3C_PARTIAL)
      */
     for(i = 0, j = -1; i < work_nstack; i++)
     {
       cur_square = work_stack + i;
-      if (cur_square->status!=q3c_PARTIAL)
+      if (cur_square->status != Q3C_PARTIAL)
         continue;
       else
         j+=1; 
@@ -3980,7 +3980,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
   #ifdef Q3C_INT8
       {
         ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> q3c_interleaved_nbits) % i1] + ybits[(yi >> q3c_interleaved_nbits) % i1]) * i1 * i1;
+        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
         /*8byte computation*/
       }
   #endif /* Q3C_INT8 */

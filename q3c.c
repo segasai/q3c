@@ -77,7 +77,6 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
 	
-	//fprintf(stderr,"XXXXXXXXXXXXXXXX\n");
 	if (invocation==0)
 	{
 		
@@ -105,11 +104,11 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	
 	
 #ifdef Q3C_INT8
-	//PG_RETURN_INT64(ipix);
+	/*PG_RETURN_INT64(ipix);*/
 	return PointerGetDatum((&ipix_buf));
 #endif
 #ifdef Q3C_INT4
-	//PG_RETURN_INT32(ipix);
+	PG_RETURN_INT32(ipix);
 #endif
 }
 
@@ -154,7 +153,7 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	invocation=1;
 	
 #ifdef Q3C_INT8
-	//PG_RETURN_INT64(ipix);
+	/* PG_RETURN_INT64(ipix); */
 	return PointerGetDatum((&ipix_buf));
 #endif
 #ifdef Q3C_INT4
@@ -188,40 +187,6 @@ Datum pgq3c_sindist(PG_FUNCTION_ARGS)
 	q3c_coord_t res;
 	res = q3c_sindist(ra1, dec1, ra2, dec2);
 	PG_RETURN_FLOAT8(res);
-}
-
-/* !!!!!!!!!!! OBSOLETE !!!!!!!!!!!!!!! */
-PG_FUNCTION_INFO_V1(q3c_strquery);
-Datum q3c_strquery(PG_FUNCTION_ARGS)
-{
-	extern struct q3c_prm hprm;
-	text *arg0 = PG_GETARG_TEXT_P(0);
-	text *ra_col0 = PG_GETARG_TEXT_P(1);
-	text *dec_col0 = PG_GETARG_TEXT_P(2);
-	q3c_coord_t arg = PG_GETARG_FLOAT8(3);
-	q3c_coord_t arg1 = PG_GETARG_FLOAT8(4);
-	q3c_coord_t arg2 = PG_GETARG_FLOAT8(5);
-	static char qstring[30000+VARHDRSZ];  
-	static char tab_name[256], ra_col[256], dec_col[256];
-	VarChar *tt;
-	
-	strncpy(tab_name,(char *)VARDATA(arg0),256);
-	tab_name[VARSIZE(arg0)-VARHDRSZ]=0;
-	
-	strncpy(ra_col,(char *)VARDATA(ra_col0),256);
-	ra_col[VARSIZE(ra_col0)-VARHDRSZ]=0;
-	
-	strncpy(dec_col,(char *)VARDATA(dec_col0),256);
-	dec_col[VARSIZE(dec_col0)-VARHDRSZ]=0;
-	
-	tt = (VarChar *)(qstring);
-	VARATT_SIZEP(tt) = 30000;
-	
-	/* not more then 30000 characters */
-	q3c_radial_query(&hprm, tab_name, ra_col, dec_col, arg, arg1, arg2,
-					qstring + VARHDRSZ);
-	PG_RETURN_TEXT_P(tt);
-	
 }
 
 
@@ -689,6 +654,51 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	
 	PG_RETURN_BOOL((result));      
 }
+
+
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ *                     Section of obsolete functions
+ * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
+
+
+/* !!!!!!!!!!! OBSOLETE !!!!!!!!!!!!!!! */
+#if 0
+PG_FUNCTION_INFO_V1(q3c_strquery);
+Datum q3c_strquery(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+	text *arg0 = PG_GETARG_TEXT_P(0);
+	text *ra_col0 = PG_GETARG_TEXT_P(1);
+	text *dec_col0 = PG_GETARG_TEXT_P(2);
+	q3c_coord_t arg = PG_GETARG_FLOAT8(3);
+	q3c_coord_t arg1 = PG_GETARG_FLOAT8(4);
+	q3c_coord_t arg2 = PG_GETARG_FLOAT8(5);
+	static char qstring[30000+VARHDRSZ];  
+	static char tab_name[256], ra_col[256], dec_col[256];
+	VarChar *tt;
+	
+	strncpy(tab_name,(char *)VARDATA(arg0),256);
+	tab_name[VARSIZE(arg0)-VARHDRSZ]=0;
+	
+	strncpy(ra_col,(char *)VARDATA(ra_col0),256);
+	ra_col[VARSIZE(ra_col0)-VARHDRSZ]=0;
+	
+	strncpy(dec_col,(char *)VARDATA(dec_col0),256);
+	dec_col[VARSIZE(dec_col0)-VARHDRSZ]=0;
+	
+	tt = (VarChar *)(qstring);
+	VARATT_SIZEP(tt) = 30000;
+	
+	/* not more then 30000 characters */
+	q3c_radial_query(&hprm, tab_name, ra_col, dec_col, arg, arg1, arg2,
+					qstring + VARHDRSZ);
+	PG_RETURN_TEXT_P(tt);
+	
+}
+#endif
 
 
 /* !!!!!!!!!!!!!!!! OBSOLETE !!!!!!!!!!!!! */

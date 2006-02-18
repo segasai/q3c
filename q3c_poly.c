@@ -78,12 +78,12 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 		if (sign3 >= 0)
 		{
 			/* on border */
-			return q3c_EDGE;
+			return Q3C_EDGE;
 		}
 		else
 		{
 			/* outside */
-			return q3c_DISJUNCT;
+			return Q3C_DISJUNCT;
 		}
 	}
 	else if (sign0 > 0)
@@ -96,7 +96,7 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 				if (sign1 < 0)
 				{
 					/* outside */
-					return q3c_DISJUNCT;
+					return Q3C_DISJUNCT;
 				}
 				else
 				{
@@ -105,18 +105,18 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 					if (sign2 >= 0)
 					{
 						/* on border */
-						return q3c_EDGE;
+						return Q3C_EDGE;
 					}
 					else
 					{
 						/* outside */
-						return q3c_DISJUNCT;
+						return Q3C_DISJUNCT;
 					}
 				}
 			}
 		}
 		/* inside */
-		return q3c_COVER;
+		return Q3C_COVER;
 	}
 	else
 	{
@@ -128,7 +128,7 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 				if (sign1 > 0)
 				{
 					/* outside */
-					return q3c_DISJUNCT;
+					return Q3C_DISJUNCT;
 				}
 				else
 				{
@@ -137,18 +137,18 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 					if (sign2 <= 0)
 					{
 						/* on border */
-						return q3c_EDGE;
+						return Q3C_EDGE;
 					}
 					else
 					{
 						/* outside */
-						return q3c_DISJUNCT;
+						return Q3C_DISJUNCT;
 					}
 				}
 			}
 		}
 		/* inside */
-		return q3c_COVER;
+		return Q3C_COVER;
 	}
 }
 
@@ -346,28 +346,28 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
      */
 
     val = q3c_check_point_in_poly(qp, xl_cur, yb_cur);
-    if (val != q3c_DISJUNCT)
+    if (val != Q3C_DISJUNCT)
     {
       goto PARTUNDEF_CHECK01;
     }
     
     val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
-    if (val != q3c_DISJUNCT)
+    if (val != Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
         
     val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
-    if (val != q3c_DISJUNCT)
+    if (val != Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
 
     val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
 
-    if (val != q3c_DISJUNCT)
+    if (val != Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;
+      return Q3C_PARTIAL;
     }
     else 
     {
@@ -375,39 +375,39 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
            ((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) && 
             (qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
       {
-        return q3c_PARTIAL;
+        return Q3C_PARTIAL;
       }
       else
       {
-        return q3c_DISJUNCT;
+        return Q3C_DISJUNCT;
       }
     }
 
 
     PARTUNDEF_CHECK01:
     val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
-    if (val == q3c_DISJUNCT)
+    if (val == Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;    
+      return Q3C_PARTIAL;    
     }
       
     //PARTUNDEF_CHECK11:
     val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
-    if (val == q3c_DISJUNCT)
+    if (val == Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;    
+      return Q3C_PARTIAL;    
     }
 
 
     //PARTUNDEF_CHECK10:
     val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
-    if (val == q3c_DISJUNCT)
+    if (val == Q3C_DISJUNCT)
     {
-      return q3c_PARTIAL;    
+      return Q3C_PARTIAL;    
     }
     else
     {
-      return q3c_COVER;
+      return Q3C_COVER;
     }
 }
 

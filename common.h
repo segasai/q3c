@@ -124,17 +124,17 @@ typedef long double q3c_coord_t;
 #endif /* Q3C_LONG_DOUBLE */
 
 
-#ifndef q3c_cbits
-#define q3c_cbits sizeof(q3c_coord_t)
-#endif /* q3c_cbits */
+#ifndef Q3C_CBITS
+#define Q3C_CBITS sizeof(q3c_coord_t)
+#endif /* Q3C_CBITS */
 
-#ifndef q3c_ibits
-#define q3c_ibits sizeof(q3c_ipix_t)
-#endif /* q3c_ibits */
+#ifndef Q3C_IBITS
+#define Q3C_IBITS sizeof(q3c_ipix_t)
+#endif /* Q3C_IBITS */
 
-#ifndef q3c_interleaved_nbits 
-#define q3c_interleaved_nbits 16
-#endif /* q3c_interleaved_nbits */
+#ifndef Q3C_INTERLEAVED_NBITS 
+#define Q3C_INTERLEAVED_NBITS 16
+#endif /* Q3C_INTERLEAVED_NBITS */
 
 
 
@@ -148,7 +148,7 @@ typedef long double q3c_coord_t;
 #define Q3C_RADEG 57.295779513082320876798154814105170L
 #define Q3C_LG2   0.301029995663981195213738894724493026768L
 #define Q3C_LG2   0.6931471805599453094172321214581765680755L*/
-#define q3c_BOX_INTERSECT(x0, x1, y0, y1, a0, a1, b0, b1) ((((x0 < a0) && \
+#define Q3C_BOX_INTERSECT(x0, x1, y0, y1, a0, a1, b0, b1) ((((x0 < a0) && \
                                                           (x1 >= a0)) || \
                                                           (x0 <= a1)) && \
                                                           (((y0 < b0) && \
@@ -156,13 +156,13 @@ typedef long double q3c_coord_t;
                                                           (y0 <= b1)))
 /* True if square(x0,x1,y0,y1) and square(a0,a1,b0,b1) have any common point*/ 
 
-#define q3c_INTERSECT(a, b, x, y) (((a <= y) && (a >= x)) || \
+#define Q3C_INTERSECT(a, b, x, y) (((a <= y) && (a >= x)) || \
                                   ((a < x) && (b >= x)))
 
-#define q3c_DISJUNCT 0 /* disjunct areas */
-#define q3c_PARTIAL 1 /* partial coverage */
-#define q3c_EDGE 1 /* point lie on the edge of the region */
-#define q3c_COVER 2 /* the point or the region is completely inside other */
+#define Q3C_DISJUNCT 0	/* disjunct areas */
+#define Q3C_PARTIAL 1	/* partial coverage */
+#define Q3C_EDGE 1		/* point lie on the edge of the region */
+#define Q3C_COVER 2		/* the point or the region is completely inside other */
 
 
 struct q3c_prm 
@@ -176,7 +176,7 @@ struct q3c_prm
 
 struct q3c_square 
 {
-	q3c_ipix_t x0,y0; /* Integer coordinates of the center of the square for */
+	q3c_ipix_t x0, y0; /* Integer coordinates of the center of the square for */
 	int nside0;       /* the nside0 segmentation */
 	char status;
 };
@@ -212,78 +212,111 @@ typedef struct
 typedef enum {Q3C_CIRCLE, Q3C_POLYGON, Q3C_ELLIPSE} q3c_region;
 
 void init_q3c(struct q3c_prm *, q3c_ipix_t);
+
 void init_q3c1(struct q3c_prm *, q3c_ipix_t);
+
 void q3c_dump_prm(struct q3c_prm *,char *);
+
 void q3c_ang2ipix(struct q3c_prm *, q3c_coord_t, q3c_coord_t, q3c_ipix_t *);
+
 void q3c_ipix2ang(struct q3c_prm *, q3c_ipix_t , q3c_coord_t *, q3c_coord_t *);
+
 void q3c_radial_query(struct q3c_prm *, char *, char *, char *,
-                      q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);
-void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
-                      q3c_coord_t, q3c_ipix_t *, int);
+					  q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);
+
+void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t, 
+						  q3c_coord_t, q3c_ipix_t *, int);
+
 void q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
-void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, 
-                       q3c_coord_t, q3c_coord_t, q3c_coord_t,
-                       q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                       q3c_coord_t *);
+
+void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
+					   q3c_coord_t, q3c_coord_t, q3c_coord_t *, q3c_coord_t *,
+					   q3c_coord_t *, q3c_coord_t *);
+
 void ang2ipix_xy(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
-                 char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out, 
-                 q3c_coord_t *y_out);
-void q3c_get_poly_coefs(char, q3c_coord_t, q3c_coord_t, 
-                        q3c_coord_t, q3c_coord_t *, q3c_coord_t *,
-                        q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                        q3c_coord_t *);
+				 char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
+				 q3c_coord_t *y_out);
+
+void q3c_get_poly_coefs(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
+						q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
+						q3c_coord_t *, q3c_coord_t *, q3c_coord_t *);
+
 char q3c_xy2facenum(q3c_coord_t, q3c_coord_t, char);
+
 char q3c_get_facenum(q3c_coord_t, q3c_coord_t);
-void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
-	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
-	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax);
 
-void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
-	q3c_coord_t d, q3c_coord_t e, q3c_coord_t PA, q3c_coord_t *ymin,
-	q3c_coord_t *ymax, q3c_coord_t *zmin, q3c_coord_t *zmax);
+void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
+											   q3c_coord_t delta,
+											   q3c_coord_t d, q3c_coord_t e,
+											   q3c_coord_t PA,
+											   q3c_coord_t *ymin,
+											   q3c_coord_t *ymax,
+											   q3c_coord_t *zmin,
+											   q3c_coord_t *zmax);
 
-inline void q3c_fast_get_xy_minmax(char, q3c_region, void *,
-                            q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                            q3c_coord_t *);
+void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
+										  q3c_coord_t delta, q3c_coord_t d,
+										  q3c_coord_t e, q3c_coord_t PA,
+										  q3c_coord_t *ymin,
+										  q3c_coord_t *ymax,
+										  q3c_coord_t *zmin,
+										  q3c_coord_t *zmax);
+
+inline void q3c_fast_get_xy_minmax(char, q3c_region, void *, q3c_coord_t *,
+								   q3c_coord_t *, q3c_coord_t *,
+								   q3c_coord_t *);
 
 void q3c_fast_get_circle_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
-                            q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                            q3c_coord_t *);
-void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
-                            q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                            q3c_coord_t *);
-char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
-	q3c_coord_t alpha1, q3c_coord_t delta01, q3c_coord_t d0,
-	q3c_coord_t e, q3c_coord_t PA0);
+								   q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
+								   q3c_coord_t *);
+
+void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t,
+									q3c_coord_t,q3c_coord_t, q3c_coord_t,
+									q3c_coord_t *, q3c_coord_t *, q3c_coord_t *, 
+									q3c_coord_t *);
+
+char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0, q3c_coord_t alpha1,
+					q3c_coord_t delta01, q3c_coord_t d0, q3c_coord_t e,
+					q3c_coord_t PA0);
 
 q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
+
 q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
+
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                           q3c_coord_t dec0, q3c_coord_t rad,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials);
-void q3c_init_poly(q3c_poly *qp, int n);
-void q3c_prepare_poly(q3c_poly *qp);
-void q3c_project_poly(q3c_poly *qp, char facenum);
-char q3c_get_facenum_poly(q3c_poly *qp);
-int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
-                            q3c_coord_t y0);
-int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
-                         q3c_coord_t yc_cur, q3c_coord_t cur_size);                         
-void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin,
-                         q3c_coord_t *xmax, q3c_coord_t *ymin, 
-                         q3c_coord_t *ymax);
-void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
-                          q3c_ipix_t *out_ipix_arr_fulls,
-                          q3c_ipix_t *out_ipix_arr_partials);
-int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
-                                   q3c_coord_t in_ra[], q3c_coord_t in_dec[],
-                                   q3c_coord_t ra0, q3c_coord_t dec0,
-                                   int invocation);
-inline char q3c_get_region_facenum(q3c_region region, void *data);
-inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
-                                q3c_ipix_t *ybits, char face_num, 
-                                q3c_ipix_t xi, q3c_ipix_t yi);
 
-                
+void q3c_init_poly(q3c_poly *qp, int n);
+
+void q3c_prepare_poly(q3c_poly *qp);
+
+void q3c_project_poly(q3c_poly *qp, char facenum);
+
+char q3c_get_facenum_poly(q3c_poly *qp);
+
+int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0, q3c_coord_t y0);
+
+int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, 
+						 q3c_coord_t yc_cur, q3c_coord_t cur_size);                         
+
+void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax,
+						 q3c_coord_t *ymin, q3c_coord_t *ymax);
+
+void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
+					q3c_ipix_t *out_ipix_arr_fulls,
+					q3c_ipix_t *out_ipix_arr_partials);
+
+int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
+								   q3c_coord_t in_ra[], q3c_coord_t in_dec[],
+								   q3c_coord_t ra0, q3c_coord_t dec0,
+								   int invocation);
+
+inline char q3c_get_region_facenum(q3c_region region, void *data);
+
+inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
+								q3c_ipix_t *ybits, char face_num,
+								q3c_ipix_t xi, q3c_ipix_t yi);
+  
 #endif/*  Q3C_COMMON_H  */
