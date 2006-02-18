@@ -215,8 +215,8 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 		face_num--; /* Just computation trick */
 		for (i = 0; i < n; i++)
 		{
-			ra1 = q3c_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
-			dec1 = q3c_DEGRA * dec[i];
+			ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
+			dec1 = Q3C_DEGRA * dec[i];
 			x[i] = (q3c_tan(ra1)) / 2;
 			y[i] = (q3c_tan(dec1) / q3c_cos(ra1)) / 2;
 		}
@@ -226,8 +226,8 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 	{
 		for (i = 0; i < n; i++)
 		{
-			ra1 = q3c_DEGRA * ra[i];
-			dec1 = q3c_DEGRA * dec[i];
+			ra1 = Q3C_DEGRA * ra[i];
+			dec1 = Q3C_DEGRA * dec[i];
 			
 			tmp0 = 1 / q3c_tan(dec1);
 #ifdef __USE_GNU
@@ -246,8 +246,8 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 	{
 		for (i = 0; i < n; i++)
 		{
-			ra1 = q3c_DEGRA * ra[i];
-			dec1 = q3c_DEGRA * dec[i];
+			ra1 = Q3C_DEGRA * ra[i];
+			dec1 = Q3C_DEGRA * dec[i];
 
 			tmp0 = 1 / q3c_tan(dec1);
 #ifdef __USE_GNU
@@ -458,91 +458,91 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
      * intersect other faces or not, and if yes, I setup the array "points" to the
      * multi_face loop.
      */
-    if (xmin < -q3c_HALF)
+    if (xmin < -Q3C_HALF)
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = xmax;
         points[1] = ymin;
         points[2] = xmin;
         points[3] = ymax;
         multi_flag = 2;
-        xmin = -q3c_HALF;
-        ymin = -q3c_HALF;
+        xmin = -Q3C_HALF;
+        ymin = -Q3C_HALF;
       }
       else 
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = xmax;
           points[1] = ymax;
           points[2] = xmin;
           points[3] = ymin;
           multi_flag = 2;
-          xmin = -q3c_HALF;
-          ymax = q3c_HALF;
+          xmin = -Q3C_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
           points[0] = xmin;
           points[1] = (ymin + ymax) / 2;
           multi_flag = 1;      
-          xmin = -q3c_HALF;
+          xmin = -Q3C_HALF;
         }
       }
     }
     else 
     {
-      if (xmax > q3c_HALF)
+      if (xmax > Q3C_HALF)
       {
-        if (ymin < -q3c_HALF)
+        if (ymin < -Q3C_HALF)
         {
           points[0] = xmin;
           points[1] = ymin;
           points[2] = xmax;
           points[3] = ymax;
           multi_flag = 2;      
-          xmax = q3c_HALF;
-          ymin = -q3c_HALF;
+          xmax = Q3C_HALF;
+          ymin = -Q3C_HALF;
         }
         else
         {
-          if (ymax > q3c_HALF)
+          if (ymax > Q3C_HALF)
           {
             points[0] = xmin;
             points[1] = ymax;
             points[2] = xmax;
             points[3] = ymax;
             multi_flag = 2;
-            xmax = q3c_HALF;
-            ymax = q3c_HALF;
+            xmax = Q3C_HALF;
+            ymax = Q3C_HALF;
           }
           else
           {
             points[0] = xmax;
             points[1] = (ymin + ymax) / 2;
             multi_flag = 1;
-            xmax = q3c_HALF;
+            xmax = Q3C_HALF;
           }
         }
       }
       else
       {
-        if (ymin < -q3c_HALF)
+        if (ymin < -Q3C_HALF)
         {
           points[0] = (xmin + xmax) / 2;
           points[1] = ymin;
           multi_flag = 1;
-          ymin = -q3c_HALF;
+          ymin = -Q3C_HALF;
         }
         else 
         {
-          if (ymax > q3c_HALF)
+          if (ymax > Q3C_HALF)
           {
             points[0] = (xmin + xmax) / 2;
             points[1] = ymax;
             multi_flag = 2;
-            ymax = q3c_HALF;
+            ymax = Q3C_HALF;
           }
           else
           {

@@ -36,16 +36,16 @@ inline q3c_coord_t q3c_dist (q3c_coord_t ra1, q3c_coord_t dec1,
 	 */
 	
 	q3c_coord_t x, y, z;
-	x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA );
+	x = q3c_sin ((ra1 - ra2) / 2 * Q3C_DEGRA );
 	x *= x;
-	y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y = q3c_sin ((dec1 - dec2) / 2 * Q3C_DEGRA);
 	y *= y;
 	
 	/* Seem to be more precise :) */
-	z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z = q3c_cos ((dec1 + dec2)/2 * Q3C_DEGRA);
 	z*=z;
 	
-	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * q3c_RADEG;
+	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * Q3C_RADEG;
 }
 
 
@@ -56,13 +56,13 @@ inline q3c_coord_t q3c_sindist (q3c_coord_t ra1, q3c_coord_t dec1,
 	 * it uses just 3 !!! computation of trigonometric functions
 	 */
 	q3c_coord_t x, y, z;
-	x = q3c_sin ((ra1 - ra2) / 2 * q3c_DEGRA);
+	x = q3c_sin ((ra1 - ra2) / 2 * Q3C_DEGRA);
 	x *= x;
-	y = q3c_sin ((dec1 - dec2) / 2 * q3c_DEGRA);
+	y = q3c_sin ((dec1 - dec2) / 2 * Q3C_DEGRA);
 	y *= y;
 	
 	/* Seem to be more precise :) */
-	z = q3c_cos ((dec1 + dec2)/2 * q3c_DEGRA);
+	z = q3c_cos ((dec1 + dec2)/2 * Q3C_DEGRA);
 	z*=z;
 	
 	return x * (z - y) + y;
@@ -83,22 +83,22 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	/* Poles */
 	{
 		face_num = 0;
-		x0 = q3c_HALF;
-		y0 = q3c_HALF;
+		x0 = Q3C_HALF;
+		y0 = Q3C_HALF;
 		goto END1;
 	}
 	else if (dec == -90)
 	{
 		face_num = 5;
-		x0 = q3c_HALF;
-		y0 = q3c_HALF;
+		x0 = Q3C_HALF;
+		y0 = Q3C_HALF;
 		goto END1;
 	}
 	
 	face_num = q3c_fmod ((ra + 45) / 90, 4);
 	/* for equatorial pixels we'll have face_num from 1 to 4 */
-	ra1 = q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num);
-	dec1 = q3c_DEGRA * dec;
+	ra1 = Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num);
+	dec1 = Q3C_DEGRA * dec;
 	x0 = q3c_tan (ra1);
 	y0 = q3c_tan (dec1) / q3c_cos (ra1);
 	face_num++;
@@ -106,7 +106,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	if (y0 > 1)
 	{
 		face_num = 0;
-		ra1 = q3c_DEGRA * ra;
+		ra1 = Q3C_DEGRA * ra;
 		tmp0 = 1 / q3c_tan (dec1);
 #ifdef __USE_GNU
 		q3c_sincos (ra1, &x0, &y0);
@@ -126,7 +126,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	else if (y0 < -1)
 	{
 		face_num = 5;
-		ra1 = q3c_DEGRA * ra;
+		ra1 = Q3C_DEGRA * ra;
 		tmp0 = 1 / q3c_tan (dec1);
 #ifdef __USE_GNU
 		q3c_sincos (ra1, &x0, &y0);
@@ -202,8 +202,8 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	/* Poles */
 	{
 		face_num = 0;
-		x0 = q3c_HALF;
-		y0 = q3c_HALF;
+		x0 = Q3C_HALF;
+		y0 = Q3C_HALF;
 		*x_out = 0;
 		*y_out = 0;
 		goto END1;
@@ -211,8 +211,8 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	else if (dec == -90)
 	{
 		face_num = 5;
-		x0 = q3c_HALF;
-		y0 = q3c_HALF;
+		x0 = Q3C_HALF;
+		y0 = Q3C_HALF;
 		*x_out = 0;
 		*y_out = 0;
 		goto END1;
@@ -220,22 +220,22 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	
 	face_num = q3c_fmod ((ra + 45) / 90, 4);
 	/*for equatorial pixels we'll have face_num from 1 to 4 */
-	x0 = q3c_tan (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-	y0 = q3c_tan (dec * q3c_DEGRA) /
-		q3c_cos (q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	x0 = q3c_tan (Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	y0 = q3c_tan (dec * Q3C_DEGRA) /
+		q3c_cos (Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
 	face_num++;
 	
 	if (y0 > 1)
 	{
  		face_num = 0;
-		x0 = q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
-		y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
+		x0 = q3c_sin (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
+		y0 = -q3c_cos (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
 	}
 	else if (y0 < -1)
 	{
 		face_num = 5;
-		x0 = -q3c_sin (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
-		y0 = -q3c_cos (q3c_DEGRA * ra) / q3c_tan (q3c_DEGRA * dec);
+		x0 = -q3c_sin (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
+		y0 = -q3c_cos (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
 	}
 	
 	*x_out = x0 / 2;
@@ -307,8 +307,8 @@ char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
 	face_num = q3c_fmod ((ra + 45) / 90, 4);
 	/*for equatorial pixels we'll have face_num from 1 to 4 */
 	
-	y0 = q3c_tan(dec * q3c_DEGRA) /
-			q3c_cos(q3c_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
+	y0 = q3c_tan(dec * Q3C_DEGRA) /
+			q3c_cos(Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
 	
 	face_num++;
 	
@@ -354,11 +354,11 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 	q3c_coord_t alpha1, q3c_coord_t delta01, q3c_coord_t d0,
 	q3c_coord_t e, q3c_coord_t PA0)
 {
-	q3c_coord_t d_alpha = (alpha1 - alpha) * q3c_DEGRA;
-	q3c_coord_t delta1 = delta01 * q3c_DEGRA;
-	q3c_coord_t delta = delta0 * q3c_DEGRA;
-	q3c_coord_t PA = PA0 * q3c_DEGRA;
-	q3c_coord_t d = d0 * q3c_DEGRA;
+	q3c_coord_t d_alpha = (alpha1 - alpha) * Q3C_DEGRA;
+	q3c_coord_t delta1 = delta01 * Q3C_DEGRA;
+	q3c_coord_t delta = delta0 * Q3C_DEGRA;
+	q3c_coord_t PA = PA0 * Q3C_DEGRA;
+	q3c_coord_t d = d0 * Q3C_DEGRA;
 	
 	q3c_coord_t t1 = cos(d_alpha);
 	q3c_coord_t t22 = sin(d_alpha);
@@ -453,7 +453,7 @@ void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
 	 */
 	char face_num, multi_flag;
 	
-	const q3c_coord_t q3c_lg2 = q3c_LG2;
+	const q3c_coord_t q3c_lg2 = Q3C_LG2;
 	
 	face_num = q3c_get_facenum(ra, dec);
 
@@ -472,91 +472,91 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 	 * The multi_flag value specify how much additional faces are covered by the
 	 * query area.
 	 */
-	if (xmin < -q3c_HALF)
+	if (xmin < -Q3C_HALF)
 	{
-		if (ymin < -q3c_HALF)
+		if (ymin < -Q3C_HALF)
 		{
 			points[0] = xmax;
 			points[1] = ymin;
 			points[2] = xmin;
 			points[3] = ymax;
 			multi_flag = 2;
-			xmin = -q3c_HALF;
-			ymin = -q3c_HALF;
+			xmin = -Q3C_HALF;
+			ymin = -Q3C_HALF;
 		}
 		else
 		{
-			if (ymax > q3c_HALF)
+			if (ymax > Q3C_HALF)
 			{
 				points[0] = xmax;
 				points[1] = ymax;
 				points[2] = xmin;
 				points[3] = ymin;
 				multi_flag = 2;
-				xmin = -q3c_HALF;
-				ymax = q3c_HALF;
+				xmin = -Q3C_HALF;
+				ymax = Q3C_HALF;
 			}
 			else
 			{
 			points[0] = xmin;
 			points[1] = (ymin + ymax) / 2;
 			multi_flag = 1;
-			xmin = -q3c_HALF;
+			xmin = -Q3C_HALF;
 			}
 		}
 	}
 	else
 	{
-		if (xmax > q3c_HALF)
+		if (xmax > Q3C_HALF)
 		{
-			if (ymin < -q3c_HALF)
+			if (ymin < -Q3C_HALF)
 			{
 				points[0] = xmin;
 				points[1] = ymin;
 				points[2] = xmax;
 				points[3] = ymax;
 				multi_flag = 2;
-				xmax = q3c_HALF;
-				ymin = -q3c_HALF;
+				xmax = Q3C_HALF;
+				ymin = -Q3C_HALF;
 			}
 			else
 			{
-				if (ymax > q3c_HALF)
+				if (ymax > Q3C_HALF)
 				{
 					points[0] = xmin;
 					points[1] = ymax;
 					points[2] = xmax;
 					points[3] = ymax;
 					multi_flag = 2;
-					xmax = q3c_HALF;
-					ymax = q3c_HALF;
+					xmax = Q3C_HALF;
+					ymax = Q3C_HALF;
 				}
 				else
 				{
 					points[0] = xmax;
 					points[1] = (ymin + ymax) / 2;
 					multi_flag = 1;
-					xmax = q3c_HALF;
+					xmax = Q3C_HALF;
 				}
 			}
 		}
 		else
 		{
-			if (ymin < -q3c_HALF)
+			if (ymin < -Q3C_HALF)
 			{
 				points[0] = (xmin + xmax) / 2;
 				points[1] = ymin;
 				multi_flag = 1;
-				ymin = -q3c_HALF;
+				ymin = -Q3C_HALF;
 			}
 			else
 			{
-				if (ymax > q3c_HALF)
+				if (ymax > Q3C_HALF)
 				{
 					points[0] = (xmin + xmax) / 2;
 					points[1] = ymax;
 					multi_flag = 1;
-					ymax = q3c_HALF;
+					ymax = Q3C_HALF;
 				}
 				else
 				{
@@ -584,10 +584,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 		 * element is >~ our ellipse
 		 */
 
-		ixmin = (q3c_HALF + xmin) * n0;
-		ixmax = (q3c_HALF + xmax) * n0;
-		iymin = (q3c_HALF + ymin) * n0;
-		iymax = (q3c_HALF + ymax) * n0;
+		ixmin = (Q3C_HALF + xmin) * n0;
+		ixmax = (Q3C_HALF + xmax) * n0;
+		iymin = (Q3C_HALF + ymin) * n0;
+		iymax = (Q3C_HALF + ymax) * n0;
 		
 		ixmax = (ixmax == n0 ? n0-1 : ixmax);
 		iymax = (iymax == n0 ? n0-1 : iymax);
@@ -684,10 +684,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				 * element is >~ our ellipse
 				 */
 
-				ixmin = (q3c_HALF + xmin) * n0;
-				ixmax = (q3c_HALF + xmax) * n0;
-				iymin = (q3c_HALF + ymin) * n0;
-				iymax = (q3c_HALF + ymax) * n0;
+				ixmin = (Q3C_HALF + xmin) * n0;
+				ixmax = (Q3C_HALF + xmax) * n0;
+				iymin = (Q3C_HALF + ymin) * n0;
+				iymax = (Q3C_HALF + ymax) * n0;
 				
 				ixmax = (ixmax == n0 ? n0-1 : ixmax);
 				iymax = (iymax == n0 ? n0-1 : iymax);
@@ -739,10 +739,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				*/
 				q3c_fast_get_circle_xy_minmax(face_num,ra,dec,radius,&xmin,&xmax,&ymin,&ymax);
 				
-				xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-				xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-				ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-				ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+				xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+				xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+				ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+				ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 				xesize = xmax - xmin;
 				yesize = ymax - ymin;
 				xesize = xesize > yesize ? xesize : yesize;
@@ -758,10 +758,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				 * element is >~ our ellipse
 				 */
 
-				ixmin = (q3c_HALF + xmin) * n0;
-				ixmax = (q3c_HALF + xmax) * n0;
-				iymin = (q3c_HALF + ymin) * n0;
-				iymax = (q3c_HALF + ymax) * n0;
+				ixmin = (Q3C_HALF + xmin) * n0;
+				ixmax = (Q3C_HALF + xmax) * n0;
+				iymin = (Q3C_HALF + ymin) * n0;
+				iymax = (Q3C_HALF + ymax) * n0;
 				
 				ixmax = (ixmax == n0 ? n0-1 : ixmax);
 				iymax = (iymax == n0 ? n0-1 : iymax);
@@ -826,10 +826,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					 * element is >~ our ellipse
 					 */
 
-					ixmin = (q3c_HALF + xmin) * n0;
-					ixmax = (q3c_HALF + xmax) * n0;
-					iymin = (q3c_HALF + ymin) * n0;
-					iymax = (q3c_HALF + ymax) * n0;
+					ixmin = (Q3C_HALF + xmin) * n0;
+					ixmax = (Q3C_HALF + xmax) * n0;
+					iymin = (Q3C_HALF + ymin) * n0;
+					iymax = (Q3C_HALF + ymax) * n0;
 					
 					ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
 					iymax = (iymax == n0 ? (n0 - 1) : iymax);
@@ -850,10 +850,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius,
 												  &xmin, &xmax, &ymin, &ymax);
 					
-					xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-					xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-					ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-					ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+					xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+					xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+					ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+					ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 					xesize = xmax - xmin;
 					yesize = ymax - ymin;
 					xesize = xesize > yesize ? xesize : yesize;
@@ -869,10 +869,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					 * element is >~ our ellipse
 					 */
 
-					ixmin = (q3c_HALF + xmin) * n0;
-					ixmax = (q3c_HALF + xmax) * n0;
-					iymin = (q3c_HALF + ymin) * n0;
-					iymax = (q3c_HALF + ymax) * n0;
+					ixmin = (Q3C_HALF + xmin) * n0;
+					ixmax = (Q3C_HALF + xmax) * n0;
+					iymin = (Q3C_HALF + ymin) * n0;
+					iymax = (Q3C_HALF + ymax) * n0;
 					
 					ixmax = (ixmax == n0 ? n0-1 : ixmax);
 					iymax = (iymax == n0 ? n0-1 : iymax);
@@ -894,10 +894,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius,
 												  &xmin, &xmax, &ymin, &ymax);
 					
-					xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-					xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-					ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-					ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+					xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+					xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+					ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+					ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 					xesize = xmax - xmin;
 					yesize = ymax - ymin;
 					xesize = xesize > yesize ? xesize : yesize;
@@ -913,10 +913,10 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					 * element is >~ our ellipse
 					 */
 
-					ixmin = (q3c_HALF + xmin) * n0;
-					ixmax = (q3c_HALF + xmax) * n0;
-					iymin = (q3c_HALF + ymin) * n0;
-					iymax = (q3c_HALF + ymax) * n0;
+					ixmin = (Q3C_HALF + xmin) * n0;
+					ixmax = (Q3C_HALF + xmax) * n0;
+					iymin = (Q3C_HALF + ymin) * n0;
+					iymax = (Q3C_HALF + ymax) * n0;
 					
 					ixmax = (ixmax == n0 ? n0-1 : ixmax);
 					iymax = (iymax == n0 ? n0-1 : iymax);
@@ -990,7 +990,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 				nstack[4];
 	char face_num, face_num0, multi_flag;
 	int i, nistack = 0;
-	const q3c_coord_t q3c_lg2 = q3c_LG2;
+	const q3c_coord_t q3c_lg2 = Q3C_LG2;
 
 	face_num = q3c_get_region_facenum(region, region_data);
 	face_num0 = face_num;
@@ -1008,91 +1008,91 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	 * intersect other faces or not, and if yes, I setup the array "points" to the
 	 * multi_face loop.
 	 */
-	if (xmin < -q3c_HALF)
+	if (xmin < -Q3C_HALF)
 	{
-		if (ymin < -q3c_HALF)
+		if (ymin < -Q3C_HALF)
 		{
 			points[0] = xmax;
 			points[1] = ymin;
 			points[2] = xmin;
 			points[3] = ymax;
 			multi_flag = 2;
-			xmin = -q3c_HALF;
-			ymin = -q3c_HALF;
+			xmin = -Q3C_HALF;
+			ymin = -Q3C_HALF;
 		}
 		else
 		{
-			if (ymax > q3c_HALF)
+			if (ymax > Q3C_HALF)
 			{
 				points[0] = xmax;
 				points[1] = ymax;
 				points[2] = xmin;
 				points[3] = ymin;
 				multi_flag = 2;
-				xmin = -q3c_HALF;
-				ymax = q3c_HALF;
+				xmin = -Q3C_HALF;
+				ymax = Q3C_HALF;
 			}
 			else
 			{
 			points[0] = xmin;
 			points[1] = (ymin + ymax) / 2;
 			multi_flag = 1;			
-			xmin = -q3c_HALF;
+			xmin = -Q3C_HALF;
 			}
 		}
 	}
 	else
 	{
-		if (xmax > q3c_HALF)
+		if (xmax > Q3C_HALF)
 		{
-			if (ymin < -q3c_HALF)
+			if (ymin < -Q3C_HALF)
 			{
 				points[0] = xmin;
 				points[1] = ymin;
 				points[2] = xmax;
 				points[3] = ymax;
 				multi_flag = 2;			
-				xmax = q3c_HALF;
-				ymin = -q3c_HALF;
+				xmax = Q3C_HALF;
+				ymin = -Q3C_HALF;
 			}
 			else
 			{
-				if (ymax > q3c_HALF)
+				if (ymax > Q3C_HALF)
 				{
 					points[0] = xmin;
 					points[1] = ymax;
 					points[2] = xmax;
 					points[3] = ymax;
 					multi_flag = 2;
-					xmax = q3c_HALF;
-					ymax = q3c_HALF;
+					xmax = Q3C_HALF;
+					ymax = Q3C_HALF;
 				}
 				else
 				{
 					points[0] = xmax;
 					points[1] = (ymin + ymax) / 2;
 					multi_flag = 1;
-					xmax = q3c_HALF;
+					xmax = Q3C_HALF;
 				}
 			}
 		}
 		else
 		{
-			if (ymin < -q3c_HALF)
+			if (ymin < -Q3C_HALF)
 			{
 				points[0] = (xmin + xmax) / 2;
 				points[1] = ymin;
 				multi_flag = 1;
-				ymin = -q3c_HALF;
+				ymin = -Q3C_HALF;
 			}
 			else
 			{
-				if (ymax > q3c_HALF)
+				if (ymax > Q3C_HALF)
 				{
 					points[0] = (xmin + xmax) / 2;
 					points[1] = ymax;
 					multi_flag = 1;
-					ymax = q3c_HALF;
+					ymax = Q3C_HALF;
 				}
 				else
 				{
@@ -1120,10 +1120,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		 * element is >~ our ellipse
 		 */
 
-		ixmin = (q3c_HALF + xmin) * n0;
-		ixmax = (q3c_HALF + xmax) * n0;
-		iymin = (q3c_HALF + ymin) * n0;
-		iymax = (q3c_HALF + ymax) * n0;
+		ixmin = (Q3C_HALF + xmin) * n0;
+		ixmax = (Q3C_HALF + xmax) * n0;
+		iymin = (Q3C_HALF + ymin) * n0;
+		iymax = (Q3C_HALF + ymax) * n0;
 		
 		ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
 		iymax = (iymax == n0 ? n0 - 1 : iymax);
@@ -1208,10 +1208,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 * element is >~ our ellipse
 			 */
 
-			ixmin = (q3c_HALF + xmin) * n0;
-			ixmax = (q3c_HALF + xmax) * n0;
-			iymin = (q3c_HALF + ymin) * n0;
-			iymax = (q3c_HALF + ymax) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			ixmax = (Q3C_HALF + xmax) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
+			iymax = (Q3C_HALF + ymax) * n0;
 			
 			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
 			iymax = (iymax == n0 ? n0 - 1 : iymax);
@@ -1258,10 +1258,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
 								   &xmax, &ymin, &ymax);
 			
-			xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-			xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-			ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-			ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 			xesize = xmax - xmin;
 			yesize = ymax - ymin;
 			xesize = xesize > yesize ? xesize : yesize;
@@ -1277,10 +1277,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 * element is >~ our ellipse
 			 */
 
-			ixmin = (q3c_HALF + xmin) * n0;
-			ixmax = (q3c_HALF + xmax) * n0;
-			iymin = (q3c_HALF + ymin) * n0;
-			iymax = (q3c_HALF + ymax) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			ixmax = (Q3C_HALF + xmax) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
+			iymax = (Q3C_HALF + ymax) * n0;
 			
 			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
 			iymax = (iymax == n0 ? n0 - 1 : iymax);
@@ -1339,10 +1339,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 * element is >~ our ellipse
 			 */
 
-			ixmin = (q3c_HALF + xmin) * n0;
-			ixmax = (q3c_HALF + xmax) * n0;
-			iymin = (q3c_HALF + ymin) * n0;
-			iymax = (q3c_HALF + ymax) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			ixmax = (Q3C_HALF + xmax) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
+			iymax = (Q3C_HALF + ymax) * n0;
 			
 			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
 			iymax = (iymax == n0 ? n0 - 1 : iymax);
@@ -1359,10 +1359,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
 								   &xmax, &ymin, &ymax);
 			
-			xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-			xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-			ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-			ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 			xesize = xmax - xmin;
 			yesize = ymax - ymin;
 			xesize = xesize > yesize ? xesize : yesize;
@@ -1378,10 +1378,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 * element is >~ our ellipse
 			 */
 
-			ixmin = (q3c_HALF + xmin) * n0;
-			ixmax = (q3c_HALF + xmax) * n0;
-			iymin = (q3c_HALF + ymin) * n0;
-			iymax = (q3c_HALF + ymax) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			ixmax = (Q3C_HALF + xmax) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
+			iymax = (Q3C_HALF + ymax) * n0;
 			
 			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
 			iymax = (iymax == n0 ? n0 - 1 : iymax);
@@ -1399,10 +1399,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
 								   &xmax, &ymin, &ymax);
 			
-			xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-			xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-			ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-			ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 			xesize = xmax - xmin;
 			yesize = ymax - ymin;
 			xesize = xesize > yesize ? xesize : yesize;
@@ -1418,10 +1418,10 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 * element is >~ our ellipse
 			 */
 
-			ixmin = (q3c_HALF + xmin) * n0;
-			ixmax = (q3c_HALF + xmax) * n0;
-			iymin = (q3c_HALF + ymin) * n0;
-			iymax = (q3c_HALF + ymax) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			ixmax = (Q3C_HALF + xmax) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
+			iymax = (Q3C_HALF + ymax) * n0;
 			
 			ixmax = (ixmax == n0 ? n0-1 : ixmax);
 			iymax = (iymax == n0 ? n0-1 : iymax);
@@ -1564,8 +1564,8 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	if ((face_num >= 1) && (face_num <= 4))
 	{
 		ra0 = q3c_atan(x);
-		*dec = q3c_RADEG * q3c_atan(y * q3c_cos(ra0));
-		ra0 = ra0 * q3c_RADEG + ((q3c_coord_t)face_num - 1) * 90;
+		*dec = Q3C_RADEG * q3c_atan(y * q3c_cos(ra0));
+		ra0 = ra0 * Q3C_RADEG + ((q3c_coord_t)face_num - 1) * 90;
 		if (ra0 < 0)
 		{
 			ra0 += (q3c_coord_t)360;
@@ -1576,14 +1576,14 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	{
 		if (face_num == 0)
 		{
-			ra0 = q3c_RADEG * (q3c_atan2(-x, y) + q3c_PI);
-			*dec = q3c_RADEG * q3c_atan( 1 / q3c_sqrt(x * x + y * y));
+			ra0 = Q3C_RADEG * (q3c_atan2(-x, y) + Q3C_PI);
+			*dec = Q3C_RADEG * q3c_atan( 1 / q3c_sqrt(x * x + y * y));
 			*ra = ra0;
 		}
 		if (face_num == 5)
 		{
-			ra0 = q3c_RADEG * (q3c_atan2(-x, -y) + q3c_PI);
-			*dec = -q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
+			ra0 = Q3C_RADEG * (q3c_atan2(-x, -y) + Q3C_PI);
+			*dec = -Q3C_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
 			*ra = ra0;
 		}		
 	}	
@@ -1604,8 +1604,8 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 	if ((face_num0 >= 1) && (face_num0 <= 4))
 	{
 		ra = q3c_atan(x);
-		dec = q3c_RADEG * q3c_atan(y * q3c_cos(ra));
-		ra = ra * q3c_RADEG + ((q3c_coord_t)face_num0 - 1) * 90;
+		dec = Q3C_RADEG * q3c_atan(y * q3c_cos(ra));
+		ra = ra * Q3C_RADEG + ((q3c_coord_t)face_num0 - 1) * 90;
 		if (ra < 0)
 		{
 			ra += (q3c_coord_t)360;
@@ -1615,8 +1615,8 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 	{
 		if (face_num0 == 0)
 		{
-			ra = q3c_RADEG * q3c_atan2(x, -y);
-			dec = q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
+			ra = Q3C_RADEG * q3c_atan2(x, -y);
+			dec = Q3C_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
 			if (ra < 0)
 			{
 				ra += (q3c_coord_t)360;
@@ -1624,8 +1624,8 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 		}
 		if (face_num0 == 5)
 		{
-			ra = q3c_RADEG * q3c_atan2(x, y);
-			dec = -q3c_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
+			ra = Q3C_RADEG * q3c_atan2(x, y);
+			dec = -Q3C_RADEG * q3c_atan(1 / q3c_sqrt(x * x + y * y));
 			if (ra < 0)
 			{
 				ra += (q3c_coord_t)360;
@@ -1823,13 +1823,13 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 
   if ((face_num >= 1) && (face_num <= 4))
   {
-    ra1 = (ra0 - (face_num  - 1 ) * 90) * q3c_DEGRA;
-    dec1 = dec0 * q3c_DEGRA;  
+    ra1 = (ra0 - (face_num  - 1 ) * 90) * Q3C_DEGRA;
+    dec1 = dec0 * Q3C_DEGRA;  
     sr = q3c_sin(ra1);
     cr = q3c_cos(ra1);
     sd = q3c_sin(dec1);
     cd = q3c_cos(dec1);
-    crad = q3c_cos(q3c_DEGRA * rad);
+    crad = q3c_cos(Q3C_DEGRA * rad);
     *axx = (crad * crad - sr * sr * cd * cd);
     *ayy = (crad * crad - sd * sd);
     *axy = (-2 * sr * sd * cd);
@@ -1842,13 +1842,13 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
     if(face_num > 0) p = -1;
     /* p=1 for North Polar cap & p=-1 for South Polar cap */
   
-    ra1 = ra0 * q3c_DEGRA;
-    dec1 = dec0 * q3c_DEGRA;
+    ra1 = ra0 * Q3C_DEGRA;
+    dec1 = dec0 * Q3C_DEGRA;
     sr = q3c_sin(ra1);
     cr = q3c_cos(ra1);
     sd = q3c_sin(dec1);
     cd = q3c_cos(dec1);
-    crad = q3c_cos(q3c_DEGRA * rad);
+    crad = q3c_cos(Q3C_DEGRA * rad);
     *axx = (crad * crad - sr * sr * cd * cd);
     *ayy = (crad * crad - cr * cr * cd * cd);
     *axy = (2 * p * sr * cr * cd * cd);
@@ -1939,8 +1939,8 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 	
 	if ((face_num >= 1) && (face_num <= 4))
 	{
-		ra1 = (ra0 - (face_num - 1 ) * 90) * q3c_DEGRA;
-		dec1 = dec0 * q3c_DEGRA;	
+		ra1 = (ra0 - (face_num - 1 ) * 90) * Q3C_DEGRA;
+		dec1 = dec0 * Q3C_DEGRA;	
 		//cr = q3c_sqrt(1 - sr * sr);
 #ifdef __USE_GNU
 		q3c_sincos(ra1, &sr, &cr);
@@ -1958,14 +1958,14 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		cd = q3c_cos(dec1);
 #endif
 		cd2 = cd * cd;
-		//srad = q3c_sin(q3c_DEGRA * rad);
+		//srad = q3c_sin(Q3C_DEGRA * rad);
 		//crad = q3c_sqrt(1 - srad * srad);
-		//crad = q3c_cos(q3c_DEGRA * rad);
+		//crad = q3c_cos(Q3C_DEGRA * rad);
 #ifdef __USE_GNU
-		q3c_sincos(q3c_DEGRA * rad, &srad, &crad);
+		q3c_sincos(Q3C_DEGRA * rad, &srad, &crad);
 #else
-		srad = q3c_sin(q3c_DEGRA * rad);
-		crad = q3c_cos(q3c_DEGRA * rad);
+		srad = q3c_sin(Q3C_DEGRA * rad);
+		crad = q3c_cos(Q3C_DEGRA * rad);
 #endif
 
 		tmp2 = ((q3c_coord_t)1) / (2 * ( cd2 * cr * cr - srad * srad ));
@@ -1980,8 +1980,8 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 	}
 	else
 	{
-		ra1 = ra0 * q3c_DEGRA;
-		dec1 = dec0 * q3c_DEGRA;
+		ra1 = ra0 * Q3C_DEGRA;
+		dec1 = dec0 * Q3C_DEGRA;
 		//sr = q3c_sin(ra1);
 		//cr = q3c_cos(ra1);
 #ifdef __USE_GNU
@@ -2001,14 +2001,14 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		cd2 = cd * cd;
 		scd = sd * cd;
 		//sd = q3c_sin(dec1);
-		//srad = q3c_sin(q3c_DEGRA * rad);
+		//srad = q3c_sin(Q3C_DEGRA * rad);
 		//crad = q3c_sqrt(1 - srad * srad);
 		
 #ifdef __USE_GNU
-		q3c_sincos(q3c_DEGRA * rad, &srad, &crad);
+		q3c_sincos(Q3C_DEGRA * rad, &srad, &crad);
 #else
-		srad = q3c_sin(q3c_DEGRA * rad);
-		crad = q3c_cos(q3c_DEGRA * rad);
+		srad = q3c_sin(Q3C_DEGRA * rad);
+		crad = q3c_cos(Q3C_DEGRA * rad);
 #endif
 
 		crad2 = crad * crad;
@@ -2162,18 +2162,18 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0,
 									q3c_coord_t *xmin, q3c_coord_t *xmax,
 									q3c_coord_t *ymin, q3c_coord_t *ymax)
 {
-	q3c_coord_t ra1, dec1 = dec0 * q3c_DEGRA, rad1 = rad0 * q3c_DEGRA,
-		PA1 = PA0 * q3c_DEGRA, tmpx;
+	q3c_coord_t ra1, dec1 = dec0 * Q3C_DEGRA, rad1 = rad0 * Q3C_DEGRA,
+		PA1 = PA0 * Q3C_DEGRA, tmpx;
 
 	if ((face_num > 0) && (face_num < 5))
 	{
-		ra1 = (ra0 - (face_num - 1) * 90) * q3c_DEGRA;
+		ra1 = (ra0 - (face_num - 1) * 90) * Q3C_DEGRA;
 		q3c_fast_get_equatorial_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
 						xmin, xmax, ymin, ymax);
 	}
 	else
 	{
-		ra1 = ra0 * q3c_DEGRA;
+		ra1 = ra0 * Q3C_DEGRA;
 		q3c_fast_get_polar_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
 						xmin, xmax, ymin, ymax);
 		if (face_num==5)
@@ -2394,91 +2394,91 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
    * intersect other faces or not, and if yes, I setup the array "points" to the
    * multi_face loop.
    */
-  if (xmin < -q3c_HALF)
+  if (xmin < -Q3C_HALF)
   {
-    if (ymin < -q3c_HALF)
+    if (ymin < -Q3C_HALF)
     {
       points[0] = xmax;
       points[1] = ymin;
       points[2] = xmin;
       points[3] = ymax;
       multi_flag = 2;
-      xmin = -q3c_HALF;
-      ymin = -q3c_HALF;
+      xmin = -Q3C_HALF;
+      ymin = -Q3C_HALF;
     }
     else
     {
-      if (ymax > q3c_HALF)
+      if (ymax > Q3C_HALF)
       {
         points[0] = xmax;
         points[1] = ymax;
         points[2] = xmin;
         points[3] = ymin;
         multi_flag = 2;
-        xmin = -q3c_HALF;
-        ymax = q3c_HALF;
+        xmin = -Q3C_HALF;
+        ymax = Q3C_HALF;
       }
       else
       {
       points[0] = xmin;
       points[1] = (ymin + ymax) / 2;
       multi_flag = 1;     
-      xmin = -q3c_HALF;
+      xmin = -Q3C_HALF;
       }
     }
   }
   else
   {
-    if (xmax > q3c_HALF)
+    if (xmax > Q3C_HALF)
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = xmin;
         points[1] = ymin;
         points[2] = xmax;
         points[3] = ymax;
         multi_flag = 2;     
-        xmax = q3c_HALF;
-        ymin = -q3c_HALF;
+        xmax = Q3C_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = xmin;
           points[1] = ymax;
           points[2] = xmax;
           points[3] = ymax;
           multi_flag = 2;
-          xmax = q3c_HALF;
-          ymax = q3c_HALF;
+          xmax = Q3C_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
           points[0] = xmax;
           points[1] = (ymin + ymax) / 2;
           multi_flag = 1;
-          xmax = q3c_HALF;
+          xmax = Q3C_HALF;
         }
       }
     }
     else
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = (xmin + xmax) / 2;
         points[1] = ymin;
         multi_flag = 1;
-        ymin = -q3c_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = (xmin + xmax) / 2;
           points[1] = ymax;
           multi_flag = 2;
-          ymax = q3c_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
@@ -2503,10 +2503,10 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
      
       q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
      
-      xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-      xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-      ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-      ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+      xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+      xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+      ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+      ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
     }
    
 #ifdef Q3C_DEBUG
@@ -2536,10 +2536,10 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
 
     /* Here we set up the stack with initial squares */
    
-    ixmin = (q3c_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-    ixmax = (q3c_HALF + xmax) * n0; /* to integers */
-    iymin = (q3c_HALF + ymin) * n0;
-    iymax = (q3c_HALF + ymax) * n0;
+    ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
+    ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
+    iymin = (Q3C_HALF + ymin) * n0;
+    iymax = (Q3C_HALF + ymax) * n0;
    
    
     ixmax = (ixmax == n0 ? n0-1 : ixmax);
@@ -2624,8 +2624,8 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
       {
         cur_square = work_stack + j;
         cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
-        xc_cur = (( (q3c_coord_t) cur_square->x0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
-        yc_cur = (( (q3c_coord_t) cur_square->y0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
+        xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
+        yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
         /* xc_cur and yc_cur -- center of the square (in the coordinate system
          * of big square [-0.5:0.5]x[-0.5:0.5]
          */
@@ -2973,91 +2973,91 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
    * intersect other faces or not, and if yes, I setup the array "points" to the
    * multi_face loop.
    */
-  if (xmin < -q3c_HALF)
+  if (xmin < -Q3C_HALF)
   {
-    if (ymin < -q3c_HALF)
+    if (ymin < -Q3C_HALF)
     {
       points[0] = xmax;
       points[1] = ymin;
       points[2] = xmin;
       points[3] = ymax;
       multi_flag = 2;
-      xmin = -q3c_HALF;
-      ymin = -q3c_HALF;
+      xmin = -Q3C_HALF;
+      ymin = -Q3C_HALF;
     }
     else
     {
-      if (ymax > q3c_HALF)
+      if (ymax > Q3C_HALF)
       {
         points[0] = xmax;
         points[1] = ymax;
         points[2] = xmin;
         points[3] = ymin;
         multi_flag = 2;
-        xmin = -q3c_HALF;
-        ymax = q3c_HALF;
+        xmin = -Q3C_HALF;
+        ymax = Q3C_HALF;
       }
       else
       {
         points[0] = xmin;
         points[1] = (ymin + ymax) / 2;
         multi_flag = 1;     
-        xmin = -q3c_HALF;
+        xmin = -Q3C_HALF;
       }
     }
   }
   else
   {
-    if (xmax > q3c_HALF)
+    if (xmax > Q3C_HALF)
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = xmin;
         points[1] = ymin;
         points[2] = xmax;
         points[3] = ymax;
         multi_flag = 2;     
-        xmax = q3c_HALF;
-        ymin = -q3c_HALF;
+        xmax = Q3C_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = xmin;
           points[1] = ymax;
           points[2] = xmax;
           points[3] = ymax;
           multi_flag = 2;
-          xmax = q3c_HALF;
-          ymax = q3c_HALF;
+          xmax = Q3C_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
           points[0] = xmax;
           points[1] = (ymin + ymax) / 2;
           multi_flag = 1;
-          xmax = q3c_HALF;
+          xmax = Q3C_HALF;
         }
       }
     }
     else
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = (xmin + xmax) / 2;
         points[1] = ymin;
         multi_flag = 1;
-        ymin = -q3c_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = (xmin + xmax) / 2;
           points[1] = ymax;
           multi_flag = 2;
-          ymax = q3c_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
@@ -3082,10 +3082,10 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
      
       q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
      
-      xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-      xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-      ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-      ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+      xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+      xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+      ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+      ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
     }
    
 #ifdef Q3C_DEBUG
@@ -3115,10 +3115,10 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
     /* Here we set up the stack with initial squares */
    
-    ixmin = (q3c_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-    ixmax = (q3c_HALF + xmax) * n0; /* to integers */
-    iymin = (q3c_HALF + ymin) * n0;
-    iymax = (q3c_HALF + ymax) * n0;
+    ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
+    ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
+    iymin = (Q3C_HALF + ymin) * n0;
+    iymax = (Q3C_HALF + ymax) * n0;
    
    
     ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
@@ -3206,8 +3206,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
       {
         cur_square = work_stack + j;
         cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
-        xc_cur = (( (q3c_coord_t) cur_square->x0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
-        yc_cur = (( (q3c_coord_t) cur_square->y0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
+        xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
+        yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
         /* xc_cur and yc_cur -- center of the square (in the coordinate system
          * of big square [-0.5:0.5]x[-0.5:0.5]
          */
@@ -3525,91 +3525,91 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
    * intersect other faces or not, and if yes, I setup the array "points" to the
    * multi_face loop.
    */
-  if (xmin < -q3c_HALF)
+  if (xmin < -Q3C_HALF)
   {
-    if (ymin < -q3c_HALF)
+    if (ymin < -Q3C_HALF)
     {
       points[0] = xmax;
       points[1] = ymin;
       points[2] = xmin;
       points[3] = ymax;
       multi_flag = 2;
-      xmin = -q3c_HALF;
-      ymin = -q3c_HALF;
+      xmin = -Q3C_HALF;
+      ymin = -Q3C_HALF;
     }
     else
     {
-      if (ymax > q3c_HALF)
+      if (ymax > Q3C_HALF)
       {
         points[0] = xmax;
         points[1] = ymax;
         points[2] = xmin;
         points[3] = ymin;
         multi_flag = 2;
-        xmin = -q3c_HALF;
-        ymax = q3c_HALF;
+        xmin = -Q3C_HALF;
+        ymax = Q3C_HALF;
       }
       else
       {
         points[0] = xmin;
         points[1] = (ymin + ymax) / 2;
         multi_flag = 1;     
-        xmin = -q3c_HALF;
+        xmin = -Q3C_HALF;
       }
     }
   }
   else
   {
-    if (xmax > q3c_HALF)
+    if (xmax > Q3C_HALF)
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = xmin;
         points[1] = ymin;
         points[2] = xmax;
         points[3] = ymax;
         multi_flag = 2;     
-        xmax = q3c_HALF;
-        ymin = -q3c_HALF;
+        xmax = Q3C_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = xmin;
           points[1] = ymax;
           points[2] = xmax;
           points[3] = ymax;
           multi_flag = 2;
-          xmax = q3c_HALF;
-          ymax = q3c_HALF;
+          xmax = Q3C_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
           points[0] = xmax;
           points[1] = (ymin + ymax) / 2;
           multi_flag = 1;
-          xmax = q3c_HALF;
+          xmax = Q3C_HALF;
         }
       }
     }
     else
     {
-      if (ymin < -q3c_HALF)
+      if (ymin < -Q3C_HALF)
       {
         points[0] = (xmin + xmax) / 2;
         points[1] = ymin;
         multi_flag = 1;
-        ymin = -q3c_HALF;
+        ymin = -Q3C_HALF;
       }
       else
       {
-        if (ymax > q3c_HALF)
+        if (ymax > Q3C_HALF)
         {
           points[0] = (xmin + xmax) / 2;
           points[1] = ymax;
           multi_flag = 2;
-          ymax = q3c_HALF;
+          ymax = Q3C_HALF;
         }
         else
         {
@@ -3636,10 +3636,10 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
      
       q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
      
-      xmax = (xmax > q3c_HALF ? q3c_HALF : xmax);
-      xmin = (xmin < -q3c_HALF ? -q3c_HALF : xmin);
-      ymax = (ymax > q3c_HALF ? q3c_HALF : ymax);
-      ymin = (ymin < -q3c_HALF ? -q3c_HALF : ymin);
+      xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+      xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+      ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+      ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
     }
    
 #ifdef Q3C_DEBUG
@@ -3669,10 +3669,10 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 
     /* Here we set up the stack with initial squares */
    
-    ixmin = (q3c_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-    ixmax = (q3c_HALF + xmax) * n0; /* to integers */
-    iymin = (q3c_HALF + ymin) * n0;
-    iymax = (q3c_HALF + ymax) * n0;
+    ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
+    ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
+    iymin = (Q3C_HALF + ymin) * n0;
+    iymax = (Q3C_HALF + ymax) * n0;
    
    
     ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
@@ -3760,8 +3760,8 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
       {
         cur_square = work_stack + j;
         cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
-        xc_cur = (( (q3c_coord_t) cur_square->x0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
-        yc_cur = (( (q3c_coord_t) cur_square->y0) + q3c_HALF) / cur_square->nside0 - q3c_HALF;
+        xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
+        yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
         /* xc_cur and yc_cur -- center of the square (in the coordinate system
          * of big square [-0.5:0.5]x[-0.5:0.5]
          */
