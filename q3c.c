@@ -455,11 +455,9 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 #undef n_partials
 #undef n_fulls
 
-
-#define max_n_poly 100
-	static q3c_coord_t ra[max_n_poly], dec[max_n_poly], x[max_n_poly],
-			y[max_n_poly], ax[max_n_poly], ay[max_n_poly];
-#undef max_n_poly
+	static q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX],
+		x[Q3C_MAX_N_POLY_VERTEX], y[Q3C_MAX_N_POLY_VERTEX],
+		ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
 
 	static int invocation;
 	
@@ -518,6 +516,10 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	else if (poly_nitems <=4)
 	{
 		elog(ERROR, "Invalid polygon! Less then 4 vertexes");
+	}
+	else if (poly_nitems > 2 * Q3C_MAX_N_POLY_VERTEX)
+	{
+		elog(ERROR, "Q3C does not support polygons with number of vertices > %d", Q3C_MAX_N_POLY_VERTEX);	
 	}
 	
 	poly_nitems /= 2;
@@ -589,9 +591,8 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
 	extern struct q3c_prm hprm;
 	
-#define max_n_poly 100
-	static q3c_coord_t in_ra[max_n_poly], in_dec[max_n_poly];
-#undef max_n_poly
+	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
+
 	static int invocation ;
 	
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen

@@ -165,6 +165,8 @@ typedef long double q3c_coord_t;
 #define Q3C_COVER 2		/* the point or the region is completely inside other */
 
 
+#define Q3C_MAX_N_POLY_VERTEX 100 /* Maximal number of vertices in the polygon */
+
 struct q3c_prm 
 {
 	q3c_ipix_t nside;

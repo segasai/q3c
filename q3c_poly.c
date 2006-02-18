@@ -422,10 +422,8 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
   q3c_ipix_t ipix;
   q3c_coord_t points[4];
   char face_num, face_num0, cur_face_num;
-#define max_n_poly 100
-  static q3c_coord_t x[3][max_n_poly], y[3][max_n_poly], ax[3][max_n_poly],
-                     ay[3][max_n_poly], x0, y0;
-#undef max_n_poly
+  static q3c_coord_t x[3][Q3C_MAX_N_POLY_VERTEX], y[3][Q3C_MAX_N_POLY_VERTEX],
+  	ax[3][Q3C_MAX_N_POLY_VERTEX], ay[3][Q3C_MAX_N_POLY_VERTEX], x0, y0;
   int face_count = -1, i;
   
 
