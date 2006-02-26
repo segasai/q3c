@@ -260,7 +260,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 {
 	q3c_ipix_t ipix_array[8];
 	static q3c_ipix_t ipix_array_buf[8];
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf, axis_ratio_buf, PA_buf;
 	static int invocation;
 	int i;
 	q3c_ellipse_region ellipse;
@@ -284,7 +284,9 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
+			(radius == radius_buf) && (PA == PA_buf) &&
+			(axis_ratio == axis_ratio_buf))
 		{
 #ifdef Q3C_INT4 
 			PG_RETURN_INT32(ipix_array_buf[iteration]);
@@ -312,7 +314,9 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
-	
+	axis_ratio_buf = axis_ratio;
+	PA_buf = PA;	
+
 	invocation=1;
 #ifdef Q3C_INT4 
 	PG_RETURN_INT32(ipix_array_buf[iteration]);
