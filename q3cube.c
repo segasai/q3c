@@ -2192,146 +2192,141 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0,
  * specified by the coefficients (axx, axy, ayy, ax, ay, a)
  */
 static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
-                                   q3c_coord_t cur_size, q3c_coord_t xmin,
-                                   q3c_coord_t xmax, q3c_coord_t ymin,
-                                   q3c_coord_t ymax, q3c_coord_t axx,
-                                   q3c_coord_t axy, q3c_coord_t ayy,
-                                   q3c_coord_t ax, q3c_coord_t ay,
-                                   q3c_coord_t a)
+								   q3c_coord_t cur_size, q3c_coord_t xmin,
+								   q3c_coord_t xmax, q3c_coord_t ymin,
+								   q3c_coord_t ymax, q3c_coord_t axx,
+								   q3c_coord_t axy, q3c_coord_t ayy,
+								   q3c_coord_t ax, q3c_coord_t ay,
+								   q3c_coord_t a)
 {
-    q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur, x_cur, y_cur, val;
+	q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur, x_cur, y_cur, val;
+	
+	/* Checking the intersection of ellipse and box
+	 * The box parameters are set by variables xc_cur, yc_cur and cur_size
+	 */
+	xl_cur = xc_cur - cur_size / 2; /* left   */
+	xr_cur = xc_cur + cur_size / 2; /* right  */
+	yb_cur = yc_cur - cur_size / 2; /* bottom */
+	yt_cur = yc_cur + cur_size / 2; /* top    */
 
-    /* Checking the intersection of ellipse and box
-     * The box parameters are set by variables xc_cur, yc_cur and cur_size
-     */
-    xl_cur = xc_cur - cur_size / 2; /* left   */
-    xr_cur = xc_cur + cur_size / 2; /* right  */
-    yb_cur = yc_cur - cur_size / 2; /* bottom */
-    yt_cur = yc_cur + cur_size / 2; /* top    */
-
-    /* Undef labels -- the labels when the current computed values dont allow
-     * to make the final decision about the intersection
-     */
+	/* Undef labels -- the labels when the current computed values dont allow
+	 * to make the final decision about the intersection
+	 */
+	
 
 
-
-    /* UNDEF_CHECK00: */
-    /* Bottom left vertex */
-    x_cur = xl_cur;
-    y_cur = yb_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
+	/* UNDEF_CHECK00: */
+	/* Bottom left vertex */
+	x_cur = xl_cur;
+	y_cur = yb_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
   
-    if (val < 0) goto PARTUNDEF_CHECK01;
+	if (val < 0) goto PARTUNDEF_CHECK01;
   
 
-    /* UNDEF_CHECK01: */
-    /* Bottom right vertex */
-    x_cur = xr_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
+	/* UNDEF_CHECK01: */
+	/* Bottom right vertex */
+	x_cur = xr_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
   
-    if (val < 0)
-    {
-      return Q3C_PARTIAL;
-    }
+	if (val < 0)
+	{
+	  return Q3C_PARTIAL;
+	}
   
-    /* UNDEF_CHECK10: */
-    /* Top right vertex */
-    y_cur = yt_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
-        
-    if (val < 0)
-    {
-      return Q3C_PARTIAL;
-    }
+	/* UNDEF_CHECK10: */
+	/* Top right vertex */
+	y_cur = yt_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
+		
+	if (val < 0)
+	{
+	  return Q3C_PARTIAL;
+	}
 
 
-    /* UNDEF_CHECK11: */
-    /* Top left vertex */
-    x_cur = xl_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
-        
-    if (val < 0)
-    {
-      return Q3C_PARTIAL;
-    }
-    else
-    {
-      /* Testing if the ellipse crosses the borders of the box)
-       * OR the box covers the whole ellipse ( this is expressed by the last
-       * condition (center of the ellipse is inside the box))
-       */
-    
-     
-      if (
-            (Q3C_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
-             Q3C_INTERSECT(ymin, ymax, yb_cur, yt_cur)
-            )&&
-          ((((2 * axx * xl_cur + axy * yt_cur + ax) *
-            (2 * axx * xr_cur + axy * yt_cur + ax)) < 0) ||
-          (((2 * axx * xl_cur + axy * yb_cur + ax) *
-            (2 * axx * xr_cur + axy * yb_cur + ax)) < 0) ||
-          (((2 * ayy * yb_cur + axy * xl_cur + ay) *
-            (2 * ayy * yt_cur + axy * xl_cur + ay)) < 0) ||
-          (((2 * ayy * yb_cur + axy * xr_cur + ay) *
-            (2 * ayy * yt_cur + axy * xr_cur + ay)) < 0)
-          ))
-      {
-       
-        return Q3C_PARTIAL;
-      }
-      else
-      {
-        return Q3C_DISJUNCT;
-      }
-    }
-  //((x0<xr_cur)&&(x0>xl_cur)&&(y0<yt_cur)&&(y0>yb_cur))
+	/* UNDEF_CHECK11: */
+	/* Top left vertex */
+	x_cur = xl_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
+		
+	if (val < 0)
+	{
+		return Q3C_PARTIAL;
+	}
+	else
+	{
+		/* Testing if the ellipse crosses the borders of the box)
+		 * OR the box covers the whole ellipse ( this is expressed by the last
+		 * condition (center of the ellipse is inside the box))
+		 */
+		if (
+		    (Q3C_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
+		     Q3C_INTERSECT(ymin, ymax, yb_cur, yt_cur)
+		    )&&
+		  ((((2 * axx * xl_cur + axy * yt_cur + ax) *
+		    (2 * axx * xr_cur + axy * yt_cur + ax)) < 0) ||
+		  (((2 * axx * xl_cur + axy * yb_cur + ax) *
+		    (2 * axx * xr_cur + axy * yb_cur + ax)) < 0) ||
+		  (((2 * ayy * yb_cur + axy * xl_cur + ay) *
+		    (2 * ayy * yt_cur + axy * xl_cur + ay)) < 0) ||
+		  (((2 * ayy * yb_cur + axy * xr_cur + ay) *
+		    (2 * ayy * yt_cur + axy * xr_cur + ay)) < 0)
+		  ))
+		{
+			return Q3C_PARTIAL;
+		}
+		else
+	  	{
+			return Q3C_DISJUNCT;
+		}
+	}
 
-    /* PARTUNDEF labels -- when we know the ellipse have
-     *   at least a partial intersection with the box 
-     */
+	/* PARTUNDEF labels -- when we know the ellipse have
+	 *   at least a partial intersection with the box 
+	 */
    
 
-    PARTUNDEF_CHECK01:
-    /* Bottom right vertex */
-    x_cur = xr_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
+	PARTUNDEF_CHECK01:
+	/* Bottom right vertex */
+	x_cur = xr_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
    
-    if (val >= 0)
-    {
-      return Q3C_PARTIAL;
-    }
+	if (val >= 0)
+	{
+		return Q3C_PARTIAL;
+	}
 
 
-    /* PARTUNDEF_CHECK10: */
-    /* Top right vertex */
-    y_cur = yt_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
-    if (val >= 0)
-    {
-      return Q3C_PARTIAL;
-    }
+	/* PARTUNDEF_CHECK10: */
+	/* Top right vertex */
+	y_cur = yt_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
+	if (val >= 0)
+	{
+		return Q3C_PARTIAL;
+	}
 
 
-    /* PARTUNDEF_CHECK11: */
-    /* Top left vertex */
-    x_cur = xl_cur;
-    val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-          y_cur * (ayy * y_cur + ay) + a;
-    if (val >= 0)
-    {
-      return Q3C_PARTIAL;
-    }
-    else
-    {
-      return Q3C_COVER;
-    }
-
+	/* PARTUNDEF_CHECK11: */
+	/* Top left vertex */
+	x_cur = xl_cur;
+	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
+		  y_cur * (ayy * y_cur + ay) + a;
+	if (val >= 0)
+	{
+		return Q3C_PARTIAL;
+	}
+	else
+	{
+		return Q3C_COVER;
+	}
 }
 
 
