@@ -433,45 +433,19 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 }
 
 
-
-
-/* !!!!!!!!!!! OBSOLETE !!!!!!!!!!!!!!!!!!!! */
-void q3c_get_nearby_split (struct q3c_prm *hprm, q3c_coord_t ra,
-						   q3c_coord_t dec, q3c_coord_t radius,
-						   q3c_ipix_t *ipix, int iteration)
-                          /* ra in degrees, dec in degrees,
-                           * radius in degrees
-                           * strictly 0<=ra<360 and -90<=dec<=90
-                           */
+/* Checking whether the box (xmin,ymin,xmax,ymax) intersect other faces or
+ * not, and if yes, I setup the array "points" to the multi_face loop.
+ * !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!!!!!! It does change the arguments (xmin,xmax, ymin, ymax) !!!!!!!!
+ */
+static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
+						  q3c_coord_t *xmax0, q3c_coord_t *ymax0,
+						  q3c_coord_t *points, char *multi_flag)
 {
-	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[4];
-	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
-		*ipix_cur = ipix, ipix0, xi = 0, yi = 0, i1, n0, n1 = 1, ixmin,
-		ixmax, iymin, iymax;
-	/* I did the initialization of xi, yi and n1 just to prevent the gcc
-	 * warnings
-	 */
-	char face_num, multi_flag;
-	
-	const q3c_coord_t q3c_lg2 = Q3C_LG2;
-	
-	face_num = q3c_get_facenum(ra, dec);
-
-	q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius, &xmin, &xmax, &ymin, &ymax);
-	/* xmin, xmax, ymin, ymax are in the coordinate system of the cube face
-	 * where -0.5<=x<=0.5 and -0.5<=y<=0.5
-	 */
-#ifdef Q3C_DEBUG
-fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax);
-#endif
-	
-
-	/* Now in a little bit ugly but fastest way I determine whether the ellipse
-	 * intersect other faces or not, and if yes, I setup the array "points" to the
-	 * multi_face loop.
-	 * The multi_flag value specify how much additional faces are covered by the
-	 * query area.
-	 */
+	const q3c_coord_t xmin = *xmin0,
+					  xmax = *xmax0,
+					  ymin = *ymin0,
+					  ymax = *ymax0;
 	if (xmin < -Q3C_HALF)
 	{
 		if (ymin < -Q3C_HALF)
@@ -480,9 +454,9 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 			points[1] = ymin;
 			points[2] = xmin;
 			points[3] = ymax;
-			multi_flag = 2;
-			xmin = -Q3C_HALF;
-			ymin = -Q3C_HALF;
+			*multi_flag = 2;
+			*xmin0 = -Q3C_HALF;
+			*ymin0 = -Q3C_HALF;
 		}
 		else
 		{
@@ -492,16 +466,16 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				points[1] = ymax;
 				points[2] = xmin;
 				points[3] = ymin;
-				multi_flag = 2;
-				xmin = -Q3C_HALF;
-				ymax = Q3C_HALF;
+				*multi_flag = 2;
+				*xmin0 = -Q3C_HALF;
+				*ymax0 = Q3C_HALF;
 			}
 			else
 			{
-			points[0] = xmin;
-			points[1] = (ymin + ymax) / 2;
-			multi_flag = 1;
-			xmin = -Q3C_HALF;
+				points[0] = xmin;
+				points[1] = (ymin + ymax) / 2;
+				*multi_flag = 1;     
+				*xmin0 = -Q3C_HALF;
 			}
 		}
 	}
@@ -515,9 +489,9 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				points[1] = ymin;
 				points[2] = xmax;
 				points[3] = ymax;
-				multi_flag = 2;
-				xmax = Q3C_HALF;
-				ymin = -Q3C_HALF;
+				*multi_flag = 2;     
+				*xmax0 = Q3C_HALF;
+				*ymin0 = -Q3C_HALF;
 			}
 			else
 			{
@@ -527,16 +501,16 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 					points[1] = ymax;
 					points[2] = xmax;
 					points[3] = ymax;
-					multi_flag = 2;
-					xmax = Q3C_HALF;
-					ymax = Q3C_HALF;
+					*multi_flag = 2;
+					*xmax0 = Q3C_HALF;
+					*ymax0 = Q3C_HALF;
 				}
 				else
 				{
 					points[0] = xmax;
 					points[1] = (ymin + ymax) / 2;
-					multi_flag = 1;
-					xmax = Q3C_HALF;
+					*multi_flag = 1;
+					*xmax0 = Q3C_HALF;
 				}
 			}
 		}
@@ -546,8 +520,8 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 			{
 				points[0] = (xmin + xmax) / 2;
 				points[1] = ymin;
-				multi_flag = 1;
-				ymin = -Q3C_HALF;
+				*multi_flag = 1;
+				*ymin0 = -Q3C_HALF;
 			}
 			else
 			{
@@ -555,424 +529,16 @@ fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax)
 				{
 					points[0] = (xmin + xmax) / 2;
 					points[1] = ymax;
-					multi_flag = 1;
-					ymax = Q3C_HALF;
+					*multi_flag = 2;
+					*ymax0 = Q3C_HALF;
 				}
 				else
 				{
-					multi_flag = 0;
+					*multi_flag = 0;
 				}
 			}
 		}
 	}
-	
-	
-	if (multi_flag == 0)
-	{
-		xesize = xmax - xmin;
-		yesize = ymax - ymin;
-		xesize = xesize > yesize ? xesize : yesize;
-		
-		if (xesize * nside < 1)
-		/* If the region is too small */
-		{
-			xesize = 1 / (q3c_coord_t)nside;
-		}
-		
-		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));	
-		/* n0 is now the level of quadtree for which the minimal
-		 * element is >~ our ellipse
-		 */
-
-		ixmin = (Q3C_HALF + xmin) * n0;
-		ixmax = (Q3C_HALF + xmax) * n0;
-		iymin = (Q3C_HALF + ymin) * n0;
-		iymax = (Q3C_HALF + ymax) * n0;
-		
-		ixmax = (ixmax == n0 ? n0-1 : ixmax);
-		iymax = (iymax == n0 ? n0-1 : iymax);
-		
-		n1 = nside / n0;
-
-		if (iymin == iymax)
-		{
-			if (iteration > 2)
-			{
-				*(ipix_cur++) = 1;
-				*(ipix_cur) = -1;
-				return;
-			}
-			if (ixmin == ixmax)
-			{
-				if (iteration > 1)
-				{
-					*(ipix_cur++) = 1;
-					*(ipix_cur) = -1;
-					return;
-				}
-			}
-			if (iteration == 1)
-			{
-				xi = (q3c_ipix_t)(ixmin * n1);
-				yi = (q3c_ipix_t)(iymin * n1);
-			}
-			else
-			{
-				xi = (q3c_ipix_t)(ixmax * n1);
-				yi = (q3c_ipix_t)(iymin * n1);
-			}
-		}
-		else
-		{
-			if (ixmin == ixmax)
-			{
-				if (iteration > 2)
-				{
-					*(ipix_cur++) = 1;
-					*(ipix_cur) = -1;
-					return;
-				}
-
-			}
-			switch(iteration)
-			{
-				case 1:
-				{
-					xi = (q3c_ipix_t)(ixmin * n1);
-					yi = (q3c_ipix_t)(iymin * n1);
-					break;
-				}
-				case 2:
-				{
-					xi = (q3c_ipix_t)(ixmin * n1);
-					yi = (q3c_ipix_t)(iymax * n1);
-					break;
-				}
-				case 3:
-				{
-					xi = (q3c_ipix_t)(ixmax * n1);
-					yi = (q3c_ipix_t)(iymin * n1);
-					break;
-				}
-				case 4:
-				{
-					xi = (q3c_ipix_t)(ixmax * n1);
-					yi = (q3c_ipix_t)(iymax * n1);
-					break;
-				}
-			}
-		}
-	}
-	else
-	{
-		if (multi_flag == 1)
-		{
-			if (iteration <= 2)
-			{
-				xesize = xmax - xmin;
-				yesize = ymax - ymin;
-				xesize = xesize > yesize ? xesize : yesize;
-				
-				if (xesize * nside < 1)
-				/* If the region is too small */
-				{
-					xesize = 1 / (q3c_coord_t)nside;
-				}
-				
-				n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize)/q3c_lg2)));
-				/* n0 is now the level of quadtree for which the minimal
-				 * element is >~ our ellipse
-				 */
-
-				ixmin = (Q3C_HALF + xmin) * n0;
-				ixmax = (Q3C_HALF + xmax) * n0;
-				iymin = (Q3C_HALF + ymin) * n0;
-				iymax = (Q3C_HALF + ymax) * n0;
-				
-				ixmax = (ixmax == n0 ? n0-1 : ixmax);
-				iymax = (iymax == n0 ? n0-1 : iymax);
-				
-				n1 = nside / n0;
-				
-				if (ixmin == ixmax)
-				{
-					if (iteration == 1)
-					{
-						xi = (q3c_ipix_t)(ixmax * n1);
-						yi = (q3c_ipix_t)(iymin * n1);
-					}
-					else
-					{
-						if (iymin == iymax)
-						{
-							*(ipix_cur++) = 1;
-							*(ipix_cur) = -1;
-							return;
-						}
-						else
-						{
-							xi = (q3c_ipix_t)(ixmax * n1);
-							yi = (q3c_ipix_t)(iymax * n1);
-						}
-					}
-				}
-				else
-				{
-					if (iteration == 1)
-					{
-						xi = (q3c_ipix_t)(ixmin * n1);
-						yi = (q3c_ipix_t)(iymax * n1);
-					}
-					else
-					{
-						xi = (q3c_ipix_t)(ixmax * n1);
-						yi = (q3c_ipix_t)(iymax * n1);
-					}
-				}
-			}
-			else
-			{
-				face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num);
-				/*
-				get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-				get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-				*/
-				q3c_fast_get_circle_xy_minmax(face_num,ra,dec,radius,&xmin,&xmax,&ymin,&ymax);
-				
-				xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-				xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-				ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-				ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
-				xesize = xmax - xmin;
-				yesize = ymax - ymin;
-				xesize = xesize > yesize ? xesize : yesize;
-				
-				if (xesize * nside < 1)
-				/* If the region is too small */
-				{
-					xesize = 1 / (q3c_coord_t)nside;
-				}
-				
-				n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize)/q3c_lg2)));
-				/* n0 is now the level of quadtree for which the minimal
-				 * element is >~ our ellipse
-				 */
-
-				ixmin = (Q3C_HALF + xmin) * n0;
-				ixmax = (Q3C_HALF + xmax) * n0;
-				iymin = (Q3C_HALF + ymin) * n0;
-				iymax = (Q3C_HALF + ymax) * n0;
-				
-				ixmax = (ixmax == n0 ? n0-1 : ixmax);
-				iymax = (iymax == n0 ? n0-1 : iymax);
-				
-				n1 = nside / n0;
-
-				if (ixmin == ixmax)
-				{
-					if (iteration == 3)
-					{
-						xi = (q3c_ipix_t)(ixmax * n1);
-						yi = (q3c_ipix_t)(iymin * n1);
-					}
-					else
-					{
-						if (iymin == iymax)
-						{
-							*(ipix_cur++) = 1;
-							*(ipix_cur) = -1;
-							return;
-						}
-						else
-						{
-							xi = (q3c_ipix_t)(ixmax * n1);
-							yi = (q3c_ipix_t)(iymax * n1);
-						}
-					}
-				}
-				else
-				{
-					if (iteration == 3)
-					{
-						xi = (q3c_ipix_t)(ixmin * n1);
-						yi = (q3c_ipix_t)(iymax * n1);
-					}
-					else
-					{
-						xi = (q3c_ipix_t)(ixmax * n1);
-						yi = (q3c_ipix_t)(iymax * n1);
-					}
-				}
-			}
-		}
-		else
-		{
-			switch(iteration)
-			{
-				case 1:
-				{
-					xesize = xmax - xmin;
-					yesize = ymax - ymin;
-					xesize = xesize > yesize ? xesize : yesize;
-					
-					if (xesize * nside < 1)
-					/* If the region is too small */
-					{
-						xesize = 1 / (q3c_coord_t)nside;
-					}
-					
-					n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-					/* n0 is now the level of quadtree for which the minimal
-					 * element is >~ our ellipse
-					 */
-
-					ixmin = (Q3C_HALF + xmin) * n0;
-					ixmax = (Q3C_HALF + xmax) * n0;
-					iymin = (Q3C_HALF + ymin) * n0;
-					iymax = (Q3C_HALF + ymax) * n0;
-					
-					ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-					iymax = (iymax == n0 ? (n0 - 1) : iymax);
-
-					n1 = nside / n0;
-					
-					xi=(q3c_ipix_t)(ixmax * n1);
-					yi=(q3c_ipix_t)(iymax * n1);
-					break;
-				}
-				case 2:
-				{
-					face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num);
-					/*
-					get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-					get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-					*/
-					q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius,
-												  &xmin, &xmax, &ymin, &ymax);
-					
-					xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-					xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-					ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-					ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
-					xesize = xmax - xmin;
-					yesize = ymax - ymin;
-					xesize = xesize > yesize ? xesize : yesize;
-					
-					if (xesize * nside < 1)
-					/* If the region is too small */
-					{
-						xesize=1 / (q3c_coord_t)nside;
-					}
-					
-					n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));	
-					/* n0 is now the level of quadtree for which the minimal
-					 * element is >~ our ellipse
-					 */
-
-					ixmin = (Q3C_HALF + xmin) * n0;
-					ixmax = (Q3C_HALF + xmax) * n0;
-					iymin = (Q3C_HALF + ymin) * n0;
-					iymax = (Q3C_HALF + ymax) * n0;
-					
-					ixmax = (ixmax == n0 ? n0-1 : ixmax);
-					iymax = (iymax == n0 ? n0-1 : iymax);
-					
-					n1 = nside / n0;
-
-					xi = (q3c_ipix_t)(ixmax * n1);
-					yi = (q3c_ipix_t)(iymax * n1);
-					break;
-				}
-				case 3:
-				{
-					face_num = q3c_xy2facenum(2 * points[2], 2 * points[3],
-											  face_num);
-					/*
-					get_poly_coefs(face_num, ra, dec, radius, &axx, &ayy, &axy, &ax, &ay, &a);
-					get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-					//*/
-					q3c_fast_get_circle_xy_minmax(face_num, ra, dec, radius,
-												  &xmin, &xmax, &ymin, &ymax);
-					
-					xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-					xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-					ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-					ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
-					xesize = xmax - xmin;
-					yesize = ymax - ymin;
-					xesize = xesize > yesize ? xesize : yesize;
-					
-					if (xesize * nside < 1)
-					/* If the region is too small */
-					{
-						xesize=1 / (q3c_coord_t)nside;
-					}
-					
-					n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));	
-					/* n0 is now the level of quadtree for which the minimal
-					 * element is >~ our ellipse
-					 */
-
-					ixmin = (Q3C_HALF + xmin) * n0;
-					ixmax = (Q3C_HALF + xmax) * n0;
-					iymin = (Q3C_HALF + ymin) * n0;
-					iymax = (Q3C_HALF + ymax) * n0;
-					
-					ixmax = (ixmax == n0 ? n0-1 : ixmax);
-					iymax = (iymax == n0 ? n0-1 : iymax);
-					
-					n1 = nside / n0;
-
-					xi = (q3c_ipix_t)(ixmax * n1);
-					yi = (q3c_ipix_t)(iymax * n1);
-					break;
-				}
-				case 4:
-				{
-					*(ipix_cur++) = 1;
-					*(ipix_cur) = -1;			
-					return;
-				}
-			}
-		}
-	}
-
-	
-	/* Now I produce the final pixel value by converting x and y values to bitfields
-	 * and combining them by interleaving, using the predefined arrays xbits and ybits
-	 */
-
-
-	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
-	
-#ifdef Q3C_INT4
-	{
-		ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % i1] + ybits[yi % i1];
-	/*4byte computation*/
-	}
-#endif /* Q3C_INT4 */
-#ifdef Q3C_INT8
-	{
-		ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
-				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-	/*8byte computation*/
-	}
-#endif /* Q3C_INT8 */
-
-	*(ipix_cur++) = ipix0;
-	*ipix_cur = ipix0 + n1 * n1 - 1;
-	/* IMPORTANT!! I subtract 1 to make after the query with   <= ipix<=
-	 */
-	
-	/*
-	fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
-	BIT_PRINT8(*ipix);
-	BIT_PRINT8ix(xi);
-	BIT_PRINT8iy(yi);
-	*/
 }
 
 
@@ -1003,105 +569,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax);
 #endif
 
-	
-	/* Now in a little bit ugly but fastest way I determine whether the ellipse
-	 * intersect other faces or not, and if yes, I setup the array "points" to the
-	 * multi_face loop.
-	 */
-	if (xmin < -Q3C_HALF)
-	{
-		if (ymin < -Q3C_HALF)
-		{
-			points[0] = xmax;
-			points[1] = ymin;
-			points[2] = xmin;
-			points[3] = ymax;
-			multi_flag = 2;
-			xmin = -Q3C_HALF;
-			ymin = -Q3C_HALF;
-		}
-		else
-		{
-			if (ymax > Q3C_HALF)
-			{
-				points[0] = xmax;
-				points[1] = ymax;
-				points[2] = xmin;
-				points[3] = ymin;
-				multi_flag = 2;
-				xmin = -Q3C_HALF;
-				ymax = Q3C_HALF;
-			}
-			else
-			{
-			points[0] = xmin;
-			points[1] = (ymin + ymax) / 2;
-			multi_flag = 1;			
-			xmin = -Q3C_HALF;
-			}
-		}
-	}
-	else
-	{
-		if (xmax > Q3C_HALF)
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = xmin;
-				points[1] = ymin;
-				points[2] = xmax;
-				points[3] = ymax;
-				multi_flag = 2;			
-				xmax = Q3C_HALF;
-				ymin = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = xmin;
-					points[1] = ymax;
-					points[2] = xmax;
-					points[3] = ymax;
-					multi_flag = 2;
-					xmax = Q3C_HALF;
-					ymax = Q3C_HALF;
-				}
-				else
-				{
-					points[0] = xmax;
-					points[1] = (ymin + ymax) / 2;
-					multi_flag = 1;
-					xmax = Q3C_HALF;
-				}
-			}
-		}
-		else
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = (xmin + xmax) / 2;
-				points[1] = ymin;
-				multi_flag = 1;
-				ymin = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = (xmin + xmax) / 2;
-					points[1] = ymax;
-					multi_flag = 1;
-					ymax = Q3C_HALF;
-				}
-				else
-				{
-					multi_flag = 0;
-				}
-			}
-		}
-	}
-	
+	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);                                                 
 	
 	if (multi_flag == 0)
 	{		
@@ -2176,7 +1644,7 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0,
 		ra1 = ra0 * Q3C_DEGRA;
 		q3c_fast_get_polar_ellipse_xy_minmax(ra1, dec1, rad1, e, PA1,
 						xmin, xmax, ymin, ymax);
-		if (face_num==5)
+		if (face_num == 5)
 		{
 			tmpx = *xmin;
 			*xmin = - (*xmax);
@@ -2331,6 +1799,9 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 
 
 
+
+
+
 void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
 					  char *ra_col_name, char *dec_col_name, q3c_coord_t ra0,
 					  q3c_coord_t dec0, q3c_coord_t rad, char * qstring)
@@ -2374,106 +1845,9 @@ void q3c_radial_query(struct q3c_prm *hprm, char *table_name,
 	 */
 
 	q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
- 
-
-	/* Now in a little bit ugly but fastest way I determine whether the ellipse
-	 * intersect other faces or not, and if yes, I setup the array "points" to the
-	 * multi_face loop.
-	 */
-	if (xmin < -Q3C_HALF)
-	{
-		if (ymin < -Q3C_HALF)
-		{
-			points[0] = xmax;
-			points[1] = ymin;
-			points[2] = xmin;
-			points[3] = ymax;
-			multi_flag = 2;
-			xmin = -Q3C_HALF;
-			ymin = -Q3C_HALF;
-		}
-		else
-		{
-			if (ymax > Q3C_HALF)
-			{
-				points[0] = xmax;
-				points[1] = ymax;
-				points[2] = xmin;
-				points[3] = ymin;
-				multi_flag = 2;
-				xmin = -Q3C_HALF;
-				ymax = Q3C_HALF;
-			}
-			else
-			{
-				points[0] = xmin;
-				points[1] = (ymin + ymax) / 2;
-				multi_flag = 1;     
-				xmin = -Q3C_HALF;
-			}
-		}
-	}
-	else
-	{
-		if (xmax > Q3C_HALF)
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = xmin;
-				points[1] = ymin;
-				points[2] = xmax;
-				points[3] = ymax;
-				multi_flag = 2;     
-				xmax = Q3C_HALF;
-				ymin = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = xmin;
-					points[1] = ymax;
-					points[2] = xmax;
-					points[3] = ymax;
-					multi_flag = 2;
-					xmax = Q3C_HALF;
-					ymax = Q3C_HALF;
-				}
-				else
-				{
-					points[0] = xmax;
-					points[1] = (ymin + ymax) / 2;
-					multi_flag = 1;
-					xmax = Q3C_HALF;
-				}
-			}
-		}
-		else
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = (xmin + xmax) / 2;
-				points[1] = ymin;
-				multi_flag = 1;
-				ymin = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = (xmin + xmax) / 2;
-					points[1] = ymax;
-					multi_flag = 2;
-					ymax = Q3C_HALF;
-				}
-				else
-				{
-					multi_flag = 0;
-				}
-			}
-		}
-	}
-
+	
+	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);	                                                    
+	
 	face_num0 = face_num;
  
 	for(face_count = 0; face_count <= multi_flag; out_nstack = 0, face_count++)
@@ -2962,104 +2336,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
   q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
  
-
-  /* Now in a little bit ugly but fastest way I determine whether the ellipse
-   * intersect other faces or not, and if yes, I setup the array "points" to the
-   * multi_face loop.
-   */
-  if (xmin < -Q3C_HALF)
-  {
-    if (ymin < -Q3C_HALF)
-    {
-      points[0] = xmax;
-      points[1] = ymin;
-      points[2] = xmin;
-      points[3] = ymax;
-      multi_flag = 2;
-      xmin = -Q3C_HALF;
-      ymin = -Q3C_HALF;
-    }
-    else
-    {
-      if (ymax > Q3C_HALF)
-      {
-        points[0] = xmax;
-        points[1] = ymax;
-        points[2] = xmin;
-        points[3] = ymin;
-        multi_flag = 2;
-        xmin = -Q3C_HALF;
-        ymax = Q3C_HALF;
-      }
-      else
-      {
-        points[0] = xmin;
-        points[1] = (ymin + ymax) / 2;
-        multi_flag = 1;     
-        xmin = -Q3C_HALF;
-      }
-    }
-  }
-  else
-  {
-    if (xmax > Q3C_HALF)
-    {
-      if (ymin < -Q3C_HALF)
-      {
-        points[0] = xmin;
-        points[1] = ymin;
-        points[2] = xmax;
-        points[3] = ymax;
-        multi_flag = 2;     
-        xmax = Q3C_HALF;
-        ymin = -Q3C_HALF;
-      }
-      else
-      {
-        if (ymax > Q3C_HALF)
-        {
-          points[0] = xmin;
-          points[1] = ymax;
-          points[2] = xmax;
-          points[3] = ymax;
-          multi_flag = 2;
-          xmax = Q3C_HALF;
-          ymax = Q3C_HALF;
-        }
-        else
-        {
-          points[0] = xmax;
-          points[1] = (ymin + ymax) / 2;
-          multi_flag = 1;
-          xmax = Q3C_HALF;
-        }
-      }
-    }
-    else
-    {
-      if (ymin < -Q3C_HALF)
-      {
-        points[0] = (xmin + xmax) / 2;
-        points[1] = ymin;
-        multi_flag = 1;
-        ymin = -Q3C_HALF;
-      }
-      else
-      {
-        if (ymax > Q3C_HALF)
-        {
-          points[0] = (xmin + xmax) / 2;
-          points[1] = ymax;
-          multi_flag = 2;
-          ymax = Q3C_HALF;
-        }
-        else
-        {
-          multi_flag = 0;
-        }
-      }
-    }
-  }
+  q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
   face_num0 = face_num;
  
@@ -3515,103 +2792,8 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
   q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
  
 
-  /* Now in a little bit ugly but fastest way I determine whether the ellipse
-   * intersect other faces or not, and if yes, I setup the array "points" to the
-   * multi_face loop.
-   */
-  if (xmin < -Q3C_HALF)
-  {
-    if (ymin < -Q3C_HALF)
-    {
-      points[0] = xmax;
-      points[1] = ymin;
-      points[2] = xmin;
-      points[3] = ymax;
-      multi_flag = 2;
-      xmin = -Q3C_HALF;
-      ymin = -Q3C_HALF;
-    }
-    else
-    {
-      if (ymax > Q3C_HALF)
-      {
-        points[0] = xmax;
-        points[1] = ymax;
-        points[2] = xmin;
-        points[3] = ymin;
-        multi_flag = 2;
-        xmin = -Q3C_HALF;
-        ymax = Q3C_HALF;
-      }
-      else
-      {
-        points[0] = xmin;
-        points[1] = (ymin + ymax) / 2;
-        multi_flag = 1;     
-        xmin = -Q3C_HALF;
-      }
-    }
-  }
-  else
-  {
-    if (xmax > Q3C_HALF)
-    {
-      if (ymin < -Q3C_HALF)
-      {
-        points[0] = xmin;
-        points[1] = ymin;
-        points[2] = xmax;
-        points[3] = ymax;
-        multi_flag = 2;     
-        xmax = Q3C_HALF;
-        ymin = -Q3C_HALF;
-      }
-      else
-      {
-        if (ymax > Q3C_HALF)
-        {
-          points[0] = xmin;
-          points[1] = ymax;
-          points[2] = xmax;
-          points[3] = ymax;
-          multi_flag = 2;
-          xmax = Q3C_HALF;
-          ymax = Q3C_HALF;
-        }
-        else
-        {
-          points[0] = xmax;
-          points[1] = (ymin + ymax) / 2;
-          multi_flag = 1;
-          xmax = Q3C_HALF;
-        }
-      }
-    }
-    else
-    {
-      if (ymin < -Q3C_HALF)
-      {
-        points[0] = (xmin + xmax) / 2;
-        points[1] = ymin;
-        multi_flag = 1;
-        ymin = -Q3C_HALF;
-      }
-      else
-      {
-        if (ymax > Q3C_HALF)
-        {
-          points[0] = (xmin + xmax) / 2;
-          points[1] = ymax;
-          multi_flag = 2;
-          ymax = Q3C_HALF;
-        }
-        else
-        {
-          multi_flag = 0;
-        }
-      }
-    }
-  }
+  q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
+
 
   face_num0 = face_num;
  
