@@ -86,8 +86,8 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
 #ifdef Q3C_INT8
-			return PointerGetDatum((&ipix_buf));
-			//PG_RETURN_INT64(ipix_buf);
+			/*return PointerGetDatum((&ipix_buf));*/
+			PG_RETURN_INT64(ipix_buf);
 #endif
 #ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_buf);
@@ -104,8 +104,8 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	
 	
 #ifdef Q3C_INT8
-	/*PG_RETURN_INT64(ipix);*/
-	return PointerGetDatum((&ipix_buf));
+	PG_RETURN_INT64(ipix);
+	/*return PointerGetDatum((&ipix_buf));*/
 #endif
 #ifdef Q3C_INT4
 	PG_RETURN_INT32(ipix);
@@ -136,8 +136,8 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
 #ifdef Q3C_INT8
-			return PointerGetDatum((&ipix_buf));
-			//PG_RETURN_INT64(ipix_buf);
+			/*return PointerGetDatum((&ipix_buf));*/
+			PG_RETURN_INT64(ipix_buf);
 #endif
 #ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_buf);
@@ -153,8 +153,8 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	invocation=1;
 	
 #ifdef Q3C_INT8
-	/* PG_RETURN_INT64(ipix); */
-	return PointerGetDatum((&ipix_buf));
+	PG_RETURN_INT64(ipix);
+	/* return PointerGetDatum((&ipix_buf)); */
 #endif
 #ifdef Q3C_INT4
 	PG_RETURN_INT32(ipix);
