@@ -58,6 +58,7 @@ test: gen_data
 dist: clean
 	mkdir -p dist
 	cp *.c *.h *.sql.in Makefile README.q3c COPYING dist
+	cp -r tests dist
 	cat q3c.sql.in | perl create_drops.pl > dist/drop_q3c.sql
 
 #all: q3c test test1 mini_test q3c.sql poly_test
