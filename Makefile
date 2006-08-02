@@ -8,7 +8,7 @@ OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
 PG_CPPFLAGS = -DQ3C_INT8 $(DEBUG) $(OPT) -D_GNU_SOURCE
 SHLIB_LINK += $(filter -lm, $(LIBS))
-EXTRA_CLEAN=dump.c prepare prepare.o
+EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o tests/join.out tests/cone.out gen_data
 
 ifdef NO_PGXS
 subdir = contrib/q3c
@@ -36,6 +36,24 @@ prepare: prepare.o q3cube.o q3c_poly.o
               
 oldclean: 
 	rm -f *~
+
+gen_data: gen_data.c
+	$(CC) $< $(CPPFLAGS) $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
+
+test: gen_data
+	createdb q3c_test
+	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
+	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
+	./gen_data 1 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
+	./gen_data 2 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
+	psql q3c_test -c '\i q3c.sql'
+	psql q3c_test -c 'CREATE INDEX q3c_idx ON test (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'ANALYZE test'
+	cat tests/cone.sql | psql q3c_test > tests/cone.out
+	diff tests/cone.out tests/cone.expected
+	cat tests/join.sql | psql q3c_test > tests/join.out
+	diff tests/join.out tests/join.expected
+	dropdb q3c_test
 
 dist: clean
 	mkdir -p dist

@@ -529,7 +529,7 @@ static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 				{
 					points[0] = (xmin + xmax) / 2;
 					points[1] = ymax;
-					*multi_flag = 2;
+					*multi_flag = 1;
 					*ymax0 = Q3C_HALF;
 				}
 				else
@@ -705,7 +705,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 					xistack[1] = (q3c_ipix_t)(ixmin * n1);
 					yistack[1] = (q3c_ipix_t)(iymax * n1);
 					facestack[1] = face_num;
-					nstack[0] = n1;
+					nstack[1] = n1;
 					nistack = 2;
 				}
 			}
@@ -903,7 +903,11 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			nistack = 3;
 		}
 	}
-
+	
+#ifdef Q3C_DEBUG
+	fprintf(stderr, "MULTI_FLAG: %d\n", multi_flag);
+#endif
+        
 	
 	/* Now I produce the final pixel value by converting x and y values to bitfields
 		and combining them by interleaving, using the predefined arrays xbits and ybits
