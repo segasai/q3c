@@ -83,6 +83,18 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
+				    rightra float, rightdec float,
+				    radius double precision)
+        RETURNS boolean AS
+'
+SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,1))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,3))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
+    AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+' LANGUAGE SQL IMMUTABLE;
+
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision,
 				rightra double precision, rightdec double precision,
