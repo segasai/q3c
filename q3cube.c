@@ -79,7 +79,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 		*ybits = hprm->ybits, xi, yi, i1;
 	char face_num;
 	
-	if (dec == 90)
+	if (dec >= 90)
 	/* Poles */
 	{
 		face_num = 0;
@@ -87,7 +87,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 		y0 = Q3C_HALF;
 		goto END1;
 	}
-	else if (dec == -90)
+	else if (dec <= -90)
 	{
 		face_num = 5;
 		x0 = Q3C_HALF;
@@ -198,7 +198,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
 				*ybits = hprm->ybits, xi, yi, i1;
 	char face_num;
-	if (dec == 90)
+	if (dec >= 90)
 	/* Poles */
 	{
 		face_num = 0;
@@ -208,7 +208,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 		*y_out = 0;
 		goto END1;
 	}
-	else if (dec == -90)
+	else if (dec <= -90)
 	{
 		face_num = 5;
 		x0 = Q3C_HALF;
@@ -294,12 +294,12 @@ char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
 	q3c_coord_t y0 = 0;
 	char face_num;
 	
-	if (dec == 90)
+	if (dec >= 90)
 	/* Poles */
 	{
 		return 0;
 	}
-	else if (dec == -90)
+	else if (dec <= -90)
 	{
 		return 5;
 	}
