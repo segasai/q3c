@@ -337,12 +337,13 @@ inline char q3c_get_region_facenum(q3c_region region, void *data)
 		}
 		case Q3C_ELLIPSE:
 		{
-			q3c_ellipse_region ellipse = *(q3c_ellipse_region*)data;
+			q3c_ellipse_region ellipse = *(q3c_ellipse_region*) data;
 			return q3c_get_facenum(ellipse.ra, ellipse.dec);
 		}
 		case Q3C_POLYGON:
 		{
-			return 1;
+			q3c_poly poly = *(q3c_poly *) data;
+			return q3c_get_facenum_poly(poly);
 		}
 		default:
 			return 1;
@@ -1582,6 +1583,246 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
 
 }
 
+void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
+												q3c_coord_t delta,
+												q3c_coord_t d, q3c_coord_t e,
+												q3c_coord_t PA,
+												q3c_coord_t *ymin,
+												q3c_coord_t *ymax,
+												q3c_coord_t *zmin,
+												q3c_coord_t *zmax,
+												q3c_coord_t *ayy,
+												q3c_coord_t *azz,
+												q3c_coord_t *ayz,
+												q3c_coord_t *ay,
+												q3c_coord_t *az,
+												q3c_coord_t *a)
+{
+	/* Thank you, Maple! */
+	q3c_coord_t t1 = sin(delta);
+	q3c_coord_t t2 = cos(d);
+	q3c_coord_t t3 = t2*t2;
+	q3c_coord_t t4 = t1*t3;
+	q3c_coord_t t5 = cos(PA);
+	q3c_coord_t t6 = cos(alpha);
+	q3c_coord_t t7 = t6*t6;
+	q3c_coord_t t9 = sin(PA);
+	q3c_coord_t t13 = t5*t5;
+	q3c_coord_t t14 = t6*t13;
+	q3c_coord_t t15 = sin(alpha);
+	q3c_coord_t t18 = t15*t3;
+	q3c_coord_t t19 = t18*t14;
+	q3c_coord_t t21 = cos(delta);
+	q3c_coord_t t22 = t21*t21;
+	q3c_coord_t t23 = t15*t22;
+	q3c_coord_t t29 = t15*t6;
+	q3c_coord_t t31 = t22*t3;
+	q3c_coord_t t34 = t1*t5;
+	q3c_coord_t t37 = t9*t3;
+	q3c_coord_t t43 = 2.0*t29*t22;
+	q3c_coord_t t44 = t7*t9;
+	q3c_coord_t t47 = -4.0*t4*t5*t7*t9-4.0*t14*t15+4.0*t19+2.0*t14*t23-2.0*t14*t23*t3+2.0*t29+2.0*t29*t31-2.0*t34*t9+2.0*t34*t37-2.0*t29*t3-t43+4.0*t34*t44;
+	q3c_coord_t t48 = e*e;
+	q3c_coord_t t51 = sin(d);
+	q3c_coord_t t52 = t51*t51;
+	q3c_coord_t t53 = t22*t13;
+	q3c_coord_t t54 = t53*t3;
+	q3c_coord_t t61 = t15*t1;
+	q3c_coord_t t62 = t61*t3;
+	q3c_coord_t t63 = t5*t6;
+	q3c_coord_t t64 = t63*t9;
+	q3c_coord_t t65 = t62*t64;
+	q3c_coord_t t67 = t13*t3;
+	q3c_coord_t t70 = t7*t3;
+	q3c_coord_t t71 = t53*t70;
+	q3c_coord_t t74 = t22*t7;
+	q3c_coord_t t75 = 2.0*t74;
+	q3c_coord_t t78 = t74*t3;
+	q3c_coord_t t80 = t67*t7;
+	q3c_coord_t t87 = 4.0*t65-2.0*t67+2.0*t13-2.0*t71-2.0*t70-t75-4.0*t7*t13+2.0*t78+4.0*t80+2.0*t74*t13+2.0*t7-4.0*t61*t64;
+	q3c_coord_t t90 = t87*t48-2.0+t75+2.0*t3;
+	q3c_coord_t t91 = t1*t6;
+	q3c_coord_t t94 = t15*t5;
+	q3c_coord_t t101 = t91*t21;
+	q3c_coord_t t111 = t9*t9;
+	q3c_coord_t t112 = t3*t111;
+	q3c_coord_t t113 = t15*t15;
+	q3c_coord_t t117 = t52*t48;
+	q3c_coord_t t124 = 2.0*t62*t63*t9*t48;
+	q3c_coord_t t125 = t1*t1;
+	q3c_coord_t t126 = t7*t125;
+	q3c_coord_t t132 = t4*t5;
+	q3c_coord_t t138 = t6*t3;
+	q3c_coord_t t143 = t22*t52;
+	q3c_coord_t t145 = t111*t6;
+	q3c_coord_t t159 = t21*t9*t3;
+	q3c_coord_t t160 = t5*t48;
+	q3c_coord_t t163 = t67*t48;
+	q3c_coord_t t165 = t52*t21;
+	q3c_coord_t t167 = t165*t48;
+	q3c_coord_t t170 = t21*t13*t3;
+	q3c_coord_t t173 = t21*t111*t3;
+	q3c_coord_t t186 = t113*t22;
+	q3c_coord_t t190 = t113*t125;
+	q3c_coord_t t197 = t125*t52;
+	q3c_coord_t tmpy0 = t47*t48+t43;
+	q3c_coord_t tmpy1 = -4.0*t52*(-1.0+t54+t3+t22-t31)*t48+4.0*t52*(-1.0+t22+t3);
+	q3c_coord_t tmpy2 = t90;
+	q3c_coord_t tmpz0 = -2.0*(-t91*t13-t91*t3+t94*t37+t91+t91*t67-t94*t9)*t21*t48+2.0*t101;
+	q3c_coord_t tmpz1 = 4.0*t52*(-t67-t74-t70+t54+2.0*t80+t78-t71+t22-t31+2.0*t65)*t48+4.0*t52*(t3+t74-t22);
+	q3c_coord_t tmpz2 = t90;
+	*a = -t112*t113-t67*t113+t74*t52-t74*t117+t112*t113*t48+t124+t67*t126*t48-t67*t126-t112*t126;
+	*ay = -2.0*t132*t44*t48+2.0*t132*t113*t9*t48+2.0*t138*t13*t15*t125*t48+2.0*t29*t143+2.0*t18*t145+2.0*t19-2.0*t18*t145*t48-2.0*t138*t13*t15*t125-2.0*t29*t143*t48-2.0*t138*t111*t15*t125;
+	*az = -2.0*t159*t160*t15-2.0*t101*t163+2.0*t91*t165-2.0*t91*t167+2.0*t91*t170+2.0*t91*t173;
+	*ayz = 2.0*t159*t160*t6-2.0*t61*t21*t163+2.0*t61*t165+2.0*t61*t173-2.0*t61*t167+2.0*t61*t170;
+	*ayy = -t112*t7-t80+t186*t52+t112*t7*t48-t67*t190-t112*t190-t186*t117+t67*t190*t48-t124;
+	*azz = t197+t53*t3*t48-t54-t197*t48-t22*t111*t3;
+
+	*ymin = (tmpy0 - tmpy1) / tmpy2;
+	*ymax = (tmpy0 + tmpy1) / tmpy2;
+	*zmin = (tmpz0 - tmpz1) / tmpz2;
+	*zmax = (tmpz0 + tmpz1) / tmpz2;
+
+}
+
+void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
+												q3c_coord_t delta,
+												q3c_coord_t d, q3c_coord_t e,
+												q3c_coord_t PA,
+												q3c_coord_t *ymin,
+												q3c_coord_t *ymax,
+												q3c_coord_t *zmin,
+												q3c_coord_t *zmax,
+												q3c_coord_t *ayy,
+												q3c_coord_t *azz,
+												q3c_coord_t *ayz,
+												q3c_coord_t *ay,
+												q3c_coord_t *az,
+												q3c_coord_t *a)
+{
+	/* Thank you, Maple! */
+	q3c_coord_t t1 = sin(alpha);
+	q3c_coord_t t2 = sin(delta);
+	q3c_coord_t t3 = t1*t2;
+	q3c_coord_t t4 = cos(d);
+	q3c_coord_t t5 = t4*t4;
+	q3c_coord_t t6 = t3*t5;
+	q3c_coord_t t7 = cos(PA);
+	q3c_coord_t t8 = t7*t7;
+	q3c_coord_t t9 = t8*t5;
+	q3c_coord_t t11 = sin(PA);
+	q3c_coord_t t12 = t7*t11;
+	q3c_coord_t t13 = cos(alpha);
+	q3c_coord_t t14 = t12*t13;
+	q3c_coord_t t15 = t13*t5;
+	q3c_coord_t t19 = cos(delta);
+	q3c_coord_t t21 = e*e;
+	q3c_coord_t t23 = t3*t19;
+	q3c_coord_t t25 = sin(d);
+	q3c_coord_t t26 = t25*t25;
+	q3c_coord_t t28 = 2.0*t6*t14;
+	q3c_coord_t t29 = t19*t19;
+	q3c_coord_t t30 = t13*t13;
+	q3c_coord_t t31 = t29*t30;
+	q3c_coord_t t32 = t31*t5;
+	q3c_coord_t t33 = t29*t8;
+	q3c_coord_t t34 = t30*t5;
+	q3c_coord_t t35 = t33*t34;
+	q3c_coord_t t36 = t9*t30;
+	q3c_coord_t t37 = 2.0*t36;
+	q3c_coord_t t47 = t29*(1.0-t5-t8+t9)*t21-t29+t5;
+	q3c_coord_t t48 = t7*t1;
+	q3c_coord_t t52 = t13*t2;
+	q3c_coord_t t59 = t52*t19;
+	q3c_coord_t t61 = t33*t5;
+	q3c_coord_t t71 = t11*t11;
+	q3c_coord_t t74 = t2*t2;
+	q3c_coord_t t75 = t74*t26;
+	q3c_coord_t t79 = t19*t71*t5;
+	q3c_coord_t t82 = t19*t8*t5;
+	q3c_coord_t t84 = t26*t19;
+	q3c_coord_t t85 = t84*t21;
+	q3c_coord_t t87 = t9*t21;
+	q3c_coord_t t90 = t19*t11*t5;
+	q3c_coord_t t91 = t7*t21;
+	q3c_coord_t t112 = t2*t5*t7;
+	q3c_coord_t t113 = t1*t1;
+	q3c_coord_t t120 = t13*t1;
+	q3c_coord_t t121 = t29*t26;
+	q3c_coord_t t123 = t1*t5;
+	q3c_coord_t t126 = t71*t13;
+	q3c_coord_t t136 = t113*t29;
+	q3c_coord_t t138 = t5*t71;
+	q3c_coord_t t144 = 2.0*t6*t7*t13*t11*t21;
+	q3c_coord_t t147 = t113*t74;
+	q3c_coord_t t150 = t26*t21;
+	q3c_coord_t t157 = t30*t74;
+	
+	q3c_coord_t tmpy0 = 2.0*(-t3+t6-t3*t9-t14+t12*t15+t3*t8)*t19*t21+2.0*t23;
+	q3c_coord_t tmpy1 = 4.0*t26*(-t5-t28+t31-t32+t35-t37+t34+t9)*t21-4.0*t26*(t31-t5);
+	q3c_coord_t tmpy2 = 2.0*t47;
+	q3c_coord_t tmpz0 = 2.0*(-t48*t11+t48*t11*t5+t52-t52*t5+t52*t9-t52*t8)*t19*t21-2.0*t59;
+	q3c_coord_t tmpz1 = -4.0*t26*(-t29-t61-t28+t31-t32+t35-t37+t34+t29*t5+t9)*t21+4.0*t26*(-t29+t31+t5);
+	q3c_coord_t tmpz2 = 2.0*t47;
+	*a = t33*t5*t21-t29*t71*t5-t61-t75*t21+t75;
+	*ay = 2.0*t3*t79+2.0*t3*t82-2.0*t3*t85-2.0*t23*t87+2.0*t90*t91*t13+2.0*t3*t84;
+	*az = -2.0*t52*t84+2.0*t52*t85-2.0*t52*t82-2.0*t52*t79+2.0*t90*t91*t1+2.0*t59*t87;
+	*ayz = 2.0*t15*t8*t1*t74-2.0*t15*t8*t1*t74*t21-2.0*t112*t113*t11*t21+2.0*t112*t30*t11*t21-2.0*t120*t121-2.0*t123*t8*t13-2.0*t123*t126+2.0*t15*t71*t1*t74+2.0*t120*t121*t21+2.0*t123*t126*t21;
+	*ayy = -t36+t136*t26-t138*t30-t144+t138*t30*t21-t9*t147-t138*t147-t136*t150+t9*t147*t21;
+	*azz = t138*t113*t21-t9*t157-t138*t157-t31*t150+t9*t157*t21+t144-t138*t113-t9*t113+t31*t26;
+	
+	*ymin = (tmpy0 - tmpy1) / tmpy2;
+	*ymax = (tmpy0 + tmpy1) / tmpy2;
+	*zmin = (tmpz0 - tmpz1) / tmpz2;
+	*zmax = (tmpz0 + tmpz1) / tmpz2;
+
+}
+
+
+void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
+												q3c_coord_t ra0,
+												q3c_coord_t dec0,
+												q3c_coord_t d0,
+												q3c_coord_t e,
+												q3c_coord_t PA,
+												q3c_coord_t *ymin,
+												q3c_coord_t *ymax,
+												q3c_coord_t *zmin,
+												q3c_coord_t *zmax,
+												q3c_coord_t *ayy,
+												q3c_coord_t *azz,
+												q3c_coord_t *ayz,
+												q3c_coord_t *ay,
+												q3c_coord_t *az,
+												q3c_coord_t *a)
+{
+	q3c_coord_t ra1, dec1 = dec0 * Q3C_DEGRA, d1 = d0 * Q3C_DEGRA,
+		PA1 = PA0 * Q3C_DEGRA, tmpx;
+
+	if ((face_num > 0) && (face_num < 5))
+	{
+		ra1 = (ra0 - (face_num - 1) * 90) * Q3C_DEGRA;
+		q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(
+			ra1, dec1, d1, e, PA1, xmin, xmax, ymin, ymax, 
+			axx, ayy, axy, ax, ay, a);
+	}
+	else
+	{
+		ra1 = ra0 * Q3C_DEGRA;
+		q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(
+			ra1, dec1, d1, e, PA1, xmin, xmax, ymin, ymax, 
+			axx, ayy, axy, ax, ay, a);
+
+		if (face_num == 5)
+		{
+			tmpx = *xmin;
+			*xmin = - (*xmax);
+			*xmax = -tmpx;
+		}
+	}	
+}
+
+
 /*north and south pole
 for south pole the ycoordinates (1st) should be inverted*/
 
@@ -1674,7 +1915,7 @@ void q3c_fast_get_ellipse_xy_minmax(char face_num, q3c_coord_t ra0,
 
 
 
-/* Function cheching whether the square with center xc_cur, yc_cur and the
+/* Function checking whether the square with center xc_cur, yc_cur and the
  * size cur_size on the cube face lie inside, or intersects etc. with the ellipse
  * specified by the coefficients (axx, axy, ayy, ax, ay, a)
  */
@@ -1830,7 +2071,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
 		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 		*ybits = hprm->ybits, i1;
-		
+	
 	char face_num, multi_flag = 0, k, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
