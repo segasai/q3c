@@ -343,7 +343,7 @@ inline char q3c_get_region_facenum(q3c_region region, void *data)
 		case Q3C_POLYGON:
 		{
 			q3c_poly poly = *(q3c_poly *) data;
-			return q3c_get_facenum_poly(poly);
+			return q3c_get_facenum_poly(&poly);
 		}
 		default:
 			return 1;
@@ -1784,7 +1784,7 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 												q3c_coord_t dec0,
 												q3c_coord_t d0,
 												q3c_coord_t e,
-												q3c_coord_t PA,
+												q3c_coord_t PA0,
 												q3c_coord_t *ymin,
 												q3c_coord_t *ymax,
 												q3c_coord_t *zmin,
@@ -1803,21 +1803,21 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 	{
 		ra1 = (ra0 - (face_num - 1) * 90) * Q3C_DEGRA;
 		q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(
-			ra1, dec1, d1, e, PA1, xmin, xmax, ymin, ymax, 
-			axx, ayy, axy, ax, ay, a);
+			ra1, dec1, d1, e, PA1, ymin, ymax, zmin, zmax, 
+			ayy, azz, ayz, ay, az, a);
 	}
 	else
 	{
 		ra1 = ra0 * Q3C_DEGRA;
 		q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(
-			ra1, dec1, d1, e, PA1, xmin, xmax, ymin, ymax, 
-			axx, ayy, axy, ax, ay, a);
+			ra1, dec1, d1, e, PA1, ymin, ymax, zmin, zmax, 
+			ayy, azz, ayz, ay, az, a);
 
 		if (face_num == 5)
 		{
-			tmpx = *xmin;
-			*xmin = - (*xmax);
-			*xmax = -tmpx;
+			tmpx = *ymin;
+			*ymin = - (*ymax);
+			*ymax = -tmpx;
 		}
 	}	
 }
