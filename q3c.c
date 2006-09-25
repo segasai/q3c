@@ -49,7 +49,10 @@
 
 #include "common.h"
 
+/* For PostgreSQL versions >= 8.2 */
+#ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
+#endif
 
 /* Postgres functions */
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
