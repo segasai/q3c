@@ -49,7 +49,7 @@
 
 #include "common.h"
 
-
+PG_MODULE_MAGIC;
 
 /* Postgres functions */
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
