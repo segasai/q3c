@@ -84,7 +84,7 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
-				    rightra float, rightdec float,
+				    rightra real, rightdec real,
 				    radius double precision)
         RETURNS boolean AS
 '
