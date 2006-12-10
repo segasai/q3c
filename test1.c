@@ -26,16 +26,16 @@ i=1;
 
 //ra=45; dec=35; radius= 1;
 
-ra=45 ;
-dec=-40;
-radius=1;
+ra=0 ;
+dec=30;
+radius=30;
 q3c_ipix_t xx[8];
 q3c_new_radial_query(&hprm,ra,dec,radius,xx2,xx3);
 q3c_circle_region circle;
 circle.ra=ra;
 circle.dec=dec;
 circle.rad=radius;
-q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, xx);
+//q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, xx);
 
 //  fprintf(stderr,"%lld %lld\n",ipix[0],ipix[1]);
 
