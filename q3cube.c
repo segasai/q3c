@@ -2134,11 +2134,12 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
     			2 * points[2 * (face_count - 1) + 1], face_num0);
 			q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
 			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 		}
+		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+		ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+		ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+
 #ifdef Q3C_DEBUG
 		fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
 #endif
@@ -2151,7 +2152,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			xesize = 1 / (q3c_coord_t)nside;
 		}
-	
+		
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
 		/* n0 is now the level of quadtree for which the minimal
 		 * element is >~ our ellipse
