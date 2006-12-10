@@ -501,7 +501,7 @@ static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 					points[0] = xmin;
 					points[1] = ymax;
 					points[2] = xmax;
-					points[3] = ymax;
+					points[3] = ymin;
 					*multi_flag = 2;
 					*xmax0 = Q3C_HALF;
 					*ymax0 = Q3C_HALF;
