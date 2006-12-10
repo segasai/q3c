@@ -1375,11 +1375,12 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 	tmp2 = 4 * axx * ayy - axy * axy;
 /* XXXXXX TODO 
  * This is a hack which works when the ellipse is very close to the parabola
- * in that case the first square is the whole face -- that's reasonable, because 
- * the parabolic problem can possibly occur if radius of the cone search is 
- * larger than ~ 23 degrees.
+ * (or when it is transformed to the hyperbola)
+ * in that case the first square is the whole face -- that's reasonable,
+ * because the parabolic/gyperbolic problem can possibly occur if radius
+ * of the cone search is larger than ~ 23 degrees.
  */
-	if (q3c_fabs(tmp2)< 1e-16)
+	if (tmp2< 1e-10)
 	{
 		*xmax = Q3C_HALF;
 		*ymax = Q3C_HALF;
