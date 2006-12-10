@@ -1379,7 +1379,7 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
  * the parabolic problem can possibly occur if radius of the cone search is 
  * larger than ~ 23 degrees.
  */
-	if (tmp2< 1e-16)
+	if (q3c_fabs(tmp2)< 1e-16)
 	{
 		*xmax = Q3C_HALF;
 		*ymax = Q3C_HALF;
