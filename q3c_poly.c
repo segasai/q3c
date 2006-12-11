@@ -270,145 +270,145 @@ static char q3c_poly_intersection_check(q3c_poly *qp,
 	q3c_coord_t yb, q3c_coord_t yt,
 	q3c_coord_t cur_size) 
 {
-  int i, n = qp->n;
-  q3c_coord_t *ax = qp->ax; 
-  q3c_coord_t *ay = qp->ay; 
-  q3c_coord_t *x = qp->x; 
-  q3c_coord_t *y = qp->y; 
-  q3c_coord_t txl, txr, tyb, tyt, axi, ayi, xi, yi, tmp, tmp1;
-  char ret = 0;
-  for( i = 0; i <n ; i++)
-  {
-    xi = x[i];
-    yi = y[i];
-    axi = ax[i];
-    ayi = ay[i];
-    txl = xl - xi;
-    txr = xr - xi;
-    tyb = yb - yi;
-    tyt = yt - yi;
+	int i, n = qp->n;
+	q3c_coord_t *ax = qp->ax; 
+	q3c_coord_t *ay = qp->ay; 
+	q3c_coord_t *x = qp->x; 
+	q3c_coord_t *y = qp->y; 
+	q3c_coord_t txl, txr, tyb, tyt, axi, ayi, xi, yi, tmp, tmp1;
+	char ret = 0;
+	for( i = 0; i <n ; i++)
+	{
+		xi = x[i];
+		yi = y[i];
+		axi = ax[i];
+		ayi = ay[i];
+		txl = xl - xi;
+		txr = xr - xi;
+		tyb = yb - yi;
+		tyt = yt - yi;
 
-    tmp = tyb / ayi;
-    tmp1 = axi * tmp - txl;
-    if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
-    {	
-      ret = 1;
-      break;
-    }    
+		tmp = tyb / ayi;
+		tmp1 = axi * tmp - txl;
+		if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
+		{	
+			ret = 1;
+			break;
+		}    
 
-    tmp = tyt / ayi;
-    tmp1 = axi * tmp - txl;
-    if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
-    {
-      ret = 1;
-      break;
-    }    
+		tmp = tyt / ayi;
+		tmp1 = axi * tmp - txl;
+		if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
+		{
+			ret = 1;
+			break;
+		}    
 
-    tmp = txl / axi;
-    tmp1 = ayi * tmp - tyb;
-    if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size))
-    {
-      ret = 1;
-      break;
-    }    
+		tmp = txl / axi;
+		tmp1 = ayi * tmp - tyb;
+		if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size))
+		{
+			ret = 1;
+			break;
+		}    
 
-    tmp = txr / axi;
-    tmp1 = ayi * tmp - tyb;
-    if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
-    {
-      ret = 1;
-      break;
-    }    
-  }
+		tmp = txr / axi;
+		tmp1 = ayi * tmp - tyb;
+		if ((tmp >= 0) && (tmp <= 1) && (tmp1 >= 0) && (tmp1 <= cur_size)) 
+		{
+			ret = 1;
+			break;
+		}    
+	}
 
-  return ret;
+	return ret;
 }
 
 
 
-int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, 
-                         q3c_coord_t yc_cur, q3c_coord_t cur_size)
+int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
+						q3c_coord_t yc_cur, q3c_coord_t cur_size)
 {
-    q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;
-    int val;
+	q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;
+	int val;
 
 
-    /* Checking the intersection of ellipse and box
-     * The box parameters are set by variables xc_cur, yc_cur and cur_size 
-     */                                                                    
-    xl_cur = xc_cur - cur_size / 2; /* left   */
-    xr_cur = xc_cur + cur_size / 2; /* right  */
-    yb_cur = yc_cur - cur_size / 2; /* bottom */ 
-    yt_cur = yc_cur + cur_size / 2; /* top    */
+	/* Checking the intersection of ellipse and box
+	 * The box parameters are set by variables xc_cur, yc_cur and cur_size 
+	 */                                                                    
+	xl_cur = xc_cur - cur_size / 2; /* left   */
+	xr_cur = xc_cur + cur_size / 2; /* right  */
+	yb_cur = yc_cur - cur_size / 2; /* bottom */ 
+	yt_cur = yc_cur + cur_size / 2; /* top    */
 
-    /* Undef labels -- the labels when the current computed values dont allow
-     * to make the final decision about the intersection
-     */
+	/* Undef labels -- the labels when the current computed values dont allow
+	 * to make the final decision about the intersection
+	 */
 
-    val = q3c_check_point_in_poly(qp, xl_cur, yb_cur);
-    if (val != Q3C_DISJUNCT)
-    {
-      goto PARTUNDEF_CHECK01;
-    }
-    
-    val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
-    if (val != Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;
-    }
-        
-    val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
-    if (val != Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;
-    }
+	val = q3c_check_point_in_poly(qp, xl_cur, yb_cur);
+	if (val != Q3C_DISJUNCT)
+	{
+		goto PARTUNDEF_CHECK01;
+	}
+	
+	val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
+	if (val != Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;
+	}
+	
+	val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
+	if (val != Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;
+	}
 
-    val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
+	val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
 
-    if (val != Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;
-    }
-    else 
-    {
-      if (q3c_poly_intersection_check(qp, xl_cur, xr_cur, yb_cur, yt_cur, cur_size)||
-           ((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) && 
-            (qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
-      {
-        return Q3C_PARTIAL;
-      }
-      else
-      {
-        return Q3C_DISJUNCT;
-      }
-    }
-
-
-    PARTUNDEF_CHECK01:
-    val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
-    if (val == Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;    
-    }
-      
-    //PARTUNDEF_CHECK11:
-    val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
-    if (val == Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;    
-    }
-
-
-    //PARTUNDEF_CHECK10:
-    val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
-    if (val == Q3C_DISJUNCT)
-    {
-      return Q3C_PARTIAL;    
-    }
-    else
-    {
-      return Q3C_COVER;
-    }
+	if (val != Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;
+	}
+	else 
+	{
+		if (q3c_poly_intersection_check(qp, xl_cur, xr_cur, yb_cur, yt_cur, cur_size)||
+			((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) && 
+			(qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
+		{
+			return Q3C_PARTIAL;
+		}
+		else
+		{
+			return Q3C_DISJUNCT;
+		}
+	}
+	
+	
+	PARTUNDEF_CHECK01:
+	val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
+	if (val == Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;    
+	}
+	
+	//PARTUNDEF_CHECK11:
+	val = q3c_check_point_in_poly(qp, xr_cur, yt_cur);
+	if (val == Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;    
+	}
+	
+	
+	//PARTUNDEF_CHECK10:
+	val = q3c_check_point_in_poly(qp, xl_cur, yt_cur);
+	if (val == Q3C_DISJUNCT)
+	{
+		return Q3C_PARTIAL;    
+	}
+	else
+	{
+		return Q3C_COVER;
+	}
 }
 
 
