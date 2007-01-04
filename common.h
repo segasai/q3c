@@ -284,22 +284,6 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 												q3c_coord_t *ay,
 												q3c_coord_t *az,
 												q3c_coord_t *a);
-void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
-												q3c_coord_t ra0,
-												q3c_coord_t dec0,
-												q3c_coord_t d0,
-												q3c_coord_t e,
-												q3c_coord_t PA0,
-												q3c_coord_t *ymin,
-												q3c_coord_t *ymax,
-												q3c_coord_t *zmin,
-												q3c_coord_t *zmax,
-												q3c_coord_t *ayy,
-												q3c_coord_t *azz,
-												q3c_coord_t *ayz,
-												q3c_coord_t *ay,
-												q3c_coord_t *az,
-												q3c_coord_t *a);
 void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
 										  q3c_coord_t delta, q3c_coord_t d,
 										  q3c_coord_t e, q3c_coord_t PA,
@@ -333,6 +317,10 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                           q3c_coord_t dec0, q3c_coord_t rad,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials);
+void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+	q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t PA,
+	q3c_coord_t ell, q3c_ipix_t *out_ipix_arr_fulls,
+	q3c_ipix_t *out_ipix_arr_partials);
 
 void q3c_init_poly(q3c_poly *qp, int n);
 
