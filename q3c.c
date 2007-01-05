@@ -64,6 +64,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
@@ -430,6 +431,108 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	}
 #endif
 }
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_it);
+Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); 
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* Major axis */
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* Axis ratio */
+	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
+	int iteration = PG_GETARG_INT32(5); /* iteration */
+	int full_flag = PG_GETARG_INT32(6); /* full_flag */
+	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
+	/* 1 means full, 0 means partial */
+
+	/* const int n_partials = 800, n_fulls = 800;*/
+	
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	/* static q3c_ipix_t partials[2 * n_partials]; */
+	/* static q3c_ipix_t fulls[2 * n_fulls]; */
+	
+#define n_partials 50
+#define n_fulls 50
+	static q3c_ipix_t partials[2 * n_partials];
+	static q3c_ipix_t fulls[2 * n_fulls];
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	 * So we should have the array with the size twice bigger
+	 */
+ 
+#undef n_fulls
+#undef n_partials
+
+	static int invocation;
+	
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
+	 * ipix_buf. Because if the program will be canceled or crashed 
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		{
+#ifdef Q3C_INT4 
+			if (full_flag)
+			{
+				PG_RETURN_INT32(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT32(partials[iteration]);
+			}
+#endif
+#ifdef Q3C_INT8 
+			if (full_flag)
+			{
+				PG_RETURN_INT64(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT64(partials[iteration]);			
+			}
+#endif
+		}
+	}
+		
+	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
+		partials);
+
+	ra_cen_buf = ra_cen;
+	dec_cen_buf = dec_cen;
+	radius_buf = radius;
+	invocation = 1;
+
+#ifdef Q3C_INT4 
+	if (full_flag)
+	{
+		PG_RETURN_INT32(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT32(partials[iteration]);			
+	}
+#endif
+#ifdef Q3C_INT8
+	if (full_flag)
+	{
+		PG_RETURN_INT64(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT64(partials[iteration]);			
+	}
+#endif
+}
+
+
 
 
 
