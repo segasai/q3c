@@ -28,8 +28,8 @@
 #include <string.h>
 #include "my_bits.h"
 
-inline q3c_coord_t q3c_dist (q3c_coord_t ra1, q3c_coord_t dec1,
-                            q3c_coord_t ra2, q3c_coord_t dec2)
+inline q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
+							q3c_coord_t ra2, q3c_coord_t dec2)
 {
 	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
 	 * it uses just 3 !!! computation of trigonometric functions
@@ -49,8 +49,8 @@ inline q3c_coord_t q3c_dist (q3c_coord_t ra1, q3c_coord_t dec1,
 }
 
 
-inline q3c_coord_t q3c_sindist (q3c_coord_t ra1, q3c_coord_t dec1,
-                               q3c_coord_t ra2, q3c_coord_t dec2)
+inline q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
+								q3c_coord_t ra2, q3c_coord_t dec2)
 {
 	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
 	 * it uses just 3 !!! computation of trigonometric functions
@@ -70,9 +70,9 @@ inline q3c_coord_t q3c_sindist (q3c_coord_t ra1, q3c_coord_t dec1,
 
 
 void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
-                   q3c_ipix_t *ipix)
-                   /* ra in degrees, dec in degrees       */
-                   /* strictly 0<=ra<360 and -90<=dec<=90 */
+					q3c_ipix_t *ipix)
+					/* ra in degrees, dec in degrees       */
+					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
 	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;	
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
@@ -152,16 +152,16 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	xi = (q3c_ipix_t)(x0 * nside);
 	yi = (q3c_ipix_t)(y0 * nside);
 
-  	 /* This two following statements are written to handle the
-  	  * case of upper right corner of base square */
+	/* This two following statements are written to handle the
+	 * case of upper right corner of base square */
 	if (xi == nside)
 	{
 		xi--;
 	}
-  	if (yi == nside)
-  	{
+	if (yi == nside)
+	{
   		yi--;
-  	}
+	}
 	
 	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
@@ -189,10 +189,10 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 /* Cloned version of ang2ipix for outputting also the x,y on the cube face
  * Coordinates on the cube face are x[-0.5,0.5] y[-0.5,0.5] */
 void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
-                  char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
-                  q3c_coord_t *y_out)
-                 /* ra in degrees, dec in degrees       */
-                 /* strictly 0<=ra<360 and -90<=dec<=90 */
+					char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
+					q3c_coord_t *y_out)
+					/* ra in degrees, dec in degrees */
+					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
 	q3c_coord_t x0 = 0,y0 = 0;
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
@@ -288,7 +288,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 
 /* The code extracted from ang2ipix for getting the cube face number */
 char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
-	/* ra in degrees, dec in degrees       */
+	/* ra in degrees, dec in degrees */
 	/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
 	q3c_coord_t y0 = 0;
@@ -440,13 +440,13 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
  * !!!!!!! It does change the arguments (xmin,xmax, ymin, ymax) !!!!!!!!
  */
 static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
-						  q3c_coord_t *xmax0, q3c_coord_t *ymax0,
-						  q3c_coord_t *points, char *multi_flag)
+								q3c_coord_t *xmax0, q3c_coord_t *ymax0,
+								q3c_coord_t *points, char *multi_flag)
 {
 	const q3c_coord_t xmin = *xmin0,
-					  xmax = *xmax0,
-					  ymin = *ymin0,
-					  ymax = *ymax0;
+					xmax = *xmax0,
+					ymin = *ymin0,
+					ymax = *ymax0;
 	if (xmin < -Q3C_HALF)
 	{
 		if (ymin < -Q3C_HALF)
@@ -475,7 +475,7 @@ static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 			{
 				points[0] = xmin;
 				points[1] = (ymin + ymax) / 2;
-				*multi_flag = 1;     
+				*multi_flag = 1; 
 				*xmin0 = -Q3C_HALF;
 			}
 		}
@@ -490,7 +490,7 @@ static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 				points[1] = ymin;
 				points[2] = xmax;
 				points[3] = ymax;
-				*multi_flag = 2;     
+				*multi_flag = 2; 
 				*xmax0 = Q3C_HALF;
 				*ymin0 = -Q3C_HALF;
 			}
@@ -548,7 +548,7 @@ static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 					q3c_ipix_t *ipix)
 				/* ra in degrees, dec in degrees, radius in degrees */
-                /* strictly 0<=ra<360 and -90<=dec<=90 */
+				/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[4];
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
@@ -570,7 +570,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax);
 #endif
 
-	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);                                                 
+	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 	
 	if (multi_flag == 0)
 	{		
@@ -958,7 +958,7 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi)
 {
-	const q3c_ipix_t  i1 = 1 << (Q3C_INTERLEAVED_NBITS);
+	const q3c_ipix_t i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 #ifdef Q3C_INT4
 	{
@@ -1231,7 +1231,6 @@ void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
 }
 
 
-/*  */
 void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 {
 	FILE *fp = fopen(filename, "w");
@@ -1303,59 +1302,59 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
  * produced on the cube face from the cone search
  */
 void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
-                        q3c_coord_t rad, q3c_coord_t *axx, q3c_coord_t *ayy,
-                        q3c_coord_t *axy, q3c_coord_t *ax, q3c_coord_t *ay,
-                        q3c_coord_t *a)
+						q3c_coord_t rad, q3c_coord_t *axx, q3c_coord_t *ayy,
+						q3c_coord_t *axy, q3c_coord_t *ax, q3c_coord_t *ay,
+						q3c_coord_t *a)
 {
-  q3c_coord_t ra1, dec1, sr, cr, cd, sd, crad, p = 1;
-
-  if ((face_num >= 1) && (face_num <= 4))
-  {
-    ra1 = (ra0 - (face_num  - 1 ) * 90) * Q3C_DEGRA;
-    dec1 = dec0 * Q3C_DEGRA;  
-    sr = q3c_sin(ra1);
-    cr = q3c_cos(ra1);
-    sd = q3c_sin(dec1);
-    cd = q3c_cos(dec1);
-    crad = q3c_cos(Q3C_DEGRA * rad);
-    *axx = (crad * crad - sr * sr * cd * cd);
-    *ayy = (crad * crad - sd * sd);
-    *axy = (-2 * sr * sd * cd);
-    *ax = (-2 * sr * cr * cd * cd);
-    *ay = (-2 * cr * sd * cd);
-    *a = crad * crad - cr * cr * cd * cd;
-  }
-  else
-  {
-    if(face_num > 0) p = -1;
-    /* p=1 for North Polar cap & p=-1 for South Polar cap */
-  
-    ra1 = ra0 * Q3C_DEGRA;
-    dec1 = dec0 * Q3C_DEGRA;
-    sr = q3c_sin(ra1);
-    cr = q3c_cos(ra1);
-    sd = q3c_sin(dec1);
-    cd = q3c_cos(dec1);
-    crad = q3c_cos(Q3C_DEGRA * rad);
-    *axx = (crad * crad - sr * sr * cd * cd);
-    *ayy = (crad * crad - cr * cr * cd * cd);
-    *axy = (2 * p * sr * cr * cd * cd);
-    *ax = -(2 * p * sr * sd * cd);
-    *ay = (2 * cr * sd * cd);
-    *a = crad * crad  - sd * sd;  
-  }
-
-
-  /* By this step I convert the coefficient of the polynome to the
-   * coordinate system on the cube face where x[-0.5,0.5] y[-0.5,0.5]
-   * I should incorporate this formulae directly with the formulae
-   * from the top
-   */
-  *axx = (*axx) * 4; *ayy = (*ayy) * 4;
-  *axy = (*axy) * 4;
-  *ax = (*ax) * 2; *ay = (*ay) * 2;
-
-  //fprintf(stdout,"%Lfx^2 %Lfy^2 %Lfxy %Lfx %Lfy %Lf\n",*axx,*ayy,*axy,*ax,*ay,*a);
+	q3c_coord_t ra1, dec1, sr, cr, cd, sd, crad, p = 1;
+	
+	if ((face_num >= 1) && (face_num <= 4))
+	{
+		ra1 = (ra0 - (face_num  - 1 ) * 90) * Q3C_DEGRA;
+		dec1 = dec0 * Q3C_DEGRA;  
+		sr = q3c_sin(ra1);
+		cr = q3c_cos(ra1);
+		sd = q3c_sin(dec1);
+		cd = q3c_cos(dec1);
+		crad = q3c_cos(Q3C_DEGRA * rad);
+		*axx = (crad * crad - sr * sr * cd * cd);
+		*ayy = (crad * crad - sd * sd);
+		*axy = (-2 * sr * sd * cd);
+		*ax = (-2 * sr * cr * cd * cd);
+		*ay = (-2 * cr * sd * cd);
+		*a = crad * crad - cr * cr * cd * cd;
+	}
+	else
+	{
+		if(face_num > 0) p = -1;
+		/* p=1 for North Polar cap & p=-1 for South Polar cap */
+		 
+		ra1 = ra0 * Q3C_DEGRA;
+		dec1 = dec0 * Q3C_DEGRA;
+		sr = q3c_sin(ra1);
+		cr = q3c_cos(ra1);
+		sd = q3c_sin(dec1);
+		cd = q3c_cos(dec1);
+		crad = q3c_cos(Q3C_DEGRA * rad);
+		*axx = (crad * crad - sr * sr * cd * cd);
+		*ayy = (crad * crad - cr * cr * cd * cd);
+		*axy = (2 * p * sr * cr * cd * cd);
+		*ax = -(2 * p * sr * sd * cd);
+		*ay = (2 * cr * sd * cd);
+		*a = crad * crad  - sd * sd;  
+	}
+	
+	/* By this step I convert the coefficient of the polynome to the
+	 * coordinate system on the cube face where x[-0.5,0.5] y[-0.5,0.5]
+	 * I should incorporate this formulae directly with the formulae
+	 * from the top
+	 */
+	
+	(*axx) *= 4;
+	(*ayy) *= 4;
+	(*axy) *= 4;
+	(*ax) *= 2;
+	(*ay) *= 2;
 }
 
 
@@ -1703,11 +1702,7 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*zmin = (tmpz0 - tmpz1) / tmpz2;
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
 	/* reduce the values to the cube with edge length of 1 (instead of 2) */
-/*	*ymin/=2;
-	*ymax/=2;
-	*zmin/=2;
-	*zmax/=2;
-*/
+
 	*ayy*=-4;
 	*azz*=-4;
 	*ayz*=-4;
@@ -1812,11 +1807,6 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*zmin = (tmpz0 - tmpz1) / tmpz2;
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
 	/* reduce the values to the cube with edge length of 1 (instead of 2) */
-/*	*ymin/=2;
-	*ymax/=2;
-	*zmin/=2;
-	*zmax/=2;
-*/
 	*ayy*=-4;
 	*azz*=-4;
 	*ayz*=-4;
@@ -2016,19 +2006,19 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 		  y_cur * (ayy * y_cur + ay) + a;
   
 	if (val < 0) goto PARTUNDEF_CHECK01;
-  
-
+	
+	
 	/* UNDEF_CHECK01: */
 	/* Bottom right vertex */
 	x_cur = xr_cur;
 	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
 		  y_cur * (ayy * y_cur + ay) + a;
-  
+	
 	if (val < 0)
 	{
 		return Q3C_PARTIAL;
 	}
-  
+	
 	/* UNDEF_CHECK10: */
 	/* Top right vertex */
 	y_cur = yt_cur;
@@ -2175,12 +2165,12 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	
 	for(face_count = 0; face_count <= multi_flag; out_nstack = 0, face_count++)
 	{
-    	/* This the beginning of the mega-loop over multiple faces */
-    	if (face_count > 0)
-    	/* This "if" works when we pass through the secondary faces */
-    	{
-    		face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
-    			2 * points[2 * (face_count - 1) + 1], face_num0);
+		/* This the beginning of the mega-loop over multiple faces */
+		if (face_count > 0)
+		/* This "if" works when we pass through the secondary faces */
+		{
+			face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
+				2 * points[2 * (face_count - 1) + 1], face_num0);
 			q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
 			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
 		}
@@ -2257,7 +2247,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				cur_square++;
 				cur_square->x0 = ixmax;
 				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;     
+				cur_square->nside0 = n0; 
 				work_nstack = 2;
 			}
 			else
@@ -2312,9 +2302,9 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				 * of big square [-0.5:0.5]x[-0.5:0.5]
 				 */
 				//fprintf(stdout,"%Lf %Lf %Lf %d\n",xc_cur,yc_cur,cur_size, status);
-				cur_square->status = q3c_circle_cover_check(xc_cur, yc_cur, cur_size,
-						                                        xmin, xmax, ymin, ymax,
-						                                        axx, axy, ayy, ax, ay, a);
+				cur_square->status = q3c_circle_cover_check(xc_cur, yc_cur,
+										cur_size, xmin, xmax, ymin, ymax,
+										axx, axy, ayy, ax, ay, a);
 
 			}
 		 
@@ -2579,452 +2569,452 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 {
  
  
-  q3c_coord_t xmin, xmax, ymin, ymax,
-              xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
-              points[4];
-                   
-  q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
-              ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
-              *ybits = hprm->ybits, i1;
+	q3c_coord_t xmin, xmax, ymin, ymax,
+	            xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
+	            points[4];
+	                 
+	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
+	            ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
+	            *ybits = hprm->ybits, i1;
  
-  char face_num, multi_flag = 0, k, face_count, face_num0;
-  int out_ipix_arr_fulls_pos = 0;
-  int out_ipix_arr_partials_pos = 0;
-  int out_ipix_arr_fulls_length = 100;//1600;
-  int out_ipix_arr_partials_length = 100;//1600;
-  /* !!!!!!!!IMPORTANT!!!!
-   * Keep in mind that those lengths are in fact multiplied by two
-   * maximal number of squares
-   */
+	char face_num, multi_flag = 0, k, face_count, face_num0;
+	int out_ipix_arr_fulls_pos = 0;
+	int out_ipix_arr_partials_pos = 0;
+	int out_ipix_arr_fulls_length = 100;//1600;
+	int out_ipix_arr_partials_length = 100;//1600;
+	/* !!!!!!!!IMPORTANT!!!!
+	 * Keep in mind that those lengths are in fact multiplied by two
+	 * maximal number of squares
+	 */
 
  
-  int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
-      res_depth;
+	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
+	    res_depth;
  
-  const int max_depth = 4; /* log2(Maximal increase of resolution) */
+	const int max_depth = 4; /* log2(Maximal increase of resolution) */
  
-  struct q3c_square work_stack[11024], out_stack[11024], *cur_square;
-  /* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-   * Consider that the size of the stacks should directly depend on the
-   * value of res_depth variable !
-   * It seems that each of stacks should have the size 4*(2^(depth-1))
-   */
+	struct q3c_square work_stack[11024], out_stack[11024], *cur_square;
+	/* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	 * Consider that the size of the stacks should directly depend on the
+	 * value of res_depth variable !
+	 * It seems that each of stacks should have the size 4*(2^(depth-1))
+	 */
  
-  face_num = q3c_get_facenum_poly(qp);
+	face_num = q3c_get_facenum_poly(qp);
  
-  q3c_project_poly(qp, face_num);
-  q3c_prepare_poly(qp);
+	q3c_project_poly(qp, face_num);
+	q3c_prepare_poly(qp);
  
-  q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
+	q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
  
 
-  q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
+	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
 
-  face_num0 = face_num;
+	face_num0 = face_num;
  
-  for(face_count = 0; face_count <= multi_flag; out_nstack = 0, face_count++)
-  {
-    /* This the beginning of the mega-loop over multiple faces */
-   
-    if (face_count > 0)
-      /* This "if" works when we pass through the secondary faces */
-    {
-      face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
-                    2 * points[2 * (face_count - 1) + 1], face_num0);
+	for(face_count = 0; face_count <= multi_flag; out_nstack = 0, face_count++)
+	{
+		/* This the beginning of the mega-loop over multiple faces */
+	 
+		if (face_count > 0)
+			/* This "if" works when we pass through the secondary faces */
+		{
+			face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
+		                2 * points[2 * (face_count - 1) + 1], face_num0);
 
-      q3c_project_poly(qp, face_num);
-      q3c_prepare_poly(qp);
-     
-      q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
-     
-      xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-      xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-      ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-      ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
-    }
-   
+			q3c_project_poly(qp, face_num);
+			q3c_prepare_poly(qp);
+		 
+			q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
+		 
+			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
+			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+		}
+	 
 #ifdef Q3C_DEBUG
-    fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
+		fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
 #endif
-   
-    xesize = xmax - xmin;
-    yesize = ymax - ymin;
-    xesize = xesize > yesize ? xesize : yesize;
+	 
+		xesize = xmax - xmin;
+		yesize = ymax - ymin;
+		xesize = xesize > yesize ? xesize : yesize;
 
-    if (xesize * nside < 1)
-    /* If the region is too small */
-    {
-      xesize=1 / (q3c_coord_t)nside;
-    }
-   
-    n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2))))); 
-    /* n0 is now the level of quadtree for which the minimal
-     * element is >~ our ellipse
-     */
+		if (xesize * nside < 1)
+		/* If the region is too small */
+		{
+			xesize=1 / (q3c_coord_t)nside;
+		}
+	 
+		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2))))); 
+		/* n0 is now the level of quadtree for which the minimal
+		 * element is >~ our ellipse
+		 */
 
-    cur_size = ((q3c_coord_t)1) / n0;
-    //fprintf(stdout, "%lld %Lf %Lf %Lf\n", n0,cur_size,xesize,yesize);
+		cur_size = ((q3c_coord_t)1) / n0;
+		//fprintf(stdout, "%lld %Lf %Lf %Lf\n", n0,cur_size,xesize,yesize);
 #ifdef Q3C_DEBUG
-    fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
-#endif
-
-    /* Here we set up the stack with initial squares */
-   
-    ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-    ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
-    iymin = (Q3C_HALF + ymin) * n0;
-    iymax = (Q3C_HALF + ymax) * n0;
-   
-   
-    ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-    iymax = (iymax == n0 ? (n0 - 1) : iymax);
-   
-   
-    cur_square = work_stack;
-    if (ixmin == ixmax)
-    {
-      if (iymin == iymax)
-      {
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;
-        work_nstack = 1;
-      }
-      else
-      {
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;
-        cur_square++;
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymax;
-        cur_square->nside0 = (int) n0;
-        work_nstack = 2;
-      }
-    }
-    else
-    {
-      if (iymin == iymax)
-      {
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;
-        cur_square++;
-        cur_square->x0 = ixmax;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;     
-        work_nstack = 2;
-      }
-      else
-      {
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;
-        cur_square++;
-        cur_square->x0 = ixmin;
-        cur_square->y0 = iymax;
-        cur_square->nside0 = (int) n0;
-        cur_square++;
-        cur_square->x0 = ixmax;
-        cur_square->y0 = iymin;
-        cur_square->nside0 = (int) n0;
-        cur_square++;
-        cur_square->x0 = ixmax;
-        cur_square->y0 = iymax;
-        cur_square->nside0 = n0;
-        work_nstack = 4;
-      }
-    }
-   
-   
-    /* For this case the maximal increase of resolution of 2^res_depth
-     * for each axis
-     */
-   
-    res_depth = nside / n0;
-    /* If the the query is too small we cannot go up to max_depth since we
-     * are limited by nside depth
-     */
-    res_depth = max_depth > res_depth ? res_depth : max_depth;
-
-    for(i = 1; i <= res_depth; i++)
-    {
-#ifdef Q3C_DEBUG
-      fprintf(stdout,"SQUARE RUN %d :\n", i);
-#endif
-#ifdef Q3C_DEBUG
-    fprintf(stdout,"1) NUM squares in the stack %d\n",work_nstack);
-#endif
-     
-      /* This loop perform the testing of all squares in work_stack */
-      for(j = 0; j < work_nstack; j++)
-      {
-        cur_square = work_stack + j;
-        cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
-        xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
-        yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
-        /* xc_cur and yc_cur -- center of the square (in the coordinate system
-         * of big square [-0.5:0.5]x[-0.5:0.5]
-         */
-        //fprintf(stdout,"%Lf %Lf %Lf %d\n",xc_cur,yc_cur,cur_size, status);
-#ifdef Q3C_DEBUG
-        fprintf(stderr,"Trying (%f %f %f)(%f %f %f %f) --- ",xc_cur,yc_cur,cur_size,xc_cur-cur_size/2,xc_cur+cur_size/2,yc_cur-cur_size/2,yc_cur+cur_size/2);
-#endif
-       
-        cur_square->status = q3c_poly_cover_check(qp, xc_cur, yc_cur,
-                                                  cur_size);
-#ifdef Q3C_DEBUG
-        fprintf(stderr,"%d\n",cur_square->status);
+		fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
 #endif
 
+		/* Here we set up the stack with initial squares */
+	 
+		ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
+		ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
+		iymin = (Q3C_HALF + ymin) * n0;
+		iymax = (Q3C_HALF + ymax) * n0;
+	 
+	 
+		ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
+		iymax = (iymax == n0 ? (n0 - 1) : iymax);
+	 
+	 
+		cur_square = work_stack;
+		if (ixmin == ixmax)
+		{
+			if (iymin == iymax)
+			{
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;
+				work_nstack = 1;
+			}
+			else
+			{
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;
+				cur_square++;
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymax;
+				cur_square->nside0 = (int) n0;
+				work_nstack = 2;
+			}
+		}
+		else
+		{
+			if (iymin == iymax)
+			{
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;
+				cur_square++;
+				cur_square->x0 = ixmax;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;     
+				work_nstack = 2;
+			}
+			else
+			{
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;
+				cur_square++;
+				cur_square->x0 = ixmin;
+				cur_square->y0 = iymax;
+				cur_square->nside0 = (int) n0;
+				cur_square++;
+				cur_square->x0 = ixmax;
+				cur_square->y0 = iymin;
+				cur_square->nside0 = (int) n0;
+				cur_square++;
+				cur_square->x0 = ixmax;
+				cur_square->y0 = iymax;
+				cur_square->nside0 = n0;
+				work_nstack = 4;
+			}
+		}
+	 
+	 
+		/* For this case the maximal increase of resolution of 2^res_depth
+		 * for each axis
+		 */
+	 
+		res_depth = nside / n0;
+		/* If the the query is too small we cannot go up to max_depth since we
+		 * are limited by nside depth
+		 */
+		res_depth = max_depth > res_depth ? res_depth : max_depth;
 
-      }
-     
+		for(i = 1; i <= res_depth; i++)
+		{
 #ifdef Q3C_DEBUG
-      fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
+			fprintf(stdout,"SQUARE RUN %d :\n", i);
 #endif
-      /* Now we select the fully covered set of squares from stack and put them
-       * into out_stack, the partly covered squares are expanded to corresponding
-       * set of 4 squares each.
-       * explanation of the following scheme
-       *    |xxxxxxxxxxxxx     xxxxxxxxxx|
-       *                                 ^
-       *                  /---/           tmp_stack2
-       *                tmp_stack1
-       */
-      for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
-      {
-        cur_square = work_stack + j;
-        //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-        if (cur_square->status == Q3C_PARTIAL)
-        /* If this square partially intersects with the ellipse
-         * I should split this square farther
-         */
-        {
-
-          /* If this is the last stage of resolution loop, I will not split
-           * the "partial" boxes
-           */
-          if (i == res_depth) continue;
-          tmp_stack1++;
-
-          xtmp = 2 * cur_square->x0;
-          ytmp = 2 * cur_square->y0;
-          ntmp = 2 * cur_square->nside0;
-         
-          /* First I try to put the childrens of this square in the part of
-           * the stack freed by trown away squares (which were disjunct from
-           * the ellipse or which were fully covered by the ellipse)
-           */
-          for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
-          {
-            cur_square = work_stack + (j + 1 - tmp_stack1);
-            cur_square->x0 = xtmp + (k & 1);
-            cur_square->y0 = ytmp + ((k & 2) >> 1);
-            cur_square->nside0 = ntmp;
-            tmp_stack1--;
-          }
-         
-          for (; k <= 3; k++)
-          {
-            cur_square = work_stack + tmp_stack2;
-            cur_square->x0 = xtmp + (k & 1);
-            cur_square->y0 = ytmp + ((k & 2) >> 1);
-            cur_square->nside0 = (int) ntmp;
-            tmp_stack2++;
-          }
-         
-        }
-        else
-        {
-          if (cur_square->status == Q3C_COVER)
-          /* I put this square in the output list and
-           * free one place in the stack
-           */
-          {
-            out_stack[out_nstack++] = *cur_square;
-            tmp_stack1++;
-          }
-          else
-          /* This branch can be reached only if status==Q3C_DISJUNCT */
-          {
-            tmp_stack1++;
-            /* I just drop this square and free the place in the stack */
-          }
-        }
-     
-      } /* end of updating of the list of squares loop */
-     
 #ifdef Q3C_DEBUG
-      fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
+		fprintf(stdout,"1) NUM squares in the stack %d\n",work_nstack);
 #endif
-     
-     
-      if (i == res_depth) break;
-      /* After updating the list of squares I compute how much I have them now
-       * (except for the case of last resolution step)
-       */
-      if (tmp_stack1 == 0)
-      {
-        work_nstack = tmp_stack2;
-      }
-      else
-      {
-        if ((tmp_stack2-work_nstack) > tmp_stack1)
-          {
-          memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
-          work_nstack = tmp_stack2 - tmp_stack1;
-          }
-        else
-          {
-          memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
-          work_nstack = tmp_stack2 - tmp_stack1;
-          }
-      }
-     
-    } /* end of resolution loop */
-   
-    //   Old printing of the results
-   
-    for(i = 0; i < out_nstack; i++)
-    {
-      cur_square = out_stack + i;
+		 
+			/* This loop perform the testing of all squares in work_stack */
+			for(j = 0; j < work_nstack; j++)
+			{
+				cur_square = work_stack + j;
+				cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
+				xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
+				yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
+				/* xc_cur and yc_cur -- center of the square (in the coordinate system
+				 * of big square [-0.5:0.5]x[-0.5:0.5]
+				 */
+				//fprintf(stdout,"%Lf %Lf %Lf %d\n",xc_cur,yc_cur,cur_size, status);
 #ifdef Q3C_DEBUG
-      fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+				fprintf(stderr,"Trying (%f %f %f)(%f %f %f %f) --- ",xc_cur,yc_cur,cur_size,xc_cur-cur_size/2,xc_cur+cur_size/2,yc_cur-cur_size/2,yc_cur+cur_size/2);
 #endif
-    }
-    //fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
-   
-    for(i = 0; i < work_nstack; i++)
-    {
-      cur_square = work_stack + i;
+			 
+				cur_square->status = q3c_poly_cover_check(qp, xc_cur, yc_cur,
+				                                          cur_size);
 #ifdef Q3C_DEBUG
-      if (cur_square->status == Q3C_PARTIAL)
-        fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+				fprintf(stderr,"%d\n",cur_square->status);
 #endif
-    }
-   
-   
-   
-    ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-    i1 = 1 << Q3C_INTERLEAVED_NBITS;
-   
-    /* Run through fully covered squares (we take them from out_stack) */
-    for(i = 0; i < out_nstack; i++)
-    {
-      cur_square = out_stack + i; 
-      ntmp1 = (nside / cur_square->nside0); 
-      //fprintf(stdout, "XX%lld\n", ntmp1);
-      xi = cur_square->x0 * ntmp1;
-      yi = cur_square->y0 * ntmp1;
-     
-
-      /* Here we compute the ipix value for the bottom lower corner of the square */
-  #ifdef Q3C_INT4
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-        /*4byte computation*/
-      }
-  #endif /* Q3C_INT4 */
-  #ifdef Q3C_INT8
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-        /*8byte computation*/
-      }
-  #endif /* Q3C_INT8 */
-     
-      ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
 
 
-     
-      /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-       * query of current square
-       * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-       */
-     
-      out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
-      out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
-   
-    } /* End of output run through fully covered squares */
-   
-    if (out_nstack == 0)
-    /* If the list of fully covered squares is empty */
-    {
-      /* Now we just do nothing  -- the stack of ipix'es will be just empty */
-    }
+			}
+		 
+#ifdef Q3C_DEBUG
+			fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
+#endif
+			/* Now we select the fully covered set of squares from stack and put them
+			 * into out_stack, the partly covered squares are expanded to corresponding
+			 * set of 4 squares each.
+			 * explanation of the following scheme
+			 *    |xxxxxxxxxxxxx     xxxxxxxxxx|
+			 *                                 ^
+			 *                  /---/           tmp_stack2
+			 *                tmp_stack1
+			 */
+			for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
+			{
+				cur_square = work_stack + j;
+				//fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
+				if (cur_square->status == Q3C_PARTIAL)
+				/* If this square partially intersects with the ellipse
+				 * I should split this square farther
+				 */
+				{
+
+					/* If this is the last stage of resolution loop, I will not split
+					 * the "partial" boxes
+					 */
+					if (i == res_depth) continue;
+					tmp_stack1++;
+
+					xtmp = 2 * cur_square->x0;
+					ytmp = 2 * cur_square->y0;
+					ntmp = 2 * cur_square->nside0;
+				 
+					/* First I try to put the childrens of this square in the part of
+					 * the stack freed by trown away squares (which were disjunct from
+					 * the ellipse or which were fully covered by the ellipse)
+					 */
+					for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
+					{
+					  cur_square = work_stack + (j + 1 - tmp_stack1);
+					  cur_square->x0 = xtmp + (k & 1);
+					  cur_square->y0 = ytmp + ((k & 2) >> 1);
+					  cur_square->nside0 = ntmp;
+					  tmp_stack1--;
+					}
+				 
+					for (; k <= 3; k++)
+					{
+					  cur_square = work_stack + tmp_stack2;
+					  cur_square->x0 = xtmp + (k & 1);
+					  cur_square->y0 = ytmp + ((k & 2) >> 1);
+					  cur_square->nside0 = (int) ntmp;
+					  tmp_stack2++;
+					}
+				 
+				}
+				else
+				{
+					if (cur_square->status == Q3C_COVER)
+					/* I put this square in the output list and
+					 * free one place in the stack
+					 */
+					{
+					  out_stack[out_nstack++] = *cur_square;
+					  tmp_stack1++;
+					}
+					else
+					/* This branch can be reached only if status==Q3C_DISJUNCT */
+					{
+					  tmp_stack1++;
+					  /* I just drop this square and free the place in the stack */
+					}
+				}
+		 
+			} /* end of updating of the list of squares loop */
+		 
+#ifdef Q3C_DEBUG
+			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
+#endif
+		 
+		 
+			if (i == res_depth) break;
+			/* After updating the list of squares I compute how much I have them now
+			 * (except for the case of last resolution step)
+			 */
+			if (tmp_stack1 == 0)
+			{
+				work_nstack = tmp_stack2;
+			}
+			else
+			{
+				if ((tmp_stack2-work_nstack) > tmp_stack1)
+					{
+					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
+					work_nstack = tmp_stack2 - tmp_stack1;
+					}
+				else
+					{
+					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
+					work_nstack = tmp_stack2 - tmp_stack1;
+					}
+			}
+		 
+		} /* end of resolution loop */
+	 
+		//   Old printing of the results
+	 
+		for(i = 0; i < out_nstack; i++)
+		{
+			cur_square = out_stack + i;
+#ifdef Q3C_DEBUG
+			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+#endif
+		}
+		//fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
+	 
+		for(i = 0; i < work_nstack; i++)
+		{
+			cur_square = work_stack + i;
+#ifdef Q3C_DEBUG
+			if (cur_square->status == Q3C_PARTIAL)
+				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+#endif
+		}
+	 
+	 
+	 
+		ntmp = ((q3c_ipix_t) face_num) * nside * nside;
+		i1 = 1 << Q3C_INTERLEAVED_NBITS;
+	 
+		/* Run through fully covered squares (we take them from out_stack) */
+		for(i = 0; i < out_nstack; i++)
+		{
+			cur_square = out_stack + i; 
+			ntmp1 = (nside / cur_square->nside0); 
+			//fprintf(stdout, "XX%lld\n", ntmp1);
+			xi = cur_square->x0 * ntmp1;
+			yi = cur_square->y0 * ntmp1;
+		 
+
+			/* Here we compute the ipix value for the bottom lower corner of the square */
+	#ifdef Q3C_INT4
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
+				/*4byte computation*/
+			}
+	#endif /* Q3C_INT4 */
+	#ifdef Q3C_INT8
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
+				/*8byte computation*/
+			}
+	#endif /* Q3C_INT8 */
+		 
+			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
 
 
-    /* Run through partly covered squares (we take them from work_stack where
-     * the cur_square->status == Q3C_PARTIAL)
-     */
-    for(i = 0, j = -1; i < work_nstack; i++)
-    {
-      cur_square = work_stack + i;
-      if (cur_square->status != Q3C_PARTIAL)
-        continue;
-      else
-        j+=1; 
-      ntmp1 = (nside / cur_square->nside0); 
-      //fprintf(stdout, "XX%lld\n", ntmp1);
-      xi = cur_square->x0 * ntmp1;
-      yi = cur_square->y0 * ntmp1;
-     
-
-      /* Here we compute the ipix value for the bottom lower corner of the square */
-  #ifdef Q3C_INT4
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-        /*4byte computation*/
-      }
-  #endif /* Q3C_INT4 */
-  #ifdef Q3C_INT8
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-        /*8byte computation*/
-      }
-  #endif /* Q3C_INT8 */
-     
-      ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
+		 
+			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+			 * query of current square
+			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+			 */
+		 
+			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
+			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
+	 
+		} /* End of output run through fully covered squares */
+	 
+		if (out_nstack == 0)
+		/* If the list of fully covered squares is empty */
+		{
+			/* Now we just do nothing  -- the stack of ipix'es will be just empty */
+		}
 
 
-     
-      /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-       * query of current square
-       * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-       */
+		/* Run through partly covered squares (we take them from work_stack where
+		 * the cur_square->status == Q3C_PARTIAL)
+		 */
+		for(i = 0, j = -1; i < work_nstack; i++)
+		{
+			cur_square = work_stack + i;
+			if (cur_square->status != Q3C_PARTIAL)
+				continue;
+			else
+				j+=1; 
+			ntmp1 = (nside / cur_square->nside0); 
+			//fprintf(stdout, "XX%lld\n", ntmp1);
+			xi = cur_square->x0 * ntmp1;
+			yi = cur_square->y0 * ntmp1;
+		 
 
-      out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
-      out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
-     
-   
-    } /* End of output run through partly covered squares */
+			/* Here we compute the ipix value for the bottom lower corner of the square */
+	#ifdef Q3C_INT4
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
+				/*4byte computation*/
+			}
+	#endif /* Q3C_INT4 */
+	#ifdef Q3C_INT8
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
+				/*8byte computation*/
+			}
+	#endif /* Q3C_INT8 */
+		 
+			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
-  } /* End of the mega-loop over the faces */
+
+		 
+			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+			 * query of current square
+			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+			 */
+
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
+		 
+	 
+		} /* End of output run through partly covered squares */
+
+	} /* End of the mega-loop over the faces */
 
 
-  /* Now we should fill the tail of the out_ipix_arr_fulls stack by
-   * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-   */
-   for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
-   {
+	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
+	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
+	 */
+	 for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+	 {
 //     fprintf(stderr,"F%d\n",i);
-     out_ipix_arr_fulls[i++] = 1;
-     out_ipix_arr_fulls[i++] = -1;
-   }
+		 out_ipix_arr_fulls[i++] = 1;
+		 out_ipix_arr_fulls[i++] = -1;
+	 }
 
 
-  /* Now we should fill the tail of the out_ipix_arr_fulls stack by
-   * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-   */
-   for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
-   {
+	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
+	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
+	 */
+	 for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+	 {
 //     fprintf(stderr,"P%d\n",i);
-     out_ipix_arr_partials[i++] = 1;
-     out_ipix_arr_partials[i++] = -1;
-   }
+		 out_ipix_arr_partials[i++] = 1;
+		 out_ipix_arr_partials[i++] = -1;
+	 }
 
 
  
@@ -3094,13 +3084,13 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(face_num, ra0, dec0, majax,
 				ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a);
 			
-     		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-     		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
+		 		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
+		 		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
 			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
 			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
 		}	
 #ifdef Q3C_DEBUG
-    	fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
+			fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
 #endif
 		
 		xesize = xmax - xmin;
@@ -3120,8 +3110,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		
 		cur_size = ((q3c_coord_t)1) / n0;
 #ifdef Q3C_DEBUG
-	    fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
-	    fprintf(stdout,Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT"\n", axx,ayy,axy,ax,ay,a);
+			fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
+			fprintf(stdout,Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT"\n", axx,ayy,axy,ax,ay,a);
 #endif
 		
 		/* Here we set up the stack with initial squares */
@@ -3135,7 +3125,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		iymax = (iymax == n0 ? (n0 - 1) : iymax);
 
 		cur_square = work_stack;
-    
+		
 		if (ixmin == ixmax)
 		{
 			if (iymin == iymax)
@@ -3190,12 +3180,12 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				work_nstack = 4;
 			}
 		}
-   
-   
+	 
+	 
 		/* For this case the maximal increase of resolution of 2^res_depth
 		 * for each axis
 		 */
-		   
+			 
 		res_depth = nside / n0;
 		/* If the the query is too small we cannot go up to max_depth since we
 		 * are limited by nside depth
@@ -3230,7 +3220,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				fprintf(stderr,"%d\n",cur_square->status);
 #endif
 			}
-     
+		 
 #ifdef Q3C_DEBUG
 			fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
 #endif
@@ -3246,237 +3236,237 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			 *                tmp_stack1
 			 */
 
-      for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
-      {
-        cur_square = work_stack + j;
-        //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-        if (cur_square->status == Q3C_PARTIAL)
-        /* If this square partially intersects with the ellipse
-         * I should split this square farther
-         */
-        {
+			for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
+			{
+				cur_square = work_stack + j;
+				//fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
+				if (cur_square->status == Q3C_PARTIAL)
+				/* If this square partially intersects with the ellipse
+				 * I should split this square farther
+				 */
+				{
 
-          /* If this is the last stage of resolution loop, I will not split
-           * the "partial" boxes
-           */
-          if (i == res_depth) continue;
-          tmp_stack1++;
+				  /* If this is the last stage of resolution loop, I will not split
+				   * the "partial" boxes
+				   */
+				  if (i == res_depth) continue;
+				  tmp_stack1++;
 
-          xtmp = 2 * cur_square->x0;
-          ytmp = 2 * cur_square->y0;
-          ntmp = 2 * cur_square->nside0;
-         
-          /* First I try to put the childrens of this square in the part of
-           * the stack freed by trown away squares (which were disjunct from
-           * the ellipse or which were fully covered by the ellipse)
-           */
-          for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
-          {
-            cur_square = work_stack + (j + 1 - tmp_stack1);
-            cur_square->x0 = xtmp + (k & 1);
-            cur_square->y0 = ytmp + ((k & 2) >> 1);
-            cur_square->nside0 = ntmp;
-            tmp_stack1--;
-          }
-         
-          for (; k <= 3; k++)
-          {
-            cur_square = work_stack + tmp_stack2;
-            cur_square->x0 = xtmp + (k & 1);
-            cur_square->y0 = ytmp + ((k & 2) >> 1);
-            cur_square->nside0 = (int) ntmp;
-            tmp_stack2++;
-          }
-         
-        }
-        else
-        {
-          if (cur_square->status == Q3C_COVER)
-          /* I put this square in the output list and
-           * free one place in the stack
-           */
-          {
-            out_stack[out_nstack++] = *cur_square;
-            tmp_stack1++;
-          }
-          else
-          /* This branch can be reached only if status==Q3C_DISJUNCT */
-          {
-            tmp_stack1++;
-            /* I just drop this square and free the place in the stack */
-          }
-        }
-     
-      } /* end of updating of the list of squares loop */
-     
+				  xtmp = 2 * cur_square->x0;
+				  ytmp = 2 * cur_square->y0;
+				  ntmp = 2 * cur_square->nside0;
+				 
+				  /* First I try to put the childrens of this square in the part of
+				   * the stack freed by trown away squares (which were disjunct from
+				   * the ellipse or which were fully covered by the ellipse)
+				   */
+				  for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
+				  {
+				    cur_square = work_stack + (j + 1 - tmp_stack1);
+				    cur_square->x0 = xtmp + (k & 1);
+				    cur_square->y0 = ytmp + ((k & 2) >> 1);
+				    cur_square->nside0 = ntmp;
+				    tmp_stack1--;
+				  }
+				 
+				  for (; k <= 3; k++)
+				  {
+				    cur_square = work_stack + tmp_stack2;
+				    cur_square->x0 = xtmp + (k & 1);
+				    cur_square->y0 = ytmp + ((k & 2) >> 1);
+				    cur_square->nside0 = (int) ntmp;
+				    tmp_stack2++;
+				  }
+				 
+				}
+				else
+				{
+				  if (cur_square->status == Q3C_COVER)
+				  /* I put this square in the output list and
+				   * free one place in the stack
+				   */
+				  {
+				    out_stack[out_nstack++] = *cur_square;
+				    tmp_stack1++;
+				  }
+				  else
+				  /* This branch can be reached only if status==Q3C_DISJUNCT */
+				  {
+				    tmp_stack1++;
+				    /* I just drop this square and free the place in the stack */
+				  }
+				}
+		 
+			} /* end of updating of the list of squares loop */
+		 
 #ifdef Q3C_DEBUG
-      fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
+			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
 #endif
-     
-     
-      if (i == res_depth) break;
-      /* After updating the list of squares I compute how much I have them now
-       * (except for the case of last resolution step)
-       */
-      if (tmp_stack1 == 0)
-      {
-        work_nstack = tmp_stack2;
-      }
-      else
-      {
-        if ((tmp_stack2-work_nstack) > tmp_stack1)
-        {
-          memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
-          work_nstack = tmp_stack2 - tmp_stack1;
-        }
-        else
-        {
-          memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
-          work_nstack = tmp_stack2 - tmp_stack1;
-        }
-      }
-     
-    } /* end of resolution loop */
-   
-    //   Old printing of the results
-   
-    for(i = 0; i < out_nstack; i++)
-    {
-      cur_square = out_stack + i;
+		 
+		 
+			if (i == res_depth) break;
+			/* After updating the list of squares I compute how much I have them now
+			 * (except for the case of last resolution step)
+			 */
+			if (tmp_stack1 == 0)
+			{
+				work_nstack = tmp_stack2;
+			}
+			else
+			{
+				if ((tmp_stack2-work_nstack) > tmp_stack1)
+				{
+				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
+				  work_nstack = tmp_stack2 - tmp_stack1;
+				}
+				else
+				{
+				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
+				  work_nstack = tmp_stack2 - tmp_stack1;
+				}
+			}
+		 
+		} /* end of resolution loop */
+	 
+		//   Old printing of the results
+	 
+		for(i = 0; i < out_nstack; i++)
+		{
+			cur_square = out_stack + i;
 #ifdef Q3C_DEBUG
-      fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
 #endif
-    }
-    //fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
-   
-    for(i = 0; i < work_nstack; i++)
-    {
-      cur_square = work_stack + i;
+		}
+		//fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
+	 
+		for(i = 0; i < work_nstack; i++)
+		{
+			cur_square = work_stack + i;
 #ifdef Q3C_DEBUG
-      if (cur_square->status == Q3C_PARTIAL)
-        fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+			if (cur_square->status == Q3C_PARTIAL)
+				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
 #endif
-    }
-   
-   
-    ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-    i1 = 1 << Q3C_INTERLEAVED_NBITS;
-   
-    /* Run through fully covered squares (we take them from out_stack) */
-    for(i = 0; i < out_nstack; i++)
-    {
-      cur_square = out_stack + i; 
-      ntmp1 = (nside / cur_square->nside0); 
-      //fprintf(stdout, "XX%lld\n", ntmp1);
-      xi = cur_square->x0 * ntmp1;
-      yi = cur_square->y0 * ntmp1;
-     
+		}
+	 
+	 
+		ntmp = ((q3c_ipix_t) face_num) * nside * nside;
+		i1 = 1 << Q3C_INTERLEAVED_NBITS;
+	 
+		/* Run through fully covered squares (we take them from out_stack) */
+		for(i = 0; i < out_nstack; i++)
+		{
+			cur_square = out_stack + i; 
+			ntmp1 = (nside / cur_square->nside0); 
+			//fprintf(stdout, "XX%lld\n", ntmp1);
+			xi = cur_square->x0 * ntmp1;
+			yi = cur_square->y0 * ntmp1;
+		 
 
-      /* Here we compute the ipix value for the bottom lower corner of the square */
-  #ifdef Q3C_INT4
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-        /*4byte computation*/
-      }
-  #endif /* Q3C_INT4 */
-  #ifdef Q3C_INT8
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-        /*8byte computation*/
-      }
-  #endif /* Q3C_INT8 */
-     
-      ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
-
-
-     
-      /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-       * query of current square
-       * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-       */
-     
-      out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
-      out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
-   
-    } /* End of output run through fully covered squares */
-   
-    if (out_nstack == 0)
-    /* If the list of fully covered squares is empty */
-    {
-      /* Now we just do nothing  -- the stack of ipix'es will be just empty */
-    }
+			/* Here we compute the ipix value for the bottom lower corner of the square */
+	#ifdef Q3C_INT4
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
+				/*4byte computation*/
+			}
+	#endif /* Q3C_INT4 */
+	#ifdef Q3C_INT8
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
+				/*8byte computation*/
+			}
+	#endif /* Q3C_INT8 */
+		 
+			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
 
 
-    /* Run through partly covered squares (we take them from work_stack where
-     * the cur_square->status == Q3C_PARTIAL)
-     */
-    for(i = 0, j = -1; i < work_nstack; i++)
-    {
-      cur_square = work_stack + i;
-      if (cur_square->status != Q3C_PARTIAL)
-        continue;
-      else
-        j+=1; 
-      ntmp1 = (nside / cur_square->nside0); 
-      //fprintf(stdout, "XX%lld\n", ntmp1);
-      xi = cur_square->x0 * ntmp1;
-      yi = cur_square->y0 * ntmp1;
-     
-
-      /* Here we compute the ipix value for the bottom lower corner of the square */
-  #ifdef Q3C_INT4
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-        /*4byte computation*/
-      }
-  #endif /* Q3C_INT4 */
-  #ifdef Q3C_INT8
-      {
-        ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-        (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-        /*8byte computation*/
-      }
-  #endif /* Q3C_INT8 */
-     
-      ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
+		 
+			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+			 * query of current square
+			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+			 */
+		 
+			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
+			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
+	 
+		} /* End of output run through fully covered squares */
+	 
+		if (out_nstack == 0)
+		/* If the list of fully covered squares is empty */
+		{
+			/* Now we just do nothing  -- the stack of ipix'es will be just empty */
+		}
 
 
-     
-      /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-       * query of current square
-       * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-       */
+		/* Run through partly covered squares (we take them from work_stack where
+		 * the cur_square->status == Q3C_PARTIAL)
+		 */
+		for(i = 0, j = -1; i < work_nstack; i++)
+		{
+			cur_square = work_stack + i;
+			if (cur_square->status != Q3C_PARTIAL)
+				continue;
+			else
+				j+=1; 
+			ntmp1 = (nside / cur_square->nside0); 
+			//fprintf(stdout, "XX%lld\n", ntmp1);
+			xi = cur_square->x0 * ntmp1;
+			yi = cur_square->y0 * ntmp1;
+		 
 
-      out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
-      out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
-     
-   
-    } /* End of output run through partly covered squares */
+			/* Here we compute the ipix value for the bottom lower corner of the square */
+	#ifdef Q3C_INT4
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
+				/*4byte computation*/
+			}
+	#endif /* Q3C_INT4 */
+	#ifdef Q3C_INT8
+			{
+				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
+				/*8byte computation*/
+			}
+	#endif /* Q3C_INT8 */
+		 
+			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
-  } /* End of the mega-loop over the faces */
+
+		 
+			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+			 * query of current square
+			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+			 */
+
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
+		 
+	 
+		} /* End of output run through partly covered squares */
+
+	} /* End of the mega-loop over the faces */
 
 
-  /* Now we should fill the tail of the out_ipix_arr_fulls stack by
-   * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-   */
-   for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
-   {
+	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
+	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
+	 */
+	 for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+	 {
 //     fprintf(stderr,"F%d\n",i);
-     out_ipix_arr_fulls[i++] = 1;
-     out_ipix_arr_fulls[i++] = -1;
-   }
+		 out_ipix_arr_fulls[i++] = 1;
+		 out_ipix_arr_fulls[i++] = -1;
+	 }
 
 
-  /* Now we should fill the tail of the out_ipix_arr_fulls stack by
-   * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-   */
-   for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
-   {
+	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
+	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
+	 */
+	 for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+	 {
 //     fprintf(stderr,"P%d\n",i);
-     out_ipix_arr_partials[i++] = 1;
-     out_ipix_arr_partials[i++] = -1;
-   }
+		 out_ipix_arr_partials[i++] = 1;
+		 out_ipix_arr_partials[i++] = -1;
+	 }
 
 #ifdef Q3C_DEBUG
 	//fprintf(stderr, "COVER:%s\n", where_cover);
