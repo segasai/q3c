@@ -8,7 +8,9 @@ OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
 PG_CPPFLAGS = -DQ3C_INT8 $(DEBUG) $(OPT) -D_GNU_SOURCE
 SHLIB_LINK += $(filter -lm, $(LIBS))
-EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o tests/join.out tests/cone.out gen_data
+EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o \
+			tests/join.out tests/cone.out tests/ellipse.out \
+			gen_data
 
 ifdef NO_PGXS
 subdir = contrib/q3c
@@ -51,6 +53,8 @@ test: gen_data
 	psql q3c_test -c 'ANALYZE test'
 	cat tests/cone.sql | psql q3c_test > tests/cone.out
 	diff tests/cone.out tests/cone.expected
+	cat tests/ellipse.sql | psql q3c_test > tests/ellipse.out
+	diff tests/ellipse.out tests/ellipse.expected
 	cat tests/join.sql | psql q3c_test > tests/join.out
 	diff tests/join.out tests/join.expected
 	dropdb q3c_test
