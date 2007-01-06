@@ -1693,12 +1693,27 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*ayz = 2.0*t159*t160*t6-2.0*t61*t21*t163+2.0*t61*t165+2.0*t61*t173-2.0*t61*t167+2.0*t61*t170;
 	*ayy = -t112*t7-t80+t186*t52+t112*t7*t48-t67*t190-t112*t190-t186*t117+t67*t190*t48-t124;
 	*azz = t197+t53*t3*t48-t54-t197*t48-t22*t111*t3;
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
+	tmpz1 = q3c_sqrt(tmpz1);
+	tmpz2 = (2 * tmpz2);
 
 	*ymin = (tmpy0 - tmpy1) / tmpy2;
 	*ymax = (tmpy0 + tmpy1) / tmpy2;
 	*zmin = (tmpz0 - tmpz1) / tmpz2;
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
-
+	/* reduce the values to the cube with edge length of 1 (instead of 2) */
+/*	*ymin/=2;
+	*ymax/=2;
+	*zmin/=2;
+	*zmax/=2;
+*/
+	*ayy*=-4;
+	*azz*=-4;
+	*ayz*=-4;
+	*ay*=-2;
+	*az*=-2;
+	*a*=-1;
 }
 
 void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
@@ -1786,12 +1801,28 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*ayz = 2.0*t15*t8*t1*t74-2.0*t15*t8*t1*t74*t21-2.0*t112*t113*t11*t21+2.0*t112*t30*t11*t21-2.0*t120*t121-2.0*t123*t8*t13-2.0*t123*t126+2.0*t15*t71*t1*t74+2.0*t120*t121*t21+2.0*t123*t126*t21;
 	*ayy = -t36+t136*t26-t138*t30-t144+t138*t30*t21-t9*t147-t138*t147-t136*t150+t9*t147*t21;
 	*azz = t138*t113*t21-t9*t157-t138*t157-t31*t150+t9*t157*t21+t144-t138*t113-t9*t113+t31*t26;
+
+	tmpy1 = q3c_sqrt(tmpy1);
+	tmpy2 = (2 * tmpy2);
+	tmpz1 = q3c_sqrt(tmpz1);
+	tmpz2 = (2 * tmpz2);
 	
 	*ymin = (tmpy0 - tmpy1) / tmpy2;
 	*ymax = (tmpy0 + tmpy1) / tmpy2;
 	*zmin = (tmpz0 - tmpz1) / tmpz2;
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
-
+	/* reduce the values to the cube with edge length of 1 (instead of 2) */
+/*	*ymin/=2;
+	*ymax/=2;
+	*zmin/=2;
+	*zmax/=2;
+*/
+	*ayy*=-4;
+	*azz*=-4;
+	*ayz*=-4;
+	*ay*=-2;
+	*az*=-2;
+	*a*=-1;
 }
 
 static void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
@@ -1847,8 +1878,11 @@ static void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 		if (face_num == 5)
 		{
 			tmpx = *ymin;
-			*ymin = - (*ymax);
+			*ymin = -(*ymax);
 			*ymax = -tmpx;
+			*ay=-*ay;			
+			*ayz=-*ayz;
+
 		}
 	}	
 }
@@ -3087,6 +3121,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		cur_size = ((q3c_coord_t)1) / n0;
 #ifdef Q3C_DEBUG
 	    fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
+	    fprintf(stdout,Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT"\n", axx,ayy,axy,ax,ay,a);
 #endif
 		
 		/* Here we set up the stack with initial squares */

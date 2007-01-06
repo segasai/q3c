@@ -26,11 +26,15 @@ i=1;
 
 //ra=45; dec=35; radius= 1;
 
-ra=0 ;
-dec=30;
-radius=30;
+ra=10 ;
+dec=-70;
+radius=10;
+double ell = 0.;
+double pa = 0;
 q3c_ipix_t xx[8];
-q3c_new_radial_query(&hprm,ra,dec,radius,xx2,xx3);
+//q3c_new_radial_query(&hprm,ra,dec,radius,xx2,xx3);
+q3c_ellipse_query(&hprm,ra,dec,radius,ell,pa,xx2,xx3);
+
 q3c_circle_region circle;
 circle.ra=ra;
 circle.dec=dec;
