@@ -234,6 +234,9 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	}
 	
 	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
+	ra_cen = q3c_fmod(ra_cen,360);
+	if (ra_cen<0) ra_cen = 360-ra_cen;
+	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = radius;
@@ -302,6 +305,10 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	}
 	
 	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
+	ra_cen = q3c_fmod(ra_cen,360);
+	if (ra_cen<0) ra_cen = 360-ra_cen;
+	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
+
 	ellipse.ra = ra_cen;
 	ellipse.dec = dec_cen;
 	ellipse.rad = radius;
