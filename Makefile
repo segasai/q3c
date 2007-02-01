@@ -42,7 +42,7 @@ oldclean:
 gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
 
-test: gen_data
+test: gen_data all
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
 	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
