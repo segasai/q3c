@@ -559,6 +559,10 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	int poly_nitems;
 	Oid element_type;
 	char *p;
+#if PG_VERSION_NUM >= 80300
+	bits8 *bitmap;
+	int bitmask;
+#endif
 	
 #define n_partials 50
 #define n_fulls 50
@@ -641,14 +645,60 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	
 	poly_nitems /= 2;
 	qp.n = poly_nitems;
+#if PG_VERSION_NUM >= 80300
+
+	bitmap = ARR_NULLBITMAP(poly_arr);
+	bitmask=1;
+#endif
+
 	for (i = 0; i < poly_nitems; i++)
 	{
+#if PG_VERSION_NUM >= 80300
+		if (bitmap && (*bitmap & bitmask) == 0)
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+					errmsg("null array element not allowed in this context")));
+		}
+		ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align_nominal(p, typalign);
+		if (bitmap)
+		{
+			bitmask <<= 1;
+			if (bitmask == 0x100)
+			{
+				bitmap++;
+				bitmask = 1;
+			}
+		}
+		if (bitmap && (*bitmap & bitmask) == 0)
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+					errmsg("null array element not allowed in this context")));
+		}
+
+		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align_nominal(p, typalign);
+		if (bitmap)
+		{
+			bitmask <<= 1;
+			if (bitmask == 0x100)
+			{
+				bitmap++;
+				bitmask = 1;
+			}
+		}
+#else
 		ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
 		p = att_addlength(p, typlen, PointerGetDatum(p));
 		p = (char *) att_align(p, typalign);
 		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
 		p = att_addlength(p, typlen, PointerGetDatum(p));
 		p = (char *) att_align(p, typalign);
+#endif 
 	}
 	
 	qp.ra = ra;
@@ -725,6 +775,12 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	Oid element_type=FLOAT8OID;
 	char *p;
 	bool result;
+
+#if PG_VERSION_NUM >= 80300
+	bits8 *bitmap;
+	int bitmask;
+#endif
+
 	
 	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
 
@@ -738,16 +794,73 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	}
 	else if (poly_nitems <= 4)
 	{
-		elog(ERROR, "Invalid polygon! Less then 3 vertexes");
+		elog(ERROR, "Invalid polygon! Less than 3 vertexes");
 	}
 	
 	p = ARR_DATA_PTR(poly_arr);
 	poly_nitems /= 2;
 	n = poly_nitems;
 	invocation = 1;
+
+#if PG_VERSION_NUM >= 80300
+
+	bitmap = ARR_NULLBITMAP(poly_arr);
+	bitmask=1;
+#endif
+
 	
 	for (i = 0; i < poly_nitems; i++)
 	{
+#if PG_VERSION_NUM >= 80300
+		if (bitmap && (*bitmap & bitmask) == 0)
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+					errmsg("null array element not allowed in this context")));
+		}
+		ra_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align_nominal(p, typalign);
+		if (bitmap)
+		{
+			bitmask <<= 1;
+			if (bitmask == 0x100)
+			{
+				bitmap++;
+				bitmask = 1;
+			}
+		}
+		if (in_ra[i] != ra_cur)
+		{
+			invocation = 0;
+			in_ra[i] = ra_cur;
+		}
+		if (bitmap && (*bitmap & bitmask) == 0)
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+					errmsg("null array element not allowed in this context")));
+		}
+
+		dec_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
+		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
+		p = (char *) att_align_nominal(p, typalign);
+		if (bitmap)
+		{
+			bitmask <<= 1;
+			if (bitmask == 0x100)
+			{
+				bitmap++;
+				bitmask = 1;
+			}
+		}
+		if (in_dec[i] != dec_cur)
+		{
+			invocation = 0;
+			in_dec[i] = dec_cur;
+		}
+
+#else
 		ra_cur  = DatumGetFloat8(fetch_att(p, typbyval, typlen));
 		if (in_ra[i] != ra_cur)
 		{
@@ -765,6 +878,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 		
 		p = att_addlength(p, typlen, PointerGetDatum(p));
 		p = (char *) att_align(p, typalign);
+#endif
 	}
 	
 	result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
