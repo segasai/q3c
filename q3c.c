@@ -57,6 +57,7 @@ PG_MODULE_MAGIC;
 /* Postgres functions */
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
 Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS);
+Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS);
 Datum pgq3c_dist(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS);
 Datum q3c_strquery(PG_FUNCTION_ARGS);
@@ -166,7 +167,46 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	
 }
 
+PG_FUNCTION_INFO_V1(pgq3c_ipix2ang);
+Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+	q3c_ipix_t ipix;
+	q3c_coord_t ra, dec;
 
+	Datum       *data;
+	bool        isnull;
+	int16       typlen;
+	bool        typbyval;
+	char        typalign;
+	int         ndims, dims[MAXDIM], lbs[MAXDIM];	
+	ArrayType  *result;
+	ipix = PG_GETARG_INT64(0);
+#ifdef Q3C_INT8
+	ipix = PG_GETARG_INT64(0);
+#endif
+#ifdef Q3C_INT4
+	ipix = PG_GETARG_INT32(0);
+#endif
+	q3c_ipix2ang(&hprm, ipix, &ra, &dec);
+
+    /* we have one dimension */
+    ndims = 1;
+    /* and one element */
+    dims[0] = 2;
+    /* and lower bound is 1 */
+    lbs[0] = 0;
+	data = ( Datum *) palloc(sizeof(Datum)*2);
+	data[0] = Float8GetDatum (ra);
+	data[1] = Float8GetDatum (dec);
+    /* get required info about the element type */
+    get_typlenbyvalalign(FLOAT8OID, &typlen, &typbyval, &typalign);
+
+    /* now build the array */
+    result = construct_array(data, 2, FLOAT8OID, typlen, typbyval, typalign);
+
+    PG_RETURN_ARRAYTYPE_P(result);	
+}
 
 
 PG_FUNCTION_INFO_V1(pgq3c_dist);

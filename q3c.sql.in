@@ -14,6 +14,14 @@ CREATE OR REPLACE FUNCTION q3c_ang2ipix(real, real)
 COMMENT ON FUNCTION q3c_ang2ipix(real, real)
 	IS 'Function converting Ra and Dec(floats) to the Q3C ipix value';
 
+CREATE OR REPLACE FUNCTION q3c_ipix2ang(bigint)
+        RETURNS double precision[]
+        AS 'MODULE_PATHNAME', 'pgq3c_ipix2ang'
+        LANGUAGE C IMMUTABLE STRICT;
+COMMENT ON FUNCTION q3c_ipix2ang (bigint)
+	IS 'Function converting the Q3C ipix value to Ra, Dec';
+
+
 CREATE OR REPLACE FUNCTION q3c_dist(double precision, double precision,
 				double precision, double precision)
         RETURNS double precision
