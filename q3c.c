@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2007 Sergey Koposov
+	   Copyright (C) 2004-2008 Sergey Koposov
    
     Author: Sergey Koposov, Sternberg Astronomical Institute
     Email: math@sai.msu.ru 
