@@ -58,6 +58,7 @@ q3c_radial_query -- the function for the radial queries
 
 q3c_poly_query -- the function for queries in polygonal regions
 
+q3c_ipix2ang -- the function to convert the Q3C ipix value to (ra,dec)
 
 ---------------------------------------------------------------------
 
@@ -107,6 +108,12 @@ To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) )
 my_table# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
 
+x) The ellipse query (the query of object which lie inside an ellipse, with
+	ra=10, dec=20, major axis=1deg, axis ratio=0.5 and positional angle=10deg)
+
+my_db=# select * from mytable WHERE
+	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
+
 
 x) The positional cross-match of the tables:
 
@@ -142,3 +149,15 @@ my_table# SELECT * FROM table1 AS a, table2 AS b WHERE
 where axis_ratio is the column with axis ratio of the ellipses and PA is the 
 column with the positional angles of them, and maj_ax is the column with major
 axises of those ellipses.
+
+
+x) The density estimation of your objects:
+
+	select (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c, 
+		q3c_pixarea(i,25) from 
+			(select (q3c_ang2ipix(ra,dec)| (2^50-1)::bigint) as i,
+					count(*) as c from mytable group by i) as x
+
+	returns the ra,dec of the Q3C pixel, number of objects within a pixel, and 
+	a pixel area.
+

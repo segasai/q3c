@@ -74,6 +74,7 @@ typedef double q3c_coord_t;
 #define q3c_cos(a) cos(a)
 #define q3c_sin(a) sin(a)
 #define q3c_asin(a) asin(a)
+#define q3c_acos(a) acos(a)
 #define q3c_sincos(a, b, c) sincos(a, b, c)
 #define q3c_tan(a) tan(a)
 #define q3c_atan(a) atan(a)
@@ -106,6 +107,7 @@ typedef long double q3c_coord_t;
 #define q3c_cos(a) cosl(a)
 #define q3c_sin(a) sinl(a)
 #define q3c_asin(a) asinl(a)
+#define q3c_acos(a) acosl(a)
 #define q3c_sincos(a, b, c) sincosl(a, b, c)
 #define q3c_tan(a) tanl(a)
 #define q3c_atan(a) atanl(a)
@@ -222,6 +224,8 @@ void q3c_dump_prm(struct q3c_prm *,char *);
 void q3c_ang2ipix(struct q3c_prm *, q3c_coord_t, q3c_coord_t, q3c_ipix_t *);
 
 void q3c_ipix2ang(struct q3c_prm *, q3c_ipix_t , q3c_coord_t *, q3c_coord_t *);
+
+q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth);
 
 void q3c_radial_query(struct q3c_prm *, char *, char *, char *,
 					  q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);

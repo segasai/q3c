@@ -1063,6 +1063,85 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	/*fprintf(stdout,"XXX %d %.20Lf %.20Lf\n",face_num,*ra,*dec);*/
 }
 
+
+/* The first part of this function's text was taken from q3c_ipix2ang()
+ * In the future I should split the ipix2xy and xy2ang codepaths
+ * and put them in the separate functions
+ */
+q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
+{
+/* depth here goes from 1 to 30 in the case of 8byte ints
+ * and means the pixel size basically 1 -- the smallest pixel, 30 -- the pixel
+ * equal to the cube face
+ */
+	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1=hprm->xbits1,
+			   *ybits1 = hprm->ybits1, i2, i3, x0, y0, idx,
+			   ix1, iy1, ix2, iy2;
+	q3c_coord_t x1, y1, x2, y2, result;
+/*	char face_num = ipix / (nside * nside);*/
+	const q3c_ipix_t i1 = 1 << Q3C_INTERLEAVED_NBITS;
+	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
+	ipix1 = ipix % (nside * nside);
+	
+#ifdef Q3C_INT4 
+	i3 = ipix1 % i1;
+	i2 = ipix1 / i1;
+	x0 = xbits1[i3];
+	y0 = ybits1[i3];
+	i3 = i2 % i1;
+	i2 = i2 / i1;
+	x0 += xbits1[i3] * ii1;
+	y0 += ybits1[i3] * ii1;
+#endif /* Q3C_INT4 */
+	
+#ifdef Q3C_INT8
+	i3 = ipix1 % i1;
+	i2 = ipix1 / i1;
+	x0 = xbits1[i3];
+	y0 = ybits1[i3];
+	i3 = i2 % i1;
+	i2 = i2 / i1;
+	x0 += xbits1[i3] * ii1;
+	y0 += ybits1[i3] * ii1;
+	i3 = i2 % i1;
+	i2 = i2 / i1;
+	x0 += xbits1[i3] * ii1 * ii1;
+	y0 += ybits1[i3] * ii1 * ii1;	
+	i3 = i2 % i1;
+	i2 = i2 / i1;
+	x0 += xbits1[i3] * ii1 * ii1 * ii1;
+	y0 += ybits1[i3] * ii1 * ii1 * ii1;
+	/*
+	BIT_PRINT8(ipix);
+	BIT_PRINT8ix(x0);
+	BIT_PRINT8iy(y0);
+	*/
+#endif /* Q3C_INT8 */
+
+	ix1 = (x0 >> depth) << depth;
+	iy1 = (y0 >> depth) << depth;
+	idx = ((q3c_ipix_t)1)<<depth;
+	ix2 = ix1 + idx;
+	iy2 = iy1 + idx;
+
+	x1 = (((q3c_coord_t)ix1) / nside) * 2 - 1;
+	y1 = (((q3c_coord_t)iy1) / nside) * 2 - 1;
+	x2 = (((q3c_coord_t)ix2) / nside) * 2 - 1;
+	y2 = (((q3c_coord_t)iy2) / nside) * 2 - 1;
+	/* Now -1<x<1 and -1<y<1 */	
+
+	x1 = x1 / sqrt(1 + x1 * x1);
+	y1 = y1 / sqrt(1 + y1 * y1);
+	x2 = x2 / sqrt(1 + x2 * x2);
+	y2 = y2 / sqrt(1 + y2 * y2);
+
+	result = ( q3c_acos(x1 * y2) - q3c_acos(x1 * y1) ) +
+			 ( q3c_acos(x2 * y1) - q3c_acos(x2 * y2) );
+	result = q3c_fabs(result);
+	return result;
+}
+
+
 char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
 {
 	/* The input x, y should be >=-1  and <=1 */

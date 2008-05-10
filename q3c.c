@@ -58,6 +58,7 @@ PG_MODULE_MAGIC;
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
 Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS);
 Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS);
+Datum pgq3c_pixarea(PG_FUNCTION_ARGS);
 Datum pgq3c_dist(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS);
 Datum q3c_strquery(PG_FUNCTION_ARGS);
@@ -175,13 +176,11 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	q3c_coord_t ra, dec;
 
 	Datum       *data;
-	bool        isnull;
 	int16       typlen;
 	bool        typbyval;
 	char        typalign;
 	int         ndims, dims[MAXDIM], lbs[MAXDIM];	
 	ArrayType  *result;
-	ipix = PG_GETARG_INT64(0);
 #ifdef Q3C_INT8
 	ipix = PG_GETARG_INT64(0);
 #endif
@@ -206,6 +205,28 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
     result = construct_array(data, 2, FLOAT8OID, typlen, typbyval, typalign);
 
     PG_RETURN_ARRAYTYPE_P(result);	
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_pixarea);
+Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+	q3c_ipix_t ipix;
+	q3c_coord_t res;
+	int depth;
+	
+#ifdef Q3C_INT8
+	ipix = PG_GETARG_INT64(0);
+#endif
+#ifdef Q3C_INT4
+	ipix = PG_GETARG_INT32(0);
+#endif
+
+	depth = PG_GETARG_INT32(1);
+
+	res = q3c_pixarea(&hprm, ipix, depth);
+
+	PG_RETURN_FLOAT8(res);
 }
 
 
