@@ -47,18 +47,30 @@ several new functions in postgres with the q3c_ prefix.
 
 The useful ones are: 
 
-q3c_ang2ipix -- the function which converts the ra and dec to ipix value
+q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec in degrees
 
-q3c_join -- the function for the spatial cross-match on the sky
+q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
+  is within radius degrees of (ra2, dec2).
 
-q3c_ellipse_join -- the function for the spatial cross-match with ellipse
-	error area
+q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
+  q3c_join, except (ra1, dec2) have to be within an ellipse with
+  major axis major, the axis ratio ratio and the position angle pa
+  (XXX counted east over north??? XXX)
 
-q3c_radial_query -- the function for the radial queries
+q3c_radial_query(ra, dec, center_ra, center_dec, radius) -- returns
+  true if ra, dec is within radius degrees of center_ra, center_dec (use
+  this for cone searches).
 
-q3c_poly_query -- the function for queries in polygonal regions
+q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within
+  the postgresql polygon poly.
 
-q3c_ipix2ang -- the function to convert the Q3C ipix value to (ra,dec)
+q3c_ipix2ang(ipix) -- returns a 2-array of (ra,dec) corresponding to ipix.
+
+q3c_pixarea(ipix, bits) -- returns the area corresponding to ipix at level
+	bits (1 is smallest, 30 is the cube face) in steradians.
+
+q3c_ipixcenter(ra, dec, bits) -- the function returning the ipix value of the
+	pixel center of certain depth covering the specified (ra,dec)
 
 ---------------------------------------------------------------------
 
@@ -153,11 +165,12 @@ axises of those ellipses.
 
 x) The density estimation of your objects:
 
-	select (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c, 
-		q3c_pixarea(i,25) from 
-			(select (q3c_ang2ipix(ra,dec)| (2^50-1)::bigint) as i,
-					count(*) as c from mytable group by i) as x
+my_table# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
+				q3c_pixarea(i,25) as area from 
+					(select q3c_ipixcenter(ra,dec, 25) as i, count(*) as c from
+						q3c group by i) as x;
 
-	returns the ra,dec of the Q3C pixel, number of objects within a pixel, and 
+
+	returns the ra,dec of the Q3C pixel center, number of objects within a pixel, and 
 	a pixel area.
 
