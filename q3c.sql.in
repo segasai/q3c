@@ -28,6 +28,12 @@ CREATE OR REPLACE FUNCTION q3c_pixarea(ipix bigint, depth int)
 COMMENT ON FUNCTION q3c_pixarea (bigint, int )
 	IS 'Function returning the area of the pixel containing ipix being located at certain depth in the quadtree';
 
+CREATE OR REPLACE FUNCTION q3c_ipixcenter(double precision, double precision, int)
+        RETURNS bigint
+        AS
+   'SELECT ((q3c_ang2ipix($1,$2))>>((2*$3))<<((2*$3))) +
+			((1::bigint)<<(2*($3-1))) -1'
+	LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION q3c_dist(double precision, double precision,
 				double precision, double precision)

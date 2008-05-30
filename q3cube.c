@@ -1135,8 +1135,17 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 	x2 = x2 / sqrt(1 + x2 * x2);
 	y2 = y2 / sqrt(1 + y2 * y2);
 
-	result = ( q3c_acos(x1 * y2) - q3c_acos(x1 * y1) ) +
-			 ( q3c_acos(x2 * y1) - q3c_acos(x2 * y2) );
+	if (q3c_fabs(x1-x2)>1e-4)
+	{
+		result = ( q3c_acos(x1 * y2) - q3c_acos(x1 * y1) ) +
+				 ( q3c_acos(x2 * y1) - q3c_acos(x2 * y2) );
+	}
+	else
+	{
+		result = q3c_asin(  x1*(y1-y2)*(y1+y2)/(y2*sqrt(1-x1*x1*y1*y1)+y1*sqrt(1-x1*x1*y2*y2)))+
+				 q3c_asin(  x2*(y2-y1)*(y1+y2)/(y1*sqrt(1-x2*x2*y2*y2)+y2*sqrt(1-x2*x2*y1*y1)));
+		
+	}
 	result = q3c_fabs(result);
 	return result;
 }

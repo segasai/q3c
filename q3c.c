@@ -224,6 +224,24 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 
 	depth = PG_GETARG_INT32(1);
 
+	if (depth <= 0)
+	{
+		elog(ERROR, "Invalid depth. It should be greater than 0.");
+	}
+#ifdef Q3C_INT8
+	if (depth > 30)
+	{
+		elog(ERROR, "Invalid depth. It should be less than 30.");
+	}
+#endif
+#ifdef Q3C_INT4
+	if (depth > 14)
+	{
+		elog(ERROR, "Invalid depth. It should be less than 14.");
+	}
+
+#endif
+
 	res = q3c_pixarea(&hprm, ipix, depth);
 
 	PG_RETURN_FLOAT8(res);
