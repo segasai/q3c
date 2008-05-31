@@ -55,7 +55,7 @@ q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
 q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec2) have to be within an ellipse with
   major axis major, the axis ratio ratio and the position angle pa
-  (XXX counted east over north??? XXX)
+  (from north through east)
 
 q3c_radial_query(ra, dec, center_ra, center_dec, radius) -- returns
   true if ra, dec is within radius degrees of center_ra, center_dec (use
@@ -97,7 +97,7 @@ Now you should do the last step -- analyze your table:
 
 my_db# ANALYZE my_table;
 
-Now the power of Q3C is available for you!!! :) 
+Now the power of Q3C is available to you!!! :) 
 
 -----------------------------------------------------------------
 
@@ -168,8 +168,7 @@ x) The density estimation of your objects:
 my_table# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
 				q3c_pixarea(i,25) as area from 
 					(select q3c_ipixcenter(ra,dec, 25) as i, count(*) as c from
-						q3c group by i) as x;
-
+						my_table group by i) as x;
 
 	returns the ra,dec of the Q3C pixel center, number of objects within a pixel, and 
 	a pixel area.
