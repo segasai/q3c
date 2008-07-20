@@ -2493,7 +2493,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				}
 				else
 				{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
+					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
 					work_nstack = tmp_stack2 - tmp_stack1;
 				}
 			}
@@ -2956,7 +2956,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 					}
 				else
 					{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
+					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
 					work_nstack = tmp_stack2 - tmp_stack1;
 					}
 			}
@@ -3409,7 +3409,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				}
 				else
 				{
-				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
+				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
 				  work_nstack = tmp_stack2 - tmp_stack1;
 				}
 			}
