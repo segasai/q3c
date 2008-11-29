@@ -1585,8 +1585,8 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 #ifdef __USE_GNU
 		q3c_sincos(dec1, &sd, &cd);
 #else
-		sd = q3c_sin(ra1);
-		cd = q3c_cos(ra1);
+		sd = q3c_sin(dec1);
+		cd = q3c_cos(dec1);
 #endif
 
 		cd2 = cd * cd;
