@@ -1,8 +1,8 @@
 /*
 	   Copyright (C) 2004-2008 Sergey Koposov
-   
+
     Author: Sergey Koposov, Sternberg Astronomical Institute
-    Email: math@sai.msu.ru 
+    Email: math@sai.msu.ru
     http://lnfm1.sai.msu.ru/~math
 
     This file is part of Q3C.
@@ -28,9 +28,9 @@
 /* Postgres stuff */
 #include "postgres.h"
 #include "executor/spi.h"
-#include "funcapi.h"      
+#include "funcapi.h"
 #include "utils/lsyscache.h"
-/* I included that just to remove the gcc warning 
+/* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
  */
 
@@ -38,9 +38,9 @@
 #include "fmgr.h"
 #include "utils/array.h"
 #include "catalog/pg_type.h"
-#include "access/heapam.h"  
+#include "access/heapam.h"
 #include "utils/builtins.h"
-#include "utils/memutils.h"   
+#include "utils/memutils.h"
 #include "catalog/pg_proc.h"
 #include "utils/typcache.h"
 */
@@ -82,10 +82,10 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	static int invocation;
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
-	
+
 	if (invocation==0)
 	{
-		
+
 	}
 	else
 	{
@@ -98,17 +98,17 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 #ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_buf);
 #endif
-		} 
-	} 
-	
+		}
+	}
+
 	q3c_ang2ipix(&hprm, ra, dec, &ipix);
-	
+
 	ra_buf = ra;
 	dec_buf = dec;
 	ipix_buf = ipix;
 	invocation=1;
-	
-	
+
+
 #ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix);
 	/*return PointerGetDatum((&ipix_buf));*/
@@ -130,12 +130,12 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	static int invocation;
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
-	
+
 	//fprintf(stderr,"Y");
-	
+
 	if (invocation==0)
 	{
-	
+
 	}
 	else
 	{
@@ -148,16 +148,16 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 #ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_buf);
 #endif
-		} 
-	} 
-	
+		}
+	}
+
 	q3c_ang2ipix(&hprm, ra, dec, &ipix);
-	
+
 	ra_buf = ra;
 	dec_buf = dec;
 	ipix_buf = ipix;
 	invocation=1;
-	
+
 #ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix);
 	/* return PointerGetDatum((&ipix_buf)); */
@@ -165,7 +165,7 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 #ifdef Q3C_INT4
 	PG_RETURN_INT32(ipix);
 #endif
-	
+
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_ipix2ang);
@@ -179,7 +179,7 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	int16       typlen;
 	bool        typbyval;
 	char        typalign;
-	int         ndims, dims[MAXDIM], lbs[MAXDIM];	
+	int         ndims, dims[MAXDIM], lbs[MAXDIM];
 	ArrayType  *result;
 #ifdef Q3C_INT8
 	ipix = PG_GETARG_INT64(0);
@@ -204,7 +204,7 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
     /* now build the array */
     result = construct_array(data, 2, FLOAT8OID, typlen, typbyval, typalign);
 
-    PG_RETURN_ARRAYTYPE_P(result);	
+    PG_RETURN_ARRAYTYPE_P(result);
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_pixarea);
@@ -214,7 +214,7 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	q3c_ipix_t ipix;
 	q3c_coord_t res;
 	int depth;
-	
+
 #ifdef Q3C_INT8
 	ipix = PG_GETARG_INT64(0);
 #endif
@@ -289,13 +289,13 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
 	int iteration = PG_GETARG_INT32(3); // iteration
-	
-	
+
+
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-   	 * ipix_buf. Because if the program will be canceled or crashed 
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+   	 * ipix_buf. Because if the program will be canceled or crashed
 	 * for some reason the invocation should be == 0
  	 */
 	}
@@ -303,15 +303,15 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 #endif
 		}
 	}
-	
+
 	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
 	ra_cen = q3c_fmod(ra_cen,360);
 	if (ra_cen<0) ra_cen = 360-ra_cen;
@@ -320,23 +320,23 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	circle.dec = dec_cen;
 	circle.rad = radius;
 	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
-	
+
 	for(i = 0; i < 8; i++)
 	{
 		ipix_array_buf[i] = ipix_array[i];
 	}
-	
+
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
-	
+
 	invocation=1;
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 	PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif  
+#endif
 }
 
 
@@ -350,7 +350,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	static int invocation;
 	int i;
 	q3c_ellipse_region ellipse;
-	
+
 	extern struct q3c_prm hprm;
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); /* ra_cen */
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); /* dec_cen */
@@ -358,13 +358,13 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* axis_ratio */
 	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
 	int iteration = PG_GETARG_INT32(5); /* iteration */
-	
-	
+
+
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-	 * ipix_buf. Because if the program will be canceled or crashed 
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
 	 * for some reason the invocation should be == 0
 	 */
 	}
@@ -374,15 +374,15 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 			(radius == radius_buf) && (PA == PA_buf) &&
 			(axis_ratio == axis_ratio_buf))
 		{
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 			PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 #endif
 		}
 	}
-	
+
 	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
 	ra_cen = q3c_fmod(ra_cen,360);
 	if (ra_cen<0) ra_cen = 360-ra_cen;
@@ -393,27 +393,27 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	ellipse.rad = radius;
 	ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	ellipse.PA = PA;
-	
+
 	q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
-	
+
 	for(i = 0; i < 8; i++)
 	{
 		ipix_array_buf[i] = ipix_array[i];
 	}
-	
+
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
 	axis_ratio_buf = axis_ratio;
-	PA_buf = PA;	
+	PA_buf = PA;
 
 	invocation=1;
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 	PG_RETURN_INT32(ipix_array_buf[iteration]);
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif  
+#endif
 }
 
 
@@ -425,7 +425,7 @@ PG_FUNCTION_INFO_V1(pgq3c_radial_query_it);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 {
 	extern struct q3c_prm hprm;
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); 
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0);
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* error radius */
 	int iteration = PG_GETARG_INT32(3); /* iteration */
@@ -433,32 +433,32 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	/* 1 means full, 0 means partial */
 
 	/* const int n_partials = 800, n_fulls = 800;*/
-	
- 
-	
+
+
+
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 	/* static q3c_ipix_t partials[2 * n_partials]; */
 	/* static q3c_ipix_t fulls[2 * n_fulls]; */
-	
+
 #define n_partials 50
 #define n_fulls 50
 	static q3c_ipix_t partials[2 * n_partials];
 	static q3c_ipix_t fulls[2 * n_fulls];
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
- 
+
 #undef n_fulls
 #undef n_partials
 
 	static int invocation;
-	
+
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-	 * ipix_buf. Because if the program will be canceled or crashed 
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
 	 * for some reason the invocation should be == 0
 	 */
 	}
@@ -466,7 +466,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 			if (full_flag)
 			{
 				PG_RETURN_INT32(fulls[iteration]);
@@ -476,19 +476,19 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 				PG_RETURN_INT32(partials[iteration]);
 			}
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
 			}
 			else
 			{
-				PG_RETURN_INT64(partials[iteration]);			
+				PG_RETURN_INT64(partials[iteration]);
 			}
 #endif
 		}
 	}
-		
+
 	q3c_new_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
 
 	ra_cen_buf = ra_cen;
@@ -496,14 +496,14 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	radius_buf = radius;
 	invocation = 1;
 
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 	if (full_flag)
 	{
 		PG_RETURN_INT32(fulls[iteration]);
 	}
 	else
 	{
-		PG_RETURN_INT32(partials[iteration]);			
+		PG_RETURN_INT32(partials[iteration]);
 	}
 #endif
 #ifdef Q3C_INT8
@@ -513,7 +513,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		PG_RETURN_INT64(partials[iteration]);			
+		PG_RETURN_INT64(partials[iteration]);
 	}
 #endif
 }
@@ -523,7 +523,7 @@ PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_it);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 {
 	extern struct q3c_prm hprm;
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); 
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0);
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* Major axis */
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* Axis ratio */
@@ -534,30 +534,30 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	/* 1 means full, 0 means partial */
 
 	/* const int n_partials = 800, n_fulls = 800;*/
-	
+
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 	/* static q3c_ipix_t partials[2 * n_partials]; */
 	/* static q3c_ipix_t fulls[2 * n_fulls]; */
-	
+
 #define n_partials 50
 #define n_fulls 50
 	static q3c_ipix_t partials[2 * n_partials];
 	static q3c_ipix_t fulls[2 * n_fulls];
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
- 
+
 #undef n_fulls
 #undef n_partials
 
 	static int invocation;
-	
+
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-	 * ipix_buf. Because if the program will be canceled or crashed 
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
 	 * for some reason the invocation should be == 0
 	 */
 	}
@@ -565,7 +565,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 			if (full_flag)
 			{
 				PG_RETURN_INT32(fulls[iteration]);
@@ -575,19 +575,19 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 				PG_RETURN_INT32(partials[iteration]);
 			}
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
 			}
 			else
 			{
-				PG_RETURN_INT64(partials[iteration]);			
+				PG_RETURN_INT64(partials[iteration]);
 			}
 #endif
 		}
 	}
-		
+
 	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
 		partials);
 
@@ -596,14 +596,14 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	radius_buf = radius;
 	invocation = 1;
 
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 	if (full_flag)
 	{
 		PG_RETURN_INT32(fulls[iteration]);
 	}
 	else
 	{
-		PG_RETURN_INT32(partials[iteration]);			
+		PG_RETURN_INT32(partials[iteration]);
 	}
 #endif
 #ifdef Q3C_INT8
@@ -613,7 +613,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		PG_RETURN_INT64(partials[iteration]);			
+		PG_RETURN_INT64(partials[iteration]);
 	}
 #endif
 }
@@ -642,13 +642,13 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	bits8 *bitmap;
 	int bitmask;
 #endif
-	
+
 #define n_partials 50
 #define n_fulls 50
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!! 
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges  
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
-	 */    
+	 */
 	static q3c_ipix_t partials[2 * n_partials];
 	static q3c_ipix_t fulls[2 * n_fulls];
 	static q3c_poly qp;
@@ -660,12 +660,12 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 		ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
 
 	static int invocation;
-	
+
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and 
-	 * ipix_buf. Because if the program will be canceled or crashed 
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
 	 * for some reason the invocation should be == 0
 	 */
 	}
@@ -676,24 +676,24 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 		/* Probably I should check that the polygon is the same ... */
 		if (iteration > 0)
 		{
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 			if (full_flag)
 			{
 				PG_RETURN_INT32(fulls[iteration]);
 			}
 			else
 			{
-				PG_RETURN_INT32(partials[iteration]);			
+				PG_RETURN_INT32(partials[iteration]);
 			}
 #endif
-#ifdef Q3C_INT8 
+#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
 			}
 			else
 			{
-				PG_RETURN_INT64(partials[iteration]);			
+				PG_RETURN_INT64(partials[iteration]);
 			}
 #endif
 		}
@@ -701,14 +701,14 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
 	poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
 	element_type = FLOAT8OID;
-	
-	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);				
 
-/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c 
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+
+/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
  function deconstruct_array*/
 
 	p = ARR_DATA_PTR(poly_arr);
-	
+
 	if (poly_nitems % 2 != 0)
 	{
 		elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
@@ -719,9 +719,9 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	}
 	else if (poly_nitems > 2 * Q3C_MAX_N_POLY_VERTEX)
 	{
-		elog(ERROR, "Q3C does not support polygons with number of vertices > %d", Q3C_MAX_N_POLY_VERTEX);	
+		elog(ERROR, "Q3C does not support polygons with number of vertices > %d", Q3C_MAX_N_POLY_VERTEX);
 	}
-	
+
 	poly_nitems /= 2;
 	qp.n = poly_nitems;
 #if PG_VERSION_NUM >= 80300
@@ -777,9 +777,9 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
 		p = att_addlength(p, typlen, PointerGetDatum(p));
 		p = (char *) att_align(p, typalign);
-#endif 
+#endif
 	}
-	
+
 	qp.ra = ra;
 	qp.dec = dec;
 	qp.x = x;
@@ -789,17 +789,17 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
 	/* fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]); */
 	q3c_poly_query(&hprm, &qp, fulls, partials);
-	
+
 	invocation = 1;
 
-#ifdef Q3C_INT4 
+#ifdef Q3C_INT4
 	if (full_flag)
 	{
 		PG_RETURN_INT32(fulls[iteration]);
 	}
 	else
 	{
-		PG_RETURN_INT32(partials[iteration]);			
+		PG_RETURN_INT32(partials[iteration]);
 	}
 #endif
 #ifdef Q3C_INT8
@@ -809,7 +809,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		PG_RETURN_INT64(partials[iteration]);			
+		PG_RETURN_INT64(partials[iteration]);
 	}
 #endif
 }
@@ -836,18 +836,18 @@ PG_FUNCTION_INFO_V1(pgq3c_in_poly);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
 	extern struct q3c_prm hprm;
-	
+
 	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
 
 	static int invocation ;
-	
+
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	int16 typlen;
 	bool typbyval;
-	char typalign;  
-	
+	char typalign;
+
 	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
 	int n, i;
 	q3c_coord_t ra_cur, dec_cur;
@@ -860,13 +860,13 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	int bitmask;
 #endif
 
-	
-	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);        
 
-	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c 
+	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
+
+	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
 	 * function deconstruct_array
 	 */
-	
+
 	 if (poly_nitems % 2 != 0)
 	 {
 	 	elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
@@ -875,7 +875,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	{
 		elog(ERROR, "Invalid polygon! Less than 3 vertexes");
 	}
-	
+
 	p = ARR_DATA_PTR(poly_arr);
 	poly_nitems /= 2;
 	n = poly_nitems;
@@ -887,7 +887,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	bitmask=1;
 #endif
 
-	
+
 	for (i = 0; i < poly_nitems; i++)
 	{
 #if PG_VERSION_NUM >= 80300
@@ -954,14 +954,15 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 			invocation = 0;
 			in_dec[i] = dec_cur;
 		}
-		
+
 		p = att_addlength(p, typlen, PointerGetDatum(p));
 		p = (char *) att_align(p, typalign);
 #endif
 	}
-	
+
 	result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
-											ra_cen, dec_cen, invocation)) > 0;
-	
-	PG_RETURN_BOOL((result));      
+											ra_cen, dec_cen, invocation)) !=
+												Q3C_DISJUNCT;
+
+	PG_RETURN_BOOL((result));
 }
