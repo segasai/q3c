@@ -33,17 +33,8 @@
 /* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
  */
-
-/*
-#include "fmgr.h"
 #include "utils/array.h"
 #include "catalog/pg_type.h"
-#include "access/heapam.h"
-#include "utils/builtins.h"
-#include "utils/memutils.h"
-#include "catalog/pg_proc.h"
-#include "utils/typcache.h"
-*/
 
 /* End of Postgres stuff */
 
