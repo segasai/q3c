@@ -2237,6 +2237,22 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * It seems that each of stacks should have the size 4*(2^(depth-1))
 	 */
 	
+	if (rad>=45)
+	{
+		q3c_ipix_t maxval = 6*(hprm->nside*hprm->nside);
+		for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+		{
+			out_ipix_arr_fulls[i++] = -1 ;
+			out_ipix_arr_fulls[i++] = maxval;
+		}
+		for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+		{
+			out_ipix_arr_partials[i++] = -1;
+			out_ipix_arr_partials[i++] = maxval;
+		}
+		return;
+	}
+	
 	face_num = q3c_get_facenum(ra0, dec0);
 	
 	q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
