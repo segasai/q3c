@@ -1452,7 +1452,8 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 						q3c_coord_t ax, q3c_coord_t ay, q3c_coord_t a,
 						q3c_coord_t *xmin, q3c_coord_t *xmax,
-						q3c_coord_t *ymin, q3c_coord_t *ymax)
+						q3c_coord_t *ymin, q3c_coord_t *ymax,
+						char *full_flag)
 {
 	q3c_coord_t tmp0, tmp1, tmp2;
 
@@ -1469,10 +1470,11 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
  */
 	if (tmp2< 1e-10)
 	{
-		*xmax = Q3C_HALF;
-		*ymax = Q3C_HALF;
-		*xmin = -Q3C_HALF;
-		*ymin = -Q3C_HALF;
+		*xmax = 2*Q3C_HALF;
+		*ymax = 2*Q3C_HALF;
+		*xmin = -2*Q3C_HALF;
+		*ymin = -2*Q3C_HALF;
+		*full_flag=1;
 		return;
 	}
 	
@@ -2215,7 +2217,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 		*ybits = hprm->ybits, i1;
 	
-	char face_num, multi_flag = 0, k, face_count, face_num0;
+	char face_num, multi_flag = 0, k, face_count, face_num0, full_flags[3]={0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 	int out_ipix_arr_fulls_length = 100;//1600;
@@ -2237,9 +2239,9 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * It seems that each of stacks should have the size 4*(2^(depth-1))
 	 */
 	
-	if (rad>=45)
+	if (rad>=35)
 	{
-		q3c_ipix_t maxval = 6*(hprm->nside*hprm->nside);
+		q3c_ipix_t maxval = 6*(nside*nside);
 		for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
 		{
 			out_ipix_arr_fulls[i++] = -1 ;
@@ -2261,7 +2263,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * axx*x^2+ayy*y^2+axy*x*y+ax*x+ay*y+a
 	 */
 	
-	q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
+	q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax,
+		full_flags);
 	
 	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 	
@@ -2275,8 +2278,10 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
 				2 * points[2 * (face_count - 1) + 1], face_num0);
-			q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy, &ax, &ay, &a);
-			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin, &ymax);
+			q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy,
+								&ax, &ay, &a);
+			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin,
+								&ymax, full_flags+face_count);
 		}
 		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
 		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
@@ -2294,6 +2299,20 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		/* If the region is too small */
 		{
 			xesize = 1 / (q3c_coord_t)nside;
+		}
+		
+		if (full_flags[face_count])
+		/* Take the whole face */
+		{
+
+			q3c_ipix_t tmpmin = face_num*nside*nside;
+			q3c_ipix_t tmpmax = (face_num+1)*nside*nside;
+#ifdef Q3C_DEBUG
+			fprintf(stdout, "FULL_FLAG\n");
+#endif
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++]=tmpmin;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++]=tmpmax;
+			continue;
 		}
 		
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
