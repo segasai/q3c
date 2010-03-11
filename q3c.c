@@ -28,22 +28,21 @@
 /* Postgres stuff */
 #include "postgres.h"
 #include "executor/spi.h"
-#include "funcapi.h"
 #include "utils/lsyscache.h"
 /* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
  */
 #include "utils/array.h"
 #include "catalog/pg_type.h"
-
-/* End of Postgres stuff */
-
-#include "common.h"
+#include "fmgr.h"
 
 /* For PostgreSQL versions >= 8.2 */
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
 #endif
+/* End of Postgres stuff */
+
+#include "common.h"
 
 /* Postgres functions */
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
