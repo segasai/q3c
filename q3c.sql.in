@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION q3c_sindist(double precision, double precision,
                                        double precision, double precision)
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_sindist'
-        LANGUAGE C IMMUTABLE STRICT;
+        LANGUAGE C IMMUTABLE STRICT COST 100;
 
 CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision, 
 					 double precision, integer)
@@ -68,7 +68,7 @@ CREATE OR REPLACE FUNCTION q3c_in_ellipse(ra0 double precision, dec0 double prec
 					pa double precision)
         RETURNS boolean
         AS 'MODULE_PATHNAME', 'pgq3c_in_ellipse'
-        LANGUAGE C IMMUTABLE STRICT;
+        LANGUAGE C IMMUTABLE STRICT COST 100;
 
 
 CREATE OR REPLACE FUNCTION q3c_radial_query_it(double precision, 
