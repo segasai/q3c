@@ -54,13 +54,13 @@ CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision,
 					 double precision, integer)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_nearby_it'
-        LANGUAGE C IMMUTABLE STRICT;
+        LANGUAGE C IMMUTABLE STRICT COST 100;
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_nearby_it(double precision, double precision, 
 		double precision, double precision, double precision, integer)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_ellipse_nearby_it'
-        LANGUAGE C IMMUTABLE STRICT;
+        LANGUAGE C IMMUTABLE STRICT COST 100;
 
 CREATE OR REPLACE FUNCTION q3c_in_ellipse(ra0 double precision, dec0 double precision,
 					ra_ell double precision, dec_ell double precision,
