@@ -76,7 +76,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 {
 	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;	
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
-		*ybits = hprm->ybits, xi, yi, i1;
+		*ybits = hprm->ybits, xi, yi;
 	char face_num;
 	
 	if (dec >= 90)
@@ -162,21 +162,8 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	{
   		yi--;
 	}
-	
-	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
-	
-	
-#ifdef Q3C_INT4
-	*ipix = ((q3c_ipix_t)face_num) * nside * nside +
-		xbits[xi % i1] + ybits[yi % i1];
-	/*4byte computation*/
-#endif /* Q3C_INT4 */
-#ifdef Q3C_INT8
-	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-		ybits[yi % i1] + (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
-		ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-	/*8byte computation*/
-#endif /* Q3C_INT8 */
+
+	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
 	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
 	BIT_PRINT8(*ipix);
@@ -196,7 +183,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 {
 	q3c_coord_t x0 = 0,y0 = 0;
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
-				*ybits = hprm->ybits, xi, yi, i1;
+				*ybits = hprm->ybits, xi, yi;
 	char face_num;
 	if (dec >= 90)
 	/* Poles */
@@ -262,20 +249,7 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 		yi--;
 	}
 	
-	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
-	
-	
-#ifdef Q3C_INT4
-	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-		ybits[yi % i1];
-	/*4byte computation*/
-#endif /* Q3C_INT4 */
-#ifdef Q3C_INT8
-	*ipix = ((q3c_ipix_t)face_num) * nside * nside + xbits[xi % i1] +
-		ybits[yi % i1] + (xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
-		ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-	/*8byte computation*/
-#endif /* Q3C_INT8 */
+	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 	
 	*out_face_num = face_num;
 	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
@@ -552,7 +526,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[4];
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
-				*ipix_cur = ipix, ipix0, xi, yi, i1, n0, n1, ixmin,
+				*ipix_cur = ipix, ipix0, xi, yi, n0, n1, ixmin,
 				ixmax, iymin, iymax, xistack[4], yistack[4], facestack[4],
 				nstack[4];
 	char face_num, face_num0, multi_flag;
@@ -914,8 +888,6 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		and combining them by interleaving, using the predefined arrays xbits and ybits
 	*/
 
-	i1 = 1 << (Q3C_INTERLEAVED_NBITS);
-
 	for(i = 0; i < nistack ; i++)
 	{
 		face_num = facestack[i];
@@ -923,22 +895,8 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		yi = yistack[i];
 		n1 = nstack[i];		
 		
-#ifdef Q3C_INT4
-		{
-			ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
-					xbits[xi % i1] + ybits[yi % i1];
-		/*4byte computation*/
-		}
-#endif /* Q3C_INT4 */
-#ifdef Q3C_INT8
-		{
-			ipix0 = ((q3c_ipix_t)face_num) * nside * nside +
-					xbits[xi % i1] + ybits[yi % i1] +
-					(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
-					ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-		/*8byte computation*/
-		}
-#endif /* Q3C_INT8 */
+		ipix0 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
+
 		*(ipix_cur++) = ipix0;
 		*(ipix_cur++) = ipix0 + n1 * n1 - 1;
 		/* IMPORTANT!! I subtract 1 to make after the query with <=ipix<=
@@ -958,21 +916,20 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi)
 {
-	const q3c_ipix_t i1 = 1 << (Q3C_INTERLEAVED_NBITS);
 	
 #ifdef Q3C_INT4
 	{
 		return ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % i1] + ybits[yi % i1];
+				xbits[xi % Q3C_I1] + ybits[yi % Q3C_I1];
 	/*4byte computation*/
 	}
 #endif /* Q3C_INT4 */
 #ifdef Q3C_INT8
 	{
 		return ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] +
-				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
+				xbits[xi % Q3C_I1] + ybits[yi % Q3C_I1] +
+				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1] +
+				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1]) * Q3C_I1 * Q3C_I1;
 	/*8byte computation*/
 	}
 #endif /* Q3C_INT8 */
@@ -988,36 +945,35 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	
 	q3c_coord_t x, y, ra0;
 	char face_num = ipix / (nside * nside);
-	const q3c_ipix_t i1 = 1 << Q3C_INTERLEAVED_NBITS;
 	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
 	ipix1 = ipix % (nside * nside);
 	
 #ifdef Q3C_INT4 
-	i3 = ipix1 % i1;
-	i2 = ipix1 / i1;
+	i3 = ipix1 % Q3C_I1;
+	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
 	y0 = ybits1[i3];
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1;
 	y0 += ybits1[i3] * ii1;
 #endif /* Q3C_INT4 */
 	
 #ifdef Q3C_INT8
-	i3 = ipix1 % i1;
-	i2 = ipix1 / i1;
+	i3 = ipix1 % Q3C_I1;
+	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
 	y0 = ybits1[i3];
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1;
 	y0 += ybits1[i3] * ii1;
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1 * ii1;
 	y0 += ybits1[i3] * ii1 * ii1;	
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1 * ii1 * ii1;
 	y0 += ybits1[i3] * ii1 * ii1 * ii1;
 	/*
@@ -1079,36 +1035,35 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 			   ix1, iy1, ix2, iy2;
 	q3c_coord_t x1, y1, x2, y2, result;
 /*	char face_num = ipix / (nside * nside);*/
-	const q3c_ipix_t i1 = 1 << Q3C_INTERLEAVED_NBITS;
 	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
 	ipix1 = ipix % (nside * nside);
 	
 #ifdef Q3C_INT4 
-	i3 = ipix1 % i1;
-	i2 = ipix1 / i1;
+	i3 = ipix1 % Q3C_I1;
+	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
 	y0 = ybits1[i3];
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1;
 	y0 += ybits1[i3] * ii1;
 #endif /* Q3C_INT4 */
 	
 #ifdef Q3C_INT8
-	i3 = ipix1 % i1;
-	i2 = ipix1 / i1;
+	i3 = ipix1 % Q3C_I1;
+	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
 	y0 = ybits1[i3];
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1;
 	y0 += ybits1[i3] * ii1;
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1 * ii1;
 	y0 += ybits1[i3] * ii1 * ii1;	
-	i3 = i2 % i1;
-	i2 = i2 / i1;
+	i3 = i2 % Q3C_I1;
+	i2 = i2 / Q3C_I1;
 	x0 += xbits1[i3] * ii1 * ii1 * ii1;
 	y0 += ybits1[i3] * ii1 * ii1 * ii1;
 	/*
@@ -2215,7 +2170,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	
 	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
 		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
-		*ybits = hprm->ybits, i1;
+		*ybits = hprm->ybits;
 	
 	char face_num, multi_flag = 0, k, face_count, face_num0, full_flags[3]={0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
@@ -2557,9 +2512,6 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 
 	 
 	 
-		ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-		i1 = 1 << Q3C_INTERLEAVED_NBITS;
-	 
 		/* Run through fully covered squares (we take them from out_stack) */
 		for(i = 0; i < out_nstack; i++)
 		{
@@ -2569,22 +2521,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
-		 
 			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
 
 
@@ -2621,22 +2559,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
-		 
 			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
 		 
@@ -2698,7 +2622,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	                 
 	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
 	            ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
-	            *ybits = hprm->ybits, i1;
+	            *ybits = hprm->ybits;
  
 	char face_num, multi_flag = 0, k, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
@@ -3020,9 +2944,6 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	 
 	 
 	 
-		ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-		i1 = 1 << Q3C_INTERLEAVED_NBITS;
-	 
 		/* Run through fully covered squares (we take them from out_stack) */
 		for(i = 0; i < out_nstack; i++)
 		{
@@ -3032,22 +2953,8 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
-		 
 			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
 
 
@@ -3084,21 +2991,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
-
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 		 
 			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
@@ -3162,7 +3055,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, 
 		iymax, ntmp, ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
-		*xbits = hprm->xbits, *ybits = hprm->ybits, i1;
+		*xbits = hprm->xbits, *ybits = hprm->ybits;
 	
 	char face_num, multi_flag = 0, k, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
@@ -3472,9 +3365,6 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		}
 	 
 	 
-		ntmp = ((q3c_ipix_t) face_num) * nside * nside;
-		i1 = 1 << Q3C_INTERLEAVED_NBITS;
-	 
 		/* Run through fully covered squares (we take them from out_stack) */
 		for(i = 0; i < out_nstack; i++)
 		{
@@ -3484,25 +3374,9 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
-		 
 			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
-
-
 		 
 			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
 			 * query of current square
@@ -3536,26 +3410,10 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			xi = cur_square->x0 * ntmp1;
 			yi = cur_square->y0 * ntmp1;
 		 
+			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-			/* Here we compute the ipix value for the bottom lower corner of the square */
-	#ifdef Q3C_INT4
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1];
-				/*4byte computation*/
-			}
-	#endif /* Q3C_INT4 */
-	#ifdef Q3C_INT8
-			{
-				ipix_tmp1 = ntmp + xbits[xi % i1] + ybits[yi % i1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % i1] + ybits[(yi >> Q3C_INTERLEAVED_NBITS) % i1]) * i1 * i1;
-				/*8byte computation*/
-			}
-	#endif /* Q3C_INT8 */
-		 
 			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
-
-		 
 			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
 			 * query of current square
 			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 

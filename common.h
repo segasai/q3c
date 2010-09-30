@@ -138,6 +138,10 @@ typedef long double q3c_coord_t;
 #define Q3C_INTERLEAVED_NBITS 16
 #endif /* Q3C_INTERLEAVED_NBITS */
 
+#ifndef Q3C_I1
+#define Q3C_I1 (1 << (Q3C_INTERLEAVED_NBITS))
+#endif /* Q3C_INTERLEAVED_NBITS */
+
 
 
 /* this probably will work only in the case of long double variables ?? */
