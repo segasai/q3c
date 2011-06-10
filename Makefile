@@ -6,7 +6,7 @@ DOCS=README.q3c
 OPT=-O3 #-mcpu=pentium4 -march=pentium4 -msse -msse2 -mfpmath=sse -mmmx
 OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
-PG_CPPFLAGS = -DQ3C_INT8 $(DEBUG) $(OPT) -D_GNU_SOURCE
+PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
 SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o \
 			tests/join.out tests/cone.out tests/ellipse.out \

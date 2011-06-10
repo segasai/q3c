@@ -26,41 +26,21 @@
 #include <math.h>
 #include <stdlib.h>
 #include "postgres.h"
+#include <inttypes.h>
+
 #ifndef Q3C_COMMON_H
 #define Q3C_COMMON_H
 
-/* If You have not specified the Q3C_INT4 then use the Q3C_INT8 instead */
-#ifndef Q3C_INT4 
-
-#ifndef Q3C_INT8
-#define Q3C_INT8
-#endif /* Q3C_INT8 */
 
 #ifndef q3c_ipix_t
 /*#define q3c_ipix_t long long 
   typedef long long q3c_ipix_t ;*/
 typedef int64 q3c_ipix_t ;
-
 #endif /* q3c_ipix_t */
 
 #ifndef Q3C_IPIX_FMT
-#define Q3C_IPIX_FMT "%lld"
+#define Q3C_IPIX_FMT "%"PRId64
 #endif /* Q3C_IPIX_FMT */
-
-#else 
-
-#ifndef q3c_ipix_t
-/*#define q3c_ipix_t long int
-  typedef unsigned long int q3c_ipix_t;*/
-typedef uint32 q3c_ipix_t;
-#endif /* q3c_ipix_t */
-
-#ifndef Q3C_IPIX_FMT
-#define Q3C_IPIX_FMT "%ld"
-#endif /* Q3C_IPIX_FMT */  
-
-#endif /* Q3C_INT8 */ 
-
 
 
 

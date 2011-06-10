@@ -928,22 +928,11 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t xi, q3c_ipix_t yi)
 {
 	
-#ifdef Q3C_INT4
-	{
-		return ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % Q3C_I1] + ybits[yi % Q3C_I1];
-	/*4byte computation*/
-	}
-#endif /* Q3C_INT4 */
-#ifdef Q3C_INT8
-	{
-		return ((q3c_ipix_t)face_num) * nside * nside +
-				xbits[xi % Q3C_I1] + ybits[yi % Q3C_I1] +
-				(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1] +
-				ybits[(yi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1]) * Q3C_I1 * Q3C_I1;
-	/*8byte computation*/
-	}
-#endif /* Q3C_INT8 */
+	return ((q3c_ipix_t)face_num) * nside * nside +
+			xbits[xi % Q3C_I1] + ybits[yi % Q3C_I1] +
+			(xbits[(xi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1] +
+			ybits[(yi >> Q3C_INTERLEAVED_NBITS) % Q3C_I1]) * Q3C_I1 * Q3C_I1;
+/*8byte computation*/
 	
 }
 
@@ -959,18 +948,6 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
 	ipix1 = ipix % (nside * nside);
 	
-#ifdef Q3C_INT4 
-	i3 = ipix1 % Q3C_I1;
-	i2 = ipix1 / Q3C_I1;
-	x0 = xbits1[i3];
-	y0 = ybits1[i3];
-	i3 = i2 % Q3C_I1;
-	i2 = i2 / Q3C_I1;
-	x0 += xbits1[i3] * ii1;
-	y0 += ybits1[i3] * ii1;
-#endif /* Q3C_INT4 */
-	
-#ifdef Q3C_INT8
 	i3 = ipix1 % Q3C_I1;
 	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
@@ -992,7 +969,6 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	BIT_PRINT8ix(x0);
 	BIT_PRINT8iy(y0);
 	*/
-#endif /* Q3C_INT8 */
 	
 	x = (((q3c_coord_t)x0) / nside) * 2 - 1;
 	y = (((q3c_coord_t)y0) / nside) * 2 - 1;
@@ -1049,18 +1025,6 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 	const q3c_ipix_t ii1 = 1 << (Q3C_INTERLEAVED_NBITS / 2);
 	ipix1 = ipix % (nside * nside);
 	
-#ifdef Q3C_INT4 
-	i3 = ipix1 % Q3C_I1;
-	i2 = ipix1 / Q3C_I1;
-	x0 = xbits1[i3];
-	y0 = ybits1[i3];
-	i3 = i2 % Q3C_I1;
-	i2 = i2 / Q3C_I1;
-	x0 += xbits1[i3] * ii1;
-	y0 += ybits1[i3] * ii1;
-#endif /* Q3C_INT4 */
-	
-#ifdef Q3C_INT8
 	i3 = ipix1 % Q3C_I1;
 	i2 = ipix1 / Q3C_I1;
 	x0 = xbits1[i3];
@@ -1082,7 +1046,6 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 	BIT_PRINT8ix(x0);
 	BIT_PRINT8iy(y0);
 	*/
-#endif /* Q3C_INT8 */
 
 	ix1 = (x0 >> depth) << depth;
 	iy1 = (y0 >> depth) << depth;
@@ -1302,7 +1265,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{	
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"U", xbits[i]);
+		fprintf(fp, Q3C_IPIX_FMT"L", xbits[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1315,7 +1278,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"U", ybits[i]);
+		fprintf(fp, Q3C_IPIX_FMT"L", ybits[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1328,7 +1291,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"U", xbits1[i]);
+		fprintf(fp, Q3C_IPIX_FMT"L", xbits1[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1341,12 +1304,12 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"U", ybits1[i]);
+		fprintf(fp, Q3C_IPIX_FMT"L", ybits1[i]);
 	}
 	fprintf(fp, "};\n");
 	
 	fprintf(fp, "struct q3c_prm hprm={"
-	"%lld,____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
+	Q3C_IPIX_FMT"L,____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
 }
 
 
@@ -2267,7 +2230,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			xesize = 1 / (q3c_coord_t)nside;
 		}
 		
-		if (full_flags[face_count])
+		if (full_flags[(int)face_count])
 		/* Take the whole face */
 		{
 

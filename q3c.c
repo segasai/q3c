@@ -81,13 +81,8 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	{
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
-#ifdef Q3C_INT8
 			/*return PointerGetDatum((&ipix_buf));*/
 			PG_RETURN_INT64(ipix_buf);
-#endif
-#ifdef Q3C_INT4
-			PG_RETURN_INT32(ipix_buf);
-#endif
 		}
 	}
 
@@ -99,13 +94,8 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	invocation=1;
 
 
-#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix);
 	/*return PointerGetDatum((&ipix_buf));*/
-#endif
-#ifdef Q3C_INT4
-	PG_RETURN_INT32(ipix);
-#endif
 }
 
 
@@ -131,13 +121,8 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	{
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
-#ifdef Q3C_INT8
 			/*return PointerGetDatum((&ipix_buf));*/
 			PG_RETURN_INT64(ipix_buf);
-#endif
-#ifdef Q3C_INT4
-			PG_RETURN_INT32(ipix_buf);
-#endif
 		}
 	}
 
@@ -148,13 +133,8 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	ipix_buf = ipix;
 	invocation=1;
 
-#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix);
 	/* return PointerGetDatum((&ipix_buf)); */
-#endif
-#ifdef Q3C_INT4
-	PG_RETURN_INT32(ipix);
-#endif
 
 }
 
@@ -171,12 +151,8 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	char        typalign;
 	int         ndims, dims[MAXDIM], lbs[MAXDIM];
 	ArrayType  *result;
-#ifdef Q3C_INT8
 	ipix = PG_GETARG_INT64(0);
-#endif
-#ifdef Q3C_INT4
-	ipix = PG_GETARG_INT32(0);
-#endif
+
 	q3c_ipix2ang(&hprm, ipix, &ra, &dec);
 
     /* we have one dimension */
@@ -205,12 +181,7 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	q3c_coord_t res;
 	int depth;
 
-#ifdef Q3C_INT8
 	ipix = PG_GETARG_INT64(0);
-#endif
-#ifdef Q3C_INT4
-	ipix = PG_GETARG_INT32(0);
-#endif
 
 	depth = PG_GETARG_INT32(1);
 
@@ -218,19 +189,10 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	{
 		elog(ERROR, "Invalid depth. It should be greater than 0.");
 	}
-#ifdef Q3C_INT8
 	if (depth > 30)
 	{
 		elog(ERROR, "Invalid depth. It should be less than 30.");
 	}
-#endif
-#ifdef Q3C_INT4
-	if (depth > 14)
-	{
-		elog(ERROR, "Invalid depth. It should be less than 14.");
-	}
-
-#endif
 
 	res = q3c_pixarea(&hprm, ipix, depth);
 
@@ -293,12 +255,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4
-			PG_RETURN_INT32(ipix_array_buf[iteration]);
-#endif
-#ifdef Q3C_INT8
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif
 		}
 	}
 
@@ -321,12 +278,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	radius_buf = radius;
 
 	invocation=1;
-#ifdef Q3C_INT4
-	PG_RETURN_INT32(ipix_array_buf[iteration]);
-#endif
-#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif
 }
 
 
@@ -364,12 +316,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 			(radius == radius_buf) && (PA == PA_buf) &&
 			(axis_ratio == axis_ratio_buf))
 		{
-#ifdef Q3C_INT4
-			PG_RETURN_INT32(ipix_array_buf[iteration]);
-#endif
-#ifdef Q3C_INT8
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif
 		}
 	}
 
@@ -398,12 +345,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	PA_buf = PA;
 
 	invocation=1;
-#ifdef Q3C_INT4
-	PG_RETURN_INT32(ipix_array_buf[iteration]);
-#endif
-#ifdef Q3C_INT8
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
-#endif
 }
 
 
@@ -456,17 +398,6 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4
-			if (full_flag)
-			{
-				PG_RETURN_INT32(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT32(partials[iteration]);
-			}
-#endif
-#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
@@ -475,7 +406,6 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 			{
 				PG_RETURN_INT64(partials[iteration]);
 			}
-#endif
 		}
 	}
 
@@ -486,17 +416,6 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	radius_buf = radius;
 	invocation = 1;
 
-#ifdef Q3C_INT4
-	if (full_flag)
-	{
-		PG_RETURN_INT32(fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT32(partials[iteration]);
-	}
-#endif
-#ifdef Q3C_INT8
 	if (full_flag)
 	{
 		PG_RETURN_INT64(fulls[iteration]);
@@ -505,7 +424,6 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	{
 		PG_RETURN_INT64(partials[iteration]);
 	}
-#endif
 }
 
 
@@ -555,17 +473,6 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
 		{
-#ifdef Q3C_INT4
-			if (full_flag)
-			{
-				PG_RETURN_INT32(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT32(partials[iteration]);
-			}
-#endif
-#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
@@ -574,7 +481,6 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 			{
 				PG_RETURN_INT64(partials[iteration]);
 			}
-#endif
 		}
 	}
 
@@ -586,17 +492,6 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	radius_buf = radius;
 	invocation = 1;
 
-#ifdef Q3C_INT4
-	if (full_flag)
-	{
-		PG_RETURN_INT32(fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT32(partials[iteration]);
-	}
-#endif
-#ifdef Q3C_INT8
 	if (full_flag)
 	{
 		PG_RETURN_INT64(fulls[iteration]);
@@ -605,7 +500,6 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	{
 		PG_RETURN_INT64(partials[iteration]);
 	}
-#endif
 }
 
 
@@ -666,17 +560,6 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 		/* Probably I should check that the polygon is the same ... */
 		if (iteration > 0)
 		{
-#ifdef Q3C_INT4
-			if (full_flag)
-			{
-				PG_RETURN_INT32(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT32(partials[iteration]);
-			}
-#endif
-#ifdef Q3C_INT8
 			if (full_flag)
 			{
 				PG_RETURN_INT64(fulls[iteration]);
@@ -685,7 +568,6 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 			{
 				PG_RETURN_INT64(partials[iteration]);
 			}
-#endif
 		}
 	}
 
@@ -782,17 +664,6 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
 	invocation = 1;
 
-#ifdef Q3C_INT4
-	if (full_flag)
-	{
-		PG_RETURN_INT32(fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT32(partials[iteration]);
-	}
-#endif
-#ifdef Q3C_INT8
 	if (full_flag)
 	{
 		PG_RETURN_INT64(fulls[iteration]);
@@ -801,7 +672,6 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	{
 		PG_RETURN_INT64(partials[iteration]);
 	}
-#endif
 }
 
 
