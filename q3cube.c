@@ -69,15 +69,26 @@ inline q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 }
 
 
-void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
+void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec,
 					q3c_ipix_t *ipix)
 					/* ra in degrees, dec in degrees       */
 					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;	
+	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;
+	q3c_coord_t ra=ra0;	
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
 		*ybits = hprm->ybits, xi, yi;
 	char face_num;
+	
+	/* We check against crazy right ascensions */
+	if (ra0<0)
+	{
+		ra = q3c_fmod(ra0, 360)+360;
+	} 
+	else if (ra0>360)
+	{
+		ra = q3c_fmod(ra0,360);
+	}
 	
 	if (dec >= 90)
 	/* Poles */
