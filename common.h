@@ -1,8 +1,9 @@
 /*
-	   Copyright (C) 2004-2008 Sergey Koposov
+	   Copyright (C) 2004-2011 Sergey Koposov
    
     Author: Sergey Koposov, Sternberg Astronomical Institute
-    Email: math@sai.msu.ru 
+    						Institute of Astronomy, Cambridge
+    Email: koposov@ast.cam.ac.uk
     http://lnfm1.sai.msu.ru/~math
 
     This file is part of Q3C.
