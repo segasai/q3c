@@ -70,41 +70,43 @@ inline q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 }
 
 
-void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec,
+void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 					q3c_ipix_t *ipix)
 					/* ra in degrees, dec in degrees       */
 					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
 	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;
-	q3c_coord_t ra=ra0;	
+	q3c_coord_t ra,dec;
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
 		*ybits = hprm->ybits, xi, yi;
 	char face_num;
 	
 	/* We check against crazy right ascensions */
-	if (ra0<0)
+	if (ra0 < 0)
 	{
-		ra = q3c_fmod(ra0, 360)+360;
+		ra = q3c_fmod(ra0, 360) + 360;
 	} 
-	else if (ra0>360)
+	else if (ra0 > 360)
 	{
-		ra = q3c_fmod(ra0,360);
+		ra = q3c_fmod(ra0, 360);
 	}
-	
-	if (dec >= 90)
-	/* Poles */
+	else
 	{
-		face_num = 0;
-		x0 = Q3C_HALF;
-		y0 = Q3C_HALF;
-		goto END1;
+	    ra = ra0;
 	}
-	else if (dec <= -90)
+    
+    /* protection against wrong declinations */	
+	if (dec0 > 90)
 	{
-		face_num = 5;
-		x0 = Q3C_HALF;
-		y0 = Q3C_HALF;
-		goto END1;
+        dec = 90;
+	}
+	else if (dec0 < -90)
+	{
+	    dec = -90;
+	}
+	else
+	{
+	    dec = dec0;
 	}
 	
 	face_num = q3c_fmod ((ra + 45) / 90, 4);
@@ -153,9 +155,7 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec,
 	}
 	
 	x0 = (x0 + 1) / 2; y0 = (y0 + 1) / 2;
-	
-	END1:
-	
+		
 	/* Now I produce the final pixel value by converting x and y values
 	 * to bitfields and combining them by interleaving, using the
 	 * predefined arrays xbits and ybits
@@ -177,17 +177,13 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec,
 
 	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
-	BIT_PRINT8(*ipix);
-	BIT_PRINT8ix(xi);
-	BIT_PRINT8iy(yi);*/
 }
 
 
 
 /* Cloned version of ang2ipix for outputting also the x,y on the cube face
  * Coordinates on the cube face are x[-0.5,0.5] y[-0.5,0.5] */
-void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
+void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 					char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
 					q3c_coord_t *y_out)
 					/* ra in degrees, dec in degrees */
@@ -196,25 +192,35 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	q3c_coord_t x0 = 0,y0 = 0;
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
 				*ybits = hprm->ybits, xi, yi;
+    q3c_coord_t ra, dec;
 	char face_num;
-	if (dec >= 90)
-	/* Poles */
+
+	/* We check against crazy right ascensions */
+	if (ra0 < 0)
 	{
-		face_num = 0;
-		x0 = Q3C_HALF;
-		y0 = Q3C_HALF;
-		*x_out = 0;
-		*y_out = 0;
-		goto END1;
+		ra = q3c_fmod(ra0, 360) + 360;
+	} 
+	else if (ra0 > 360)
+	{
+		ra = q3c_fmod(ra0, 360);
 	}
-	else if (dec <= -90)
+	else
 	{
-		face_num = 5;
-		x0 = Q3C_HALF;
-		y0 = Q3C_HALF;
-		*x_out = 0;
-		*y_out = 0;
-		goto END1;
+        ra = ra0;
+	}
+
+    /* protection against wrong declinations */	
+	if (dec0 > 90)
+	{
+        dec = 90;
+	}
+	else if (dec0 < -90)
+	{
+	    dec = -90;
+	}
+	else
+	{
+	    dec = dec0;
 	}
 	
 	face_num = q3c_fmod ((ra + 45) / 90, 4);
@@ -242,8 +248,6 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	x0 = (x0 + 1) / 2;
 	y0 = (y0 + 1) / 2;
 	
-	END1:
-	
 	/* Now I produce the final pixel value by converting x and y values to bitfields
 	 * and combining them by interleaving, using the predefined arrays xbits and ybits
 	 */
@@ -264,11 +268,6 @@ void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 	
 	*out_face_num = face_num;
-	/*fprintf(stdout,"YYY %d %.20Lf %.20Lf\n",face_num,ra,dec);
-	BIT_PRINT8(*ipix);
-	BIT_PRINT8ix(xi);
-	BIT_PRINT8iy(yi);
-	*/
 }
 
 
