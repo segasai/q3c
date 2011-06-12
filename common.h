@@ -170,6 +170,13 @@ struct q3c_square
 	char status;
 };
 
+#define SET_SQUARE(sq, x, y, n) do {\
+    sq->x0=x;\
+    sq->y0=y;\
+    sq->nside0=n;\
+} while(0);
+
+
 typedef struct
 {
 	int n;

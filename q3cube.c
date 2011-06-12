@@ -2088,9 +2088,8 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 			return Q3C_DISJUNCT;
 		}
 	}
+	#undef POLY_EVAL
 }
-
-
 
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 							q3c_coord_t dec0, q3c_coord_t rad,
@@ -2231,20 +2230,14 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				work_nstack = 1;
 			}
 			else
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				work_nstack = 2;
 			}
 		}
@@ -2252,32 +2245,20 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0; 
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				work_nstack = 2;
 			}
 			else
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmax, iymax, n0);
 				work_nstack = 4;
 			}
 		}
@@ -2358,18 +2339,16 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 					for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
 					{
 						cur_square = work_stack + (j + 1 - tmp_stack1);
-						cur_square->x0 = xtmp + (k & 1);
-						cur_square->y0 = ytmp + ((k & 2) >> 1);
-						cur_square->nside0 = ntmp;
+						SET_SQUARE(cur_square, xtmp + (k & 1),
+						      ytmp + ((k & 2) >> 1), ntmp);
 						tmp_stack1--;
 					}
 				 
 					for (; k <= 3; k++)
 					{
 						cur_square = work_stack + tmp_stack2;
-						cur_square->x0 = xtmp + (k & 1);
-						cur_square->y0 = ytmp + ((k & 2) >> 1);
-						cur_square->nside0 = ntmp;
+						SET_SQUARE(cur_square, xtmp + (k & 1),
+						      ytmp + ((k & 2) >> 1), ntmp);
 						tmp_stack2++;
 					}
 				 
@@ -2656,20 +2635,14 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				work_nstack = 1;
 			}
 			else
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				work_nstack = 2;
 			}
 		}
@@ -2677,32 +2650,20 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;     
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				work_nstack = 2;
 			}
 			else
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmax, iymax, n0);
 				work_nstack = 4;
 			}
 		}
@@ -2790,18 +2751,14 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 					for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
 					{
 					  cur_square = work_stack + (j + 1 - tmp_stack1);
-					  cur_square->x0 = xtmp + (k & 1);
-					  cur_square->y0 = ytmp + ((k & 2) >> 1);
-					  cur_square->nside0 = ntmp;
+					  SET_SQUARE(cur_square, xtmp + (k & 1), ytmp + ((k & 2) >> 1), ntmp);
 					  tmp_stack1--;
 					}
 				 
 					for (; k <= 3; k++)
 					{
 					  cur_square = work_stack + tmp_stack2;
-					  cur_square->x0 = xtmp + (k & 1);
-					  cur_square->y0 = ytmp + ((k & 2) >> 1);
-					  cur_square->nside0 = (int) ntmp;
+					  SET_SQUARE(cur_square, xtmp + (k & 1), ytmp + ((k & 2) >> 1), ntmp);
 					  tmp_stack2++;
 					}
 				 
@@ -3079,20 +3036,14 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				work_nstack = 1;
 			}
  			else
  			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				work_nstack = 2;
 			}
 		}
@@ -3100,32 +3051,20 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		{
 			if (iymin == iymax)
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;     
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				work_nstack = 2;
 			}
 			else
 			{
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmin;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmin, iymax, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymin;
-				cur_square->nside0 = (int) n0;
+				SET_SQUARE(cur_square, ixmax, iymin, n0);
 				cur_square++;
-				cur_square->x0 = ixmax;
-				cur_square->y0 = iymax;
-				cur_square->nside0 = n0;
+				SET_SQUARE(cur_square, ixmax, iymax, n0);
 				work_nstack = 4;
 			}
 		}
@@ -3212,18 +3151,16 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				  for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
 				  {
 				    cur_square = work_stack + (j + 1 - tmp_stack1);
-				    cur_square->x0 = xtmp + (k & 1);
-				    cur_square->y0 = ytmp + ((k & 2) >> 1);
-				    cur_square->nside0 = ntmp;
+				    SET_SQUARE(cur_square, xtmp + (k & 1),
+				            ytmp + ((k & 2) >> 1), ntmp);
 				    tmp_stack1--;
 				  }
 				 
 				  for (; k <= 3; k++)
 				  {
 				    cur_square = work_stack + tmp_stack2;
-				    cur_square->x0 = xtmp + (k & 1);
-				    cur_square->y0 = ytmp + ((k & 2) >> 1);
-				    cur_square->nside0 = (int) ntmp;
+				    SET_SQUARE(cur_square, xtmp + (k & 1),
+				            ytmp + ((k & 2) >> 1), ntmp);
 				    tmp_stack2++;
 				  }
 				 
