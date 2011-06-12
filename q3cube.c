@@ -2001,7 +2001,8 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 								   q3c_coord_t ax, q3c_coord_t ay,
 								   q3c_coord_t a)
 {
-	q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur, x_cur, y_cur, val;
+	q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;
+    char status = 0, inside; 
 	
 	/* Checking the intersection of ellipse and box
 	 * The box parameters are set by variables xc_cur, yc_cur and cur_size
@@ -2015,56 +2016,56 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 	 * to make the final decision about the intersection
 	 */
 	
+    #define EVAL_POLY(x,y) ( x * (axx * x + axy * y + ax) + y * (ayy * y + ay) + a )
 
+    /* the idea of the code is following:
+     * we go through the list of vertices till we encounter the one 
+     * which is inside the ellipse
+     * If none of the vertices is inside the ellipse we double check the
+     * edge crossings
+     * If all the vertices are inside we return "covered"
+     */
 
-	/* UNDEF_CHECK00: */
 	/* Bottom left vertex */
-	x_cur = xl_cur;
-	y_cur = yb_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-  
-	if (val < 0) goto PARTUNDEF_CHECK01;
+	inside  = EVAL_POLY(xl_cur, yb_cur) < 0;
+	status += inside;
 	
-	
-	/* UNDEF_CHECK01: */
 	/* Bottom right vertex */
-	x_cur = xr_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-	
-	if (val < 0)
+	inside = EVAL_POLY(xr_cur, yb_cur) < 0 ;
+	/* we use XOR to check if the current vertex has different status 
+	 * than the previous ones */
+	if (inside ^ (status > 0))
 	{
 		return Q3C_PARTIAL;
 	}
-	
-	/* UNDEF_CHECK10: */
+	status += inside;
+
 	/* Top right vertex */
-	y_cur = yt_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-		
-	if (val < 0)
+	inside = EVAL_POLY(xr_cur, yt_cur) < 0;
+	if (inside ^ (status > 0))
 	{
 		return Q3C_PARTIAL;
 	}
+    status += inside;
 
-
-	/* UNDEF_CHECK11: */
 	/* Top left vertex */
-	x_cur = xl_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-		
-	if (val < 0)
+	inside = EVAL_POLY(xl_cur, yt_cur) < 0;
+	if (inside ^ (status > 0))
 	{
 		return Q3C_PARTIAL;
+	}
+	status += inside;
+	
+	if (status == 4)
+	{
+		/* All the vertices are inside so the square must be covered by
+		 * the ellipse */
+		return Q3C_COVER;
 	}
 	else
 	{
-		/* Testing if the ellipse crosses the borders of the box)
-		 * OR the box covers the whole ellipse ( this is expressed by the last
-		 * condition (center of the ellipse is inside the box))
+		/* All the vertices are outside the ellipse
+		 * Now we test if the ellipse crosses the edges of the square
 		 */
 		if (
 		    (Q3C_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
@@ -2083,51 +2084,9 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 			return Q3C_PARTIAL;
 		}
 		else
-			{
+        {
 			return Q3C_DISJUNCT;
 		}
-	}
-
-	/* PARTUNDEF labels -- when we know the ellipse have
-	 *   at least a partial intersection with the box 
-	 */
-   
-
-	PARTUNDEF_CHECK01:
-	/* Bottom right vertex */
-	x_cur = xr_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-   
-	if (val >= 0)
-	{
-		return Q3C_PARTIAL;
-	}
-
-
-	/* PARTUNDEF_CHECK10: */
-	/* Top right vertex */
-	y_cur = yt_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-	if (val >= 0)
-	{
-		return Q3C_PARTIAL;
-	}
-
-
-	/* PARTUNDEF_CHECK11: */
-	/* Top left vertex */
-	x_cur = xl_cur;
-	val = x_cur * (axx * x_cur + axy * y_cur + ax) +
-		  y_cur * (ayy * y_cur + ay) + a;
-	if (val >= 0)
-	{
-		return Q3C_PARTIAL;
-	}
-	else
-	{
-		return Q3C_COVER;
 	}
 }
 
