@@ -154,6 +154,11 @@ typedef long double q3c_coord_t;
 
 #define Q3C_MAX_N_POLY_VERTEX 100 /* Maximal number of vertices in the polygon */
 
+#define UNWRAP_RA(ra) ( (ra < 0) ? \
+                      (q3c_fmod(ra, 360) + 360) : \
+                      ( (ra > 360) ? q3c_fmod(ra, 360) : ra ) \
+                      ) 
+
 struct q3c_prm 
 {
 	q3c_ipix_t nside;

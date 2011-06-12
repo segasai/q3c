@@ -86,18 +86,7 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 	char face_num;
 	
 	/* We check against crazy right ascensions */
-	if (ra0 < 0)
-	{
-		ra = q3c_fmod(ra0, 360) + 360;
-	} 
-	else if (ra0 > 360)
-	{
-		ra = q3c_fmod(ra0, 360);
-	}
-	else
-	{
-	    ra = ra0;
-	}
+	ra = UNWRAP_RA(ra0);
     
     /* protection against wrong declinations */	
 	if (dec0 > 90)
