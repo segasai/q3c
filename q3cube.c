@@ -1364,52 +1364,34 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 {
 	q3c_coord_t tmp0, tmp1, tmp2, ra1, dec1, sr, cr ,sd, cd, srad, crad, crad2,
 		cd2, scd;
+
+    dec1 = dec0 * Q3C_DEGRA;	
+    q3c_sincos(dec1, sd, cd);
+    cd2 = cd * cd;
+    q3c_sincos(Q3C_DEGRA * rad, srad, crad);
+    crad2 = crad * crad;
 	
 	if ((face_num >= 1) && (face_num <= 4))
 	{
 		ra1 = (ra0 - (face_num - 1 ) * 90) * Q3C_DEGRA;
-		dec1 = dec0 * Q3C_DEGRA;	
-		//cr = q3c_sqrt(1 - sr * sr);
 		q3c_sincos(ra1, sr, cr);
-		//sd = q3c_sin(dec1);
-		//cd = q3c_sqrt( 1 - sd * sd);
-		//cd = q3c_cos(dec1);
-		q3c_sincos(dec1, sd, cd);
-		cd2 = cd * cd;
-		//srad = q3c_sin(Q3C_DEGRA * rad);
-		//crad = q3c_sqrt(1 - srad * srad);
-		//crad = q3c_cos(Q3C_DEGRA * rad);
-		q3c_sincos(Q3C_DEGRA * rad, srad, crad);
-
+				
 		tmp2 = ((q3c_coord_t)1) / (2 * ( cd2 * cr * cr - srad * srad ));
 		tmp0 = sr * cr *cd2;
 		tmp1 = srad * q3c_sqrt(cd2 - srad * srad);
 		*xmin = (tmp0 - tmp1) * tmp2;
 		*xmax = (tmp0 + tmp1) * tmp2;
 		tmp0 = cr * cd * sd;
-		tmp1 = srad * q3c_sqrt(crad * crad - cd2 * sr * sr);
+		tmp1 = srad * q3c_sqrt(crad2 - cd2 * sr * sr);
 		*ymin = (tmp0 - tmp1) * tmp2;
 		*ymax = (tmp0 + tmp1) * tmp2;
 	}
 	else
 	{
 		ra1 = ra0 * Q3C_DEGRA;
-		dec1 = dec0 * Q3C_DEGRA;
-		//sr = q3c_sin(ra1);
-		//cr = q3c_cos(ra1);
 		q3c_sincos(ra1, sr, cr);
-
-		q3c_sincos(dec1, sd, cd);
-
-		cd2 = cd * cd;
 		scd = sd * cd;
-		//sd = q3c_sin(dec1);
-		//srad = q3c_sin(Q3C_DEGRA * rad);
-		//crad = q3c_sqrt(1 - srad * srad);
-		
-		q3c_sincos(Q3C_DEGRA * rad, srad, crad);
 
-		crad2 = crad * crad;
 		tmp0 = scd * sr;
 		tmp1 = srad * q3c_sqrt(crad2 - cr * cr * cd2);
 		tmp2 = ((q3c_coord_t)1) / (2 * (crad2 - cd2));
@@ -1983,12 +1965,6 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	char face_num, multi_flag = 0, k, face_count, face_num0, full_flags[3]={0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
-	int out_ipix_arr_fulls_length = 100;//1600;
-	int out_ipix_arr_partials_length = 100;//1600;
-	/* !!!!!!!!IMPORTANT!!!!
-	 * Keep in mind that those lengths are in fact multiplied by two
-	 * maximal number of squares
-	 */
 	
 	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
 		res_depth;
@@ -2005,12 +1981,12 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	if (rad>=35)
 	{
 		q3c_ipix_t maxval = 6*(nside*nside);
-		for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
 		{
 			out_ipix_arr_fulls[i++] = -1 ;
 			out_ipix_arr_fulls[i++] = maxval;
 		}
-		for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+		for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
 		{
 			out_ipix_arr_partials[i++] = -1;
 			out_ipix_arr_partials[i++] = maxval;
@@ -2369,7 +2345,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+	for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
 	{
 		out_ipix_arr_fulls[i++] = 1;
 		out_ipix_arr_fulls[i++] = -1;
@@ -2379,7 +2355,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+	for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
 	{
 		out_ipix_arr_partials[i++] = 1;
 		out_ipix_arr_partials[i++] = -1;
@@ -2415,13 +2391,6 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	char face_num, multi_flag = 0, k, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
-	int out_ipix_arr_fulls_length = 100;//1600;
-	int out_ipix_arr_partials_length = 100;//1600;
-	/* !!!!!!!!IMPORTANT!!!!
-	 * Keep in mind that those lengths are in fact multiplied by two
-	 * maximal number of squares
-	 */
-
  
 	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
 	    res_depth;
@@ -2780,7 +2749,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	 for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+	 for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
 	 {
 //     fprintf(stderr,"F%d\n",i);
 		 out_ipix_arr_fulls[i++] = 1;
@@ -2791,7 +2760,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	 for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+	 for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
 	 {
 //     fprintf(stderr,"P%d\n",i);
 		 out_ipix_arr_partials[i++] = 1;
@@ -2826,12 +2795,6 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	char face_num, multi_flag = 0, k, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
-	int out_ipix_arr_fulls_length = 100;//1600;
-	int out_ipix_arr_partials_length = 100;//1600;
-	/* !!!!!!!!IMPORTANT!!!!
-	 * Keep in mind that those lengths are in fact multiplied by two
-	 * maximal number of squares
-	 */
 	
 	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
 		res_depth;
@@ -3177,7 +3140,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	 for(i = out_ipix_arr_fulls_pos; i < out_ipix_arr_fulls_length;)
+	 for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
 	 {
 //     fprintf(stderr,"F%d\n",i);
 		 out_ipix_arr_fulls[i++] = 1;
@@ -3188,7 +3151,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
 	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
 	 */
-	 for(i = out_ipix_arr_partials_pos; i < out_ipix_arr_partials_length;)
+	 for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
 	 {
 //     fprintf(stderr,"P%d\n",i);
 		 out_ipix_arr_partials[i++] = 1;
