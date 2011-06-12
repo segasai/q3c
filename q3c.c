@@ -371,17 +371,13 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	/* static q3c_ipix_t partials[2 * n_partials]; */
 	/* static q3c_ipix_t fulls[2 * n_fulls]; */
 
-#define n_partials 50
-#define n_fulls 50
-	static q3c_ipix_t partials[2 * n_partials];
-	static q3c_ipix_t fulls[2 * n_fulls];
+	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
+	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
 
-#undef n_fulls
-#undef n_partials
 
 	static int invocation;
 
@@ -446,17 +442,12 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	/* static q3c_ipix_t partials[2 * n_partials]; */
 	/* static q3c_ipix_t fulls[2 * n_fulls]; */
 
-#define n_partials 50
-#define n_fulls 50
-	static q3c_ipix_t partials[2 * n_partials];
-	static q3c_ipix_t fulls[2 * n_fulls];
+	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
+	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
-
-#undef n_fulls
-#undef n_partials
 
 	static int invocation;
 
@@ -526,17 +517,13 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	int bitmask;
 #endif
 
-#define n_partials 50
-#define n_fulls 50
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the n_partials and n_fulls is the number of pairs !!! of ranges
+	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
-	static q3c_ipix_t partials[2 * n_partials];
-	static q3c_ipix_t fulls[2 * n_fulls];
+	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	static q3c_poly qp;
-#undef n_partials
-#undef n_fulls
 
 	static q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX],
 		x[Q3C_MAX_N_POLY_VERTEX], y[Q3C_MAX_N_POLY_VERTEX],

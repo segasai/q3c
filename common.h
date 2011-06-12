@@ -151,7 +151,14 @@ typedef long double q3c_coord_t;
 #define Q3C_COVER 2		/* the point or the region is completely inside other */
 
 
-#define Q3C_MAX_N_POLY_VERTEX 100 /* Maximal number of vertices in the polygon */
+#define Q3C_MAX_N_POLY_VERTEX 100
+/* Maximal number of vertices in the polygon */
+
+#define Q3C_NPARTIALS 50 
+/*length of the list of the partially covered ipix ranges*/
+
+#define Q3C_NFULLS 50 
+/*length of the list of the fully covered ipix ranges*/
 
 #define UNWRAP_RA(ra) ( (ra < 0) ? \
                       (q3c_fmod(ra, 360) + 360) : \
