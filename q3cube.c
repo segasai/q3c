@@ -1949,6 +1949,62 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 	#undef POLY_EVAL
 }
 
+
+int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
+                      q3c_coord_t ymin, q3c_coord_t xmax, q3c_coord_t ymax,
+                      int n0)
+{
+    /* Here we set up the stack with initial squares */
+    int work_nstack = 0;
+    q3c_ipix_t ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
+    q3c_ipix_t ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
+    q3c_ipix_t iymin = (Q3C_HALF + ymin) * n0;
+    q3c_ipix_t iymax = (Q3C_HALF + ymax) * n0;
+    struct q3c_square *cur_square = stack;
+    
+    ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
+    iymax = (iymax == n0 ? (n0 - 1) : iymax);
+    
+    
+    if (ixmin == ixmax)
+    {
+        if (iymin == iymax)
+        {
+            SET_SQUARE(cur_square, ixmin, iymin, n0);
+            work_nstack = 1;
+        }
+        else
+        {
+            SET_SQUARE(cur_square, ixmin, iymin, n0);
+            cur_square++;
+            SET_SQUARE(cur_square, ixmin, iymax, n0);
+            work_nstack = 2;
+        }
+    }
+    else
+    {
+        if (iymin == iymax)
+        {
+            SET_SQUARE(cur_square, ixmin, iymin, n0);
+            cur_square++;
+            SET_SQUARE(cur_square, ixmax, iymin, n0);
+            work_nstack = 2;
+        }
+        else
+        {
+            SET_SQUARE(cur_square, ixmin, iymin, n0);
+            cur_square++;
+            SET_SQUARE(cur_square, ixmin, iymax, n0);
+            cur_square++;
+            SET_SQUARE(cur_square, ixmax, iymin, n0);
+            cur_square++;
+            SET_SQUARE(cur_square, ixmax, iymax, n0);
+            work_nstack = 4;
+        }
+    }
+    return work_nstack;
+}
+
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 							q3c_coord_t dec0, q3c_coord_t rad,
 							q3c_ipix_t *out_ipix_arr_fulls,
@@ -1958,7 +2014,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
 		points[4];
 	
-	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
+	q3c_ipix_t n0, nside = hprm->nside, ntmp,
 		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 		*ybits = hprm->ybits;
 	
@@ -2067,59 +2123,13 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #endif
 		
 		/* Here we set up the stack with initial squares */
-		
-		ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-		ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
-		iymin = (Q3C_HALF + ymin) * n0;
-		iymax = (Q3C_HALF + ymax) * n0;
-		
-		ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-		iymax = (iymax == n0 ? (n0 - 1) : iymax);
-		
-		cur_square = work_stack;
-		
-		if (ixmin == ixmax)
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				work_nstack = 1;
-			}
-			else
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				work_nstack = 2;
-			}
-		}
-		else
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				work_nstack = 2;
-			}
-			else
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymax, n0);
-				work_nstack = 4;
-			}
-		}
-	 
-	 
+
+		work_nstack = q3c_setup_square_stack(work_stack,
+		                xmin, ymin, xmax, ymax, n0);
+
 		/* For this case the maximal increase of resolution of 2^res_depth
 		 * for each axis
 		 */
-	 
 		res_depth = nside / n0;
 		/* If the the query is too small we cannot go up to max_depth since we
 		 * are limited by nside depth
@@ -2384,7 +2394,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	            xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
 	            points[4];
 	                 
-	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, iymax, ntmp,
+	q3c_ipix_t n0, nside = hprm->nside, ntmp,
 	            ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 	            *ybits = hprm->ybits;
  
@@ -2463,55 +2473,8 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		fprintf(stdout,"XMIN: "Q3C_COORD_FMT" XMAX: "Q3C_COORD_FMT" YMIN: "Q3C_COORD_FMT" YMAX: "Q3C_COORD_FMT"\n", xmin, xmax, ymin, ymax);
 #endif
 
-		/* Here we set up the stack with initial squares */
-	 
-		ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-		ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
-		iymin = (Q3C_HALF + ymin) * n0;
-		iymax = (Q3C_HALF + ymax) * n0;
-	 
-	 
-		ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-		iymax = (iymax == n0 ? (n0 - 1) : iymax);
-	 
-	 
-		cur_square = work_stack;
-		if (ixmin == ixmax)
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				work_nstack = 1;
-			}
-			else
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				work_nstack = 2;
-			}
-		}
-		else
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				work_nstack = 2;
-			}
-			else
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymax, n0);
-				work_nstack = 4;
-			}
-		}
+		work_nstack = q3c_setup_square_stack(work_stack,
+		                xmin, ymin, xmax, ymax, n0);
 	 
 	 
 		/* For this case the maximal increase of resolution of 2^res_depth
@@ -2788,8 +2751,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
 		points[4], axx, ayy, axy, ax, ay, a;
 
-	q3c_ipix_t n0, nside = hprm->nside, ixmin, iymin, ixmax, 
-		iymax, ntmp, ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
+	q3c_ipix_t n0, nside = hprm->nside, 
+		ntmp, ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
 		*xbits = hprm->xbits, *ybits = hprm->ybits;
 	
 	char face_num, multi_flag = 0, k, face_count, face_num0;
@@ -2859,55 +2822,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			fprintf(stdout,Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT" "Q3C_COORD_FMT"\n", axx,ayy,axy,ax,ay,a);
 #endif
 		
-		/* Here we set up the stack with initial squares */
-		
-		ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-		ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
-		iymin = (Q3C_HALF + ymin) * n0;
-		iymax = (Q3C_HALF + ymax) * n0;
-
-		ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-		iymax = (iymax == n0 ? (n0 - 1) : iymax);
-
-		cur_square = work_stack;
-		
-		if (ixmin == ixmax)
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				work_nstack = 1;
-			}
- 			else
- 			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				work_nstack = 2;
-			}
-		}
-		else
-		{
-			if (iymin == iymax)
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				work_nstack = 2;
-			}
-			else
-			{
-				SET_SQUARE(cur_square, ixmin, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmin, iymax, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymin, n0);
-				cur_square++;
-				SET_SQUARE(cur_square, ixmax, iymax, n0);
-				work_nstack = 4;
-			}
-		}
-	 
+		work_nstack = q3c_setup_square_stack(work_stack,
+		                xmin, ymin, xmax, ymax, n0);	 
 	 
 		/* For this case the maximal increase of resolution of 2^res_depth
 		 * for each axis

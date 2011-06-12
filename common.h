@@ -368,5 +368,8 @@ inline char q3c_get_region_facenum(q3c_region region, void *data);
 inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi);
+int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
+                      q3c_coord_t ymin, q3c_coord_t xmax, q3c_coord_t ymax,
+                      int n0);
   
 #endif/*  Q3C_COMMON_H  */
