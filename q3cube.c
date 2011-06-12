@@ -2005,24 +2005,134 @@ int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
     return work_nstack;
 }
 
+void q3c_stack_process(struct q3c_square* work_stack, int *work_nstack,
+                       struct q3c_square* out_stack, int *out_nstack,
+                       int cur_depth, int res_depth)
+{
+    /* Now we select the fully covered set of squares from stack and put them
+     * into out_stack, the partly covered squares are expanded to corresponding
+     * set of 4 squares each.
+     * explanation of the following scheme
+     *    |xxxxxxxxxxxxx     xxxxxxxxxx|
+     *                                 ^
+     *                  /---/           tmp_stack2
+     *                tmp_stack1
+     */
+    struct q3c_square *cur_square;
+    int tmp_stack1, tmp_stack2;
+    q3c_ipix_t xtmp,ytmp,ntmp;
+    int j,k;
+
+    for(j = 0, tmp_stack1 = 0, tmp_stack2 = *work_nstack; j < *work_nstack; j++)
+    {
+        cur_square = work_stack + j;
+        //fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
+        if (cur_square->status == Q3C_PARTIAL)
+        /* If this square partially intersects with the ellipse
+         * I should split this square further
+         */
+        {
+
+            /* If this is the last stage of resolution loop, I will not split
+             * the "partial" boxes
+             */
+            if (cur_depth == res_depth) continue;
+            tmp_stack1++;
+
+            xtmp = 2 * cur_square->x0;
+            ytmp = 2 * cur_square->y0;
+            ntmp = 2 * cur_square->nside0;
+         
+            /* First I try to put the childrens of this square in the part of
+             * the stack freed by trown away squares (which were disjunct from
+             * the ellipse or which were fully covered by the ellipse)
+             */
+            for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
+            {
+                cur_square = work_stack + (j + 1 - tmp_stack1);
+                SET_SQUARE(cur_square, xtmp + (k & 1),
+                      ytmp + ((k & 2) >> 1), ntmp);
+                tmp_stack1--;
+            }
+         
+            for (; k <= 3; k++)
+            {
+                cur_square = work_stack + tmp_stack2;
+                SET_SQUARE(cur_square, xtmp + (k & 1),
+                      ytmp + ((k & 2) >> 1), ntmp);
+                tmp_stack2++;
+            }
+         
+        }
+        else
+        {
+            if (cur_square->status == Q3C_COVER)
+            /* I put this square in the output list and
+             * free one place in the stack
+             */
+            {
+                out_stack[(*out_nstack)++] = *cur_square;
+                tmp_stack1++;
+            }
+            else
+            /* This branch can be reached only if status==Q3C_DISJUNCT */
+            {
+                tmp_stack1++;
+                /* I just drop this square and free the place in the stack */
+            }
+        }
+ 
+    } /* end of updating of the list of squares loop */
+
+    if (cur_depth == res_depth) return;
+    /* After updating the list of squares I compute how much I have them now
+     * (except for the case of last resolution step)
+     */
+#ifdef Q3C_DEBUG
+			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
+#endif
+
+    if (tmp_stack1 == 0)
+    {
+        *work_nstack = tmp_stack2;
+    }
+    else
+    {
+        if ((tmp_stack2-*work_nstack) > tmp_stack1)
+        {
+            memcpy(work_stack + (*work_nstack - tmp_stack1),
+                   work_stack + (tmp_stack2 - tmp_stack1),
+                   tmp_stack1 * sizeof(struct q3c_square));
+            *work_nstack = tmp_stack2 - tmp_stack1;
+        }
+        else
+        {
+            memcpy(work_stack + (*work_nstack - tmp_stack1), 
+                   work_stack + *work_nstack,
+                   (tmp_stack2 - *work_nstack) * sizeof(struct q3c_square));
+            *work_nstack = tmp_stack2 - tmp_stack1;
+        }
+    }
+}
+
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 							q3c_coord_t dec0, q3c_coord_t rad,
 							q3c_ipix_t *out_ipix_arr_fulls,
 							q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t axx, ayy, axy, ax, ay, a, xmin, xmax, ymin, ymax,
-		xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
+		xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize,
 		points[4];
 	
-	q3c_ipix_t n0, nside = hprm->nside, ntmp,
+	q3c_ipix_t n0, nside = hprm->nside,
 		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 		*ybits = hprm->ybits;
 	
-	char face_num, multi_flag = 0, k, face_count, face_num0, full_flags[3]={0,0,0};
+	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3]={0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 	
-	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
+	int work_nstack = 0, i, j, out_nstack = 0,
 		res_depth;
 	
 	const int max_depth = 4; /* log2(Maximal increase of resolution) */
@@ -2165,102 +2275,11 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #ifdef Q3C_DEBUG
 			fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
 #endif
-			/* Now we select the fully covered set of squares from stack and put them
-			 * into out_stack, the partly covered squares are expanded to corresponding
-			 * set of 4 squares each.
-			 * explanation of the following scheme
-			 *    |xxxxxxxxxxxxx     xxxxxxxxxx|
-			 *                                 ^
-			 *                  /---/           tmp_stack2
-			 *                tmp_stack1
-			 */
-			for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
-			{
-				cur_square = work_stack + j;
-				//fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-				if (cur_square->status == Q3C_PARTIAL)
-				/* If this square partially intersects with the ellipse
-				 * I should split this square farther
-				 */
-				{
 
-					/* If this is the last stage of resolution loop, I will not split
-					 * the "partial" boxes
-					 */
-					if (i == res_depth) continue;
-					tmp_stack1++;
-
-					xtmp = 2 * cur_square->x0;
-					ytmp = 2 * cur_square->y0;
-					ntmp = 2 * cur_square->nside0;
-				 
-					/* First I try to put the childrens of this square in the part of
-					 * the stack freed by trown away squares (which were disjunct from
-					 * the ellipse or which were fully covered by the ellipse)
-					 */
-					for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
-					{
-						cur_square = work_stack + (j + 1 - tmp_stack1);
-						SET_SQUARE(cur_square, xtmp + (k & 1),
-						      ytmp + ((k & 2) >> 1), ntmp);
-						tmp_stack1--;
-					}
-				 
-					for (; k <= 3; k++)
-					{
-						cur_square = work_stack + tmp_stack2;
-						SET_SQUARE(cur_square, xtmp + (k & 1),
-						      ytmp + ((k & 2) >> 1), ntmp);
-						tmp_stack2++;
-					}
-				 
-				}
-				else
-				{
-					if (cur_square->status == Q3C_COVER)
-					/* I put this square in the output list and
-					 * free one place in the stack
-					 */
-					{
-						out_stack[out_nstack++] = *cur_square;
-						tmp_stack1++;
-					}
-					else
-					/* This branch can be reached only if status==Q3C_DISJUNCT */
-					{
-						tmp_stack1++;
-						/* I just drop this square and free the place in the stack */
-					}
-				}
+            q3c_stack_process(work_stack, &work_nstack,
+                              out_stack, &out_nstack,
+                              i, res_depth);
 		 
-			} /* end of updating of the list of squares loop */
-		 
-#ifdef Q3C_DEBUG
-			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
-#endif
-		 
-		 
-			if (i == res_depth) break;
-			/* After updating the list of squares I compute how much I have them now
-			 * (except for the case of last resolution step)
-			 */
-			if (tmp_stack1 == 0)
-			{
-				work_nstack = tmp_stack2;
-			}
-			else
-			{
-				if ((tmp_stack2-work_nstack) > tmp_stack1)
-				{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
-					work_nstack = tmp_stack2 - tmp_stack1;
-				}
-				else
-				{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
-					work_nstack = tmp_stack2 - tmp_stack1;
-				}
-			}
 		 
 		} /* end of resolution loop */
 	 
@@ -2391,18 +2410,18 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
  
  
 	q3c_coord_t xmin, xmax, ymin, ymax,
-	            xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
+	            xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize,
 	            points[4];
 	                 
-	q3c_ipix_t n0, nside = hprm->nside, ntmp,
+	q3c_ipix_t n0, nside = hprm->nside,
 	            ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
 	            *ybits = hprm->ybits;
  
-	char face_num, multi_flag = 0, k, face_count, face_num0;
+	char face_num, multi_flag = 0, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
  
-	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
+	int work_nstack = 0, i, j, out_nstack = 0,
 	    res_depth;
  
 	const int max_depth = 4; /* log2(Maximal increase of resolution) */
@@ -2523,102 +2542,10 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 #ifdef Q3C_DEBUG
 			fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
 #endif
-			/* Now we select the fully covered set of squares from stack and put them
-			 * into out_stack, the partly covered squares are expanded to corresponding
-			 * set of 4 squares each.
-			 * explanation of the following scheme
-			 *    |xxxxxxxxxxxxx     xxxxxxxxxx|
-			 *                                 ^
-			 *                  /---/           tmp_stack2
-			 *                tmp_stack1
-			 */
-			for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
-			{
-				cur_square = work_stack + j;
-				//fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-				if (cur_square->status == Q3C_PARTIAL)
-				/* If this square partially intersects with the ellipse
-				 * I should split this square farther
-				 */
-				{
-
-					/* If this is the last stage of resolution loop, I will not split
-					 * the "partial" boxes
-					 */
-					if (i == res_depth) continue;
-					tmp_stack1++;
-
-					xtmp = 2 * cur_square->x0;
-					ytmp = 2 * cur_square->y0;
-					ntmp = 2 * cur_square->nside0;
-				 
-					/* First I try to put the childrens of this square in the part of
-					 * the stack freed by trown away squares (which were disjunct from
-					 * the ellipse or which were fully covered by the ellipse)
-					 */
-					for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
-					{
-					  cur_square = work_stack + (j + 1 - tmp_stack1);
-					  SET_SQUARE(cur_square, xtmp + (k & 1), ytmp + ((k & 2) >> 1), ntmp);
-					  tmp_stack1--;
-					}
-				 
-					for (; k <= 3; k++)
-					{
-					  cur_square = work_stack + tmp_stack2;
-					  SET_SQUARE(cur_square, xtmp + (k & 1), ytmp + ((k & 2) >> 1), ntmp);
-					  tmp_stack2++;
-					}
-				 
-				}
-				else
-				{
-					if (cur_square->status == Q3C_COVER)
-					/* I put this square in the output list and
-					 * free one place in the stack
-					 */
-					{
-					  out_stack[out_nstack++] = *cur_square;
-					  tmp_stack1++;
-					}
-					else
-					/* This branch can be reached only if status==Q3C_DISJUNCT */
-					{
-					  tmp_stack1++;
-					  /* I just drop this square and free the place in the stack */
-					}
-				}
-		 
-			} /* end of updating of the list of squares loop */
-		 
-#ifdef Q3C_DEBUG
-			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
-#endif
-		 
-		 
-			if (i == res_depth) break;
-			/* After updating the list of squares I compute how much I have them now
-			 * (except for the case of last resolution step)
-			 */
-			if (tmp_stack1 == 0)
-			{
-				work_nstack = tmp_stack2;
-			}
-			else
-			{
-				if ((tmp_stack2-work_nstack) > tmp_stack1)
-					{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
-					work_nstack = tmp_stack2 - tmp_stack1;
-					}
-				else
-					{
-					memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
-					work_nstack = tmp_stack2 - tmp_stack1;
-					}
-			}
-		 
-		} /* end of resolution loop */
+            q3c_stack_process(work_stack, &work_nstack,
+                              out_stack, &out_nstack,
+                              i, res_depth);
+        }
 	 
 		//   Old printing of the results
 	 
@@ -2748,18 +2675,18 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0,
-		yc_cur = 0, cur_size, xesize, yesize, xtmp, ytmp,
+		yc_cur = 0, cur_size, xesize, yesize,
 		points[4], axx, ayy, axy, ax, ay, a;
 
 	q3c_ipix_t n0, nside = hprm->nside, 
-		ntmp, ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
+		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
 		*xbits = hprm->xbits, *ybits = hprm->ybits;
 	
-	char face_num, multi_flag = 0, k, face_count, face_num0;
+	char face_num, multi_flag = 0, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 	
-	int work_nstack = 0, i, j, tmp_stack1, tmp_stack2, out_nstack = 0,
+	int work_nstack = 0, i, j, out_nstack = 0,
 		res_depth;
 	
 	const int max_depth = 4; /* log2(Maximal increase of resolution) */
@@ -2868,104 +2795,10 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			fprintf(stdout,"2) NUM squares in the stack %d\n",work_nstack);
 #endif
 
+            q3c_stack_process(work_stack, &work_nstack,
+                              out_stack, &out_nstack,
+                              i, res_depth);
 
-			/* Now we select the fully covered set of squares from stack and put them
-			 * into out_stack, the partly covered squares are expanded to corresponding
-			 * set of 4 squares each.
-			 * explanation of the following scheme
-			 *    |xxxxxxxxxxxxx     xxxxxxxxxx|
-			 *                                 ^
-			 *                  /---/           tmp_stack2
-			 *                tmp_stack1
-			 */
-
-			for(j = 0, tmp_stack1 = 0, tmp_stack2 = work_nstack; j < work_nstack; j++)
-			{
-				cur_square = work_stack + j;
-				//fprintf(stdout,"%d %d %d\n",work_nstack,tmp_stack1,tmp_stack2);
-				if (cur_square->status == Q3C_PARTIAL)
-				/* If this square partially intersects with the ellipse
-				 * I should split this square farther
-				 */
-				{
-
-				  /* If this is the last stage of resolution loop, I will not split
-				   * the "partial" boxes
-				   */
-				  if (i == res_depth) continue;
-				  tmp_stack1++;
-
-				  xtmp = 2 * cur_square->x0;
-				  ytmp = 2 * cur_square->y0;
-				  ntmp = 2 * cur_square->nside0;
-				 
-				  /* First I try to put the childrens of this square in the part of
-				   * the stack freed by trown away squares (which were disjunct from
-				   * the ellipse or which were fully covered by the ellipse)
-				   */
-				  for(k = 0; (k <= 3) && (tmp_stack1 > 0); k++)
-				  {
-				    cur_square = work_stack + (j + 1 - tmp_stack1);
-				    SET_SQUARE(cur_square, xtmp + (k & 1),
-				            ytmp + ((k & 2) >> 1), ntmp);
-				    tmp_stack1--;
-				  }
-				 
-				  for (; k <= 3; k++)
-				  {
-				    cur_square = work_stack + tmp_stack2;
-				    SET_SQUARE(cur_square, xtmp + (k & 1),
-				            ytmp + ((k & 2) >> 1), ntmp);
-				    tmp_stack2++;
-				  }
-				 
-				}
-				else
-				{
-				  if (cur_square->status == Q3C_COVER)
-				  /* I put this square in the output list and
-				   * free one place in the stack
-				   */
-				  {
-				    out_stack[out_nstack++] = *cur_square;
-				    tmp_stack1++;
-				  }
-				  else
-				  /* This branch can be reached only if status==Q3C_DISJUNCT */
-				  {
-				    tmp_stack1++;
-				    /* I just drop this square and free the place in the stack */
-				  }
-				}
-		 
-			} /* end of updating of the list of squares loop */
-		 
-#ifdef Q3C_DEBUG
-			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
-#endif
-		 
-		 
-			if (i == res_depth) break;
-			/* After updating the list of squares I compute how much I have them now
-			 * (except for the case of last resolution step)
-			 */
-			if (tmp_stack1 == 0)
-			{
-				work_nstack = tmp_stack2;
-			}
-			else
-			{
-				if ((tmp_stack2-work_nstack) > tmp_stack1)
-				{
-				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + (tmp_stack2 - tmp_stack1), tmp_stack1 * sizeof(struct q3c_square));
-				  work_nstack = tmp_stack2 - tmp_stack1;
-				}
-				else
-				{
-				  memcpy(work_stack + (work_nstack - tmp_stack1), work_stack + work_nstack, (tmp_stack2 - work_nstack) * sizeof(struct q3c_square));
-				  work_nstack = tmp_stack2 - tmp_stack1;
-				}
-			}
 		 
 		} /* end of resolution loop */
 	 

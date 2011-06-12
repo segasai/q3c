@@ -371,5 +371,8 @@ inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
                       q3c_coord_t ymin, q3c_coord_t xmax, q3c_coord_t ymax,
                       int n0);
+void q3c_stack_process(struct q3c_square* work_stack, int *work_nstack,
+                       struct q3c_square* out_stack, int *out_nstack,
+                       int cur_depth, int res_depth);
   
 #endif/*  Q3C_COMMON_H  */
