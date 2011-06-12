@@ -156,12 +156,8 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 			dec1 = Q3C_DEGRA * dec[i];
 
 			tmp0 = 1 / q3c_tan(dec1);
-#ifdef __USE_GNU
-			q3c_sincos(ra1, &x0, &y0);
-#else
-			x0 = q3c_sin(ra1);
-			y0 = q3c_cos(ra1);
-#endif
+			q3c_sincos(ra1, x0, y0);
+
 			x0 *= tmp0;
 			y0 *= (-tmp0);
 			x[i] = x0 / 2;
@@ -176,12 +172,9 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 			dec1 = Q3C_DEGRA * dec[i];
 
 			tmp0 = 1 / q3c_tan(dec1);
-#ifdef __USE_GNU
-			q3c_sincos(ra1, &x0, &y0);
-#else
-			x0 = q3c_sin(ra1);
-			y0 = q3c_cos(ra1);
-#endif
+
+			q3c_sincos(ra1, x0, y0);
+
 			x0 *= (-tmp0);
 			y0 *= (-tmp0);
 			x[i] = x0 / 2;

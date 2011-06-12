@@ -115,12 +115,8 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 		face_num = 0;
 		ra1 = Q3C_DEGRA * ra;
 		tmp0 = 1 / q3c_tan (dec1);
-#ifdef __USE_GNU
-		q3c_sincos (ra1, &x0, &y0);
-#else
-		x0 = q3c_sin (ra1);
-		y0 = q3c_cos (ra1);
-#endif
+		q3c_sincos (ra1, x0, y0);
+
 		x0 *= tmp0;
 		y0 *= (-tmp0);
 		/*x0 = q3c_sin(ra1) / q3c_tan(dec1);*/
@@ -135,12 +131,8 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 		face_num = 5;
 		ra1 = Q3C_DEGRA * ra;
 		tmp0 = 1 / q3c_tan (dec1);
-#ifdef __USE_GNU
-		q3c_sincos (ra1, &x0, &y0);
-#else
-		x0 = q3c_sin (ra1);
-		y0 = q3c_cos (ra1);
-#endif
+		q3c_sincos (ra1, x0, y0);
+
 		x0 *= (-tmp0);
 		y0 *= (-tmp0);
 		/*x0 = -q3c_sin(ra1) / q3c_tan(dec1);*/
@@ -1241,16 +1233,17 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 						q3c_coord_t *a)
 {
 	q3c_coord_t ra1, dec1, sr, cr, cd, sd, crad, p = 1;
+
+    dec1 = dec0 * Q3C_DEGRA;  
+    sd = q3c_sin(dec1);
+    cd = q3c_cos(dec1);
+    crad = q3c_cos(Q3C_DEGRA * rad);
 	
 	if ((face_num >= 1) && (face_num <= 4))
 	{
 		ra1 = (ra0 - (face_num  - 1 ) * 90) * Q3C_DEGRA;
-		dec1 = dec0 * Q3C_DEGRA;  
 		sr = q3c_sin(ra1);
 		cr = q3c_cos(ra1);
-		sd = q3c_sin(dec1);
-		cd = q3c_cos(dec1);
-		crad = q3c_cos(Q3C_DEGRA * rad);
 		*axx = (crad * crad - sr * sr * cd * cd);
 		*ayy = (crad * crad - sd * sd);
 		*axy = (-2 * sr * sd * cd);
@@ -1264,12 +1257,8 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 		/* p=1 for North Polar cap & p=-1 for South Polar cap */
 		 
 		ra1 = ra0 * Q3C_DEGRA;
-		dec1 = dec0 * Q3C_DEGRA;
 		sr = q3c_sin(ra1);
 		cr = q3c_cos(ra1);
-		sd = q3c_sin(dec1);
-		cd = q3c_cos(dec1);
-		crad = q3c_cos(Q3C_DEGRA * rad);
 		*axx = (crad * crad - sr * sr * cd * cd);
 		*ayy = (crad * crad - cr * cr * cd * cd);
 		*axy = (2 * p * sr * cr * cd * cd);
@@ -1381,31 +1370,16 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		ra1 = (ra0 - (face_num - 1 ) * 90) * Q3C_DEGRA;
 		dec1 = dec0 * Q3C_DEGRA;	
 		//cr = q3c_sqrt(1 - sr * sr);
-#ifdef __USE_GNU
-		q3c_sincos(ra1, &sr, &cr);
-#else
-		sr = q3c_sin(ra1);
-		cr = q3c_cos(ra1);
-#endif
+		q3c_sincos(ra1, sr, cr);
 		//sd = q3c_sin(dec1);
 		//cd = q3c_sqrt( 1 - sd * sd);
 		//cd = q3c_cos(dec1);
-#ifdef __USE_GNU
-		q3c_sincos(dec1, &sd, &cd);
-#else
-		sd = q3c_sin(dec1);
-		cd = q3c_cos(dec1);
-#endif
+		q3c_sincos(dec1, sd, cd);
 		cd2 = cd * cd;
 		//srad = q3c_sin(Q3C_DEGRA * rad);
 		//crad = q3c_sqrt(1 - srad * srad);
 		//crad = q3c_cos(Q3C_DEGRA * rad);
-#ifdef __USE_GNU
-		q3c_sincos(Q3C_DEGRA * rad, &srad, &crad);
-#else
-		srad = q3c_sin(Q3C_DEGRA * rad);
-		crad = q3c_cos(Q3C_DEGRA * rad);
-#endif
+		q3c_sincos(Q3C_DEGRA * rad, srad, crad);
 
 		tmp2 = ((q3c_coord_t)1) / (2 * ( cd2 * cr * cr - srad * srad ));
 		tmp0 = sr * cr *cd2;
@@ -1423,19 +1397,9 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		dec1 = dec0 * Q3C_DEGRA;
 		//sr = q3c_sin(ra1);
 		//cr = q3c_cos(ra1);
-#ifdef __USE_GNU
-		q3c_sincos(ra1, &sr, &cr);
-#else
-		sr = q3c_sin(ra1);
-		cr = q3c_cos(ra1);
-#endif
+		q3c_sincos(ra1, sr, cr);
 
-#ifdef __USE_GNU
-		q3c_sincos(dec1, &sd, &cd);
-#else
-		sd = q3c_sin(dec1);
-		cd = q3c_cos(dec1);
-#endif
+		q3c_sincos(dec1, sd, cd);
 
 		cd2 = cd * cd;
 		scd = sd * cd;
@@ -1443,12 +1407,7 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		//srad = q3c_sin(Q3C_DEGRA * rad);
 		//crad = q3c_sqrt(1 - srad * srad);
 		
-#ifdef __USE_GNU
-		q3c_sincos(Q3C_DEGRA * rad, &srad, &crad);
-#else
-		srad = q3c_sin(Q3C_DEGRA * rad);
-		crad = q3c_cos(Q3C_DEGRA * rad);
-#endif
+		q3c_sincos(Q3C_DEGRA * rad, srad, crad);
 
 		crad2 = crad * crad;
 		tmp0 = scd * sr;

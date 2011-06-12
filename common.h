@@ -56,7 +56,7 @@ typedef double q3c_coord_t;
 #define q3c_sin(a) sin(a)
 #define q3c_asin(a) asin(a)
 #define q3c_acos(a) acos(a)
-#define q3c_sincos(a, b, c) sincos(a, b, c)
+#define q3c_sincos0(a, b, c) sincos(a, b, c)
 #define q3c_tan(a) tan(a)
 #define q3c_atan(a) atan(a)
 #define q3c_atan2(a,b) atan2(a, b)
@@ -89,7 +89,7 @@ typedef long double q3c_coord_t;
 #define q3c_sin(a) sinl(a)
 #define q3c_asin(a) asinl(a)
 #define q3c_acos(a) acosl(a)
-#define q3c_sincos(a, b, c) sincosl(a, b, c)
+#define q3c_sincos0(a, b, c) sincosl(a, b, c)
 #define q3c_tan(a) tanl(a)
 #define q3c_atan(a) atanl(a)
 #define q3c_atan2(a,b) atan2l(a, b)
@@ -122,7 +122,6 @@ typedef long double q3c_coord_t;
 #ifndef Q3C_I1
 #define Q3C_I1 (1 << (Q3C_INTERLEAVED_NBITS))
 #endif /* Q3C_INTERLEAVED_NBITS */
-
 
 
 /* this probably will work only in the case of long double variables ?? */
@@ -158,6 +157,15 @@ typedef long double q3c_coord_t;
                       (q3c_fmod(ra, 360) + 360) : \
                       ( (ra > 360) ? q3c_fmod(ra, 360) : ra ) \
                       ) 
+
+#ifdef __USE_GNU
+#define q3c_sincos(a,b,c) q3c_sincos0(a,&b,&c)
+#else
+#define q3c_sincos(a,b,c) do {\
+    b=q3c_sin(a);\
+    c=q3c_cos(a);\
+} while(0);
+#endif
 
 struct q3c_prm 
 {
