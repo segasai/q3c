@@ -355,7 +355,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 
 	q3c_poly qp;
 
-	ang2ipix_xy(hprm, ra0, dec0, &cur_face_num, &ipix, &x0, &y0);
+	q3c_ang2ipix_xy(hprm, ra0, dec0, &cur_face_num, &ipix, &x0, &y0);
 
 	qp.ra = in_ra;
 	qp.dec = in_dec;

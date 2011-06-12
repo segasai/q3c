@@ -231,7 +231,7 @@ void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
 					   q3c_coord_t, q3c_coord_t, q3c_coord_t *, q3c_coord_t *,
 					   q3c_coord_t *, q3c_coord_t *, char *);
 
-void ang2ipix_xy(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
+void q3c_ang2ipix_xy(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec,
 				 char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
 				 q3c_coord_t *y_out);
 

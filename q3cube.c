@@ -70,8 +70,12 @@ inline q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 }
 
 
-void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
-					q3c_ipix_t *ipix)
+
+/* ang2ipix outputting also the x,y on the cube face
+ * Coordinates on the cube face are x[-0.5,0.5] y[-0.5,0.5] */
+void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
+					char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
+					q3c_coord_t *y_out)
 					/* ra in degrees, dec in degrees       */
 					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
@@ -154,7 +158,11 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 		/*y0 = -q3c_cos(ra1) / q3c_tan(dec1);*/
 	}
 	
-	x0 = (x0 + 1) / 2; y0 = (y0 + 1) / 2;
+	*x_out = x0 / 2;
+	*y_out = y0 / 2;
+
+	x0 = (x0 + 1) / 2;
+	y0 = (y0 + 1) / 2;
 		
 	/* Now I produce the final pixel value by converting x and y values
 	 * to bitfields and combining them by interleaving, using the
@@ -177,99 +185,19 @@ void q3c_ang2ipix (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 
 	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
+	*out_face_num = face_num;
+
 }
 
-
-
-/* Cloned version of ang2ipix for outputting also the x,y on the cube face
- * Coordinates on the cube face are x[-0.5,0.5] y[-0.5,0.5] */
-void ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
-					char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
-					q3c_coord_t *y_out)
-					/* ra in degrees, dec in degrees */
+void q3c_ang2ipix(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
+                   q3c_ipix_t *ipix)
+					/* ra in degrees, dec in degrees       */
 					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-	q3c_coord_t x0 = 0,y0 = 0;
-	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
-				*ybits = hprm->ybits, xi, yi;
-    q3c_coord_t ra, dec;
-	char face_num;
-
-	/* We check against crazy right ascensions */
-	if (ra0 < 0)
-	{
-		ra = q3c_fmod(ra0, 360) + 360;
-	} 
-	else if (ra0 > 360)
-	{
-		ra = q3c_fmod(ra0, 360);
-	}
-	else
-	{
-        ra = ra0;
-	}
-
-    /* protection against wrong declinations */	
-	if (dec0 > 90)
-	{
-        dec = 90;
-	}
-	else if (dec0 < -90)
-	{
-	    dec = -90;
-	}
-	else
-	{
-	    dec = dec0;
-	}
-	
-	face_num = q3c_fmod ((ra + 45) / 90, 4);
-	/*for equatorial pixels we'll have face_num from 1 to 4 */
-	x0 = q3c_tan (Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-	y0 = q3c_tan (dec * Q3C_DEGRA) /
-		q3c_cos (Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num));
-	face_num++;
-	
-	if (y0 > 1)
-	{
- 		face_num = 0;
-		x0 = q3c_sin (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
-		y0 = -q3c_cos (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
-	}
-	else if (y0 < -1)
-	{
-		face_num = 5;
-		x0 = -q3c_sin (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
-		y0 = -q3c_cos (Q3C_DEGRA * ra) / q3c_tan (Q3C_DEGRA * dec);
-	}
-	
-	*x_out = x0 / 2;
-	*y_out = y0 / 2;
-	x0 = (x0 + 1) / 2;
-	y0 = (y0 + 1) / 2;
-	
-	/* Now I produce the final pixel value by converting x and y values to bitfields
-	 * and combining them by interleaving, using the predefined arrays xbits and ybits
-	 */
-	
-	xi = (q3c_ipix_t)(x0 * nside);
-	yi = (q3c_ipix_t)(y0 * nside);
-	
-	/* This two strings are written to handle the case of edges of base square */
-	if (xi == nside)
-	{
-		xi--;
-	}
-	if (yi == nside)
-	{
-		yi--;
-	}
-	
-	*ipix = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-	
-	*out_face_num = face_num;
+    q3c_coord_t tmpx, tmpy;
+    char face;
+    q3c_ang2ipix_xy(hprm, ra0, dec0, &face, ipix, &tmpx, &tmpy);
 }
-
 
 /* The code extracted from ang2ipix for getting the cube face number */
 char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
