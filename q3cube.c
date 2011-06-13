@@ -2115,6 +2115,89 @@ void q3c_stack_process(struct q3c_square* work_stack, int *work_nstack,
 	}
 }
 
+
+/* This function processes the stack of squares and put the fully covered
+ * and partially covered squares in th appropriate output lists
+ */
+void q3c_output_stack( struct q3c_prm *hprm,
+                struct q3c_square *out_stack, int out_nstack,
+                struct q3c_square *work_stack, int work_nstack,
+                  int face_num, int nside,
+                  q3c_ipix_t *out_ipix_arr_fulls,
+                  int *out_ipix_arr_fulls_pos,
+                  q3c_ipix_t *out_ipix_arr_partials,
+                  int *out_ipix_arr_partials_pos)
+{
+    int i,j,ntmp1;
+    q3c_ipix_t xi,yi, ipix_tmp1, ipix_tmp2;
+	q3c_ipix_t	*xbits = hprm->xbits, *ybits = hprm->ybits;
+
+    struct q3c_square *cur_square;
+    /* Run through fully covered squares (we take them from out_stack) */
+    for(i = 0; i < out_nstack; i++)
+    {
+        cur_square = out_stack + i; 
+        ntmp1 = (nside / cur_square->nside0); 
+        //fprintf(stdout, "XX%lld\n", ntmp1);
+        xi = cur_square->x0 * ntmp1;
+        yi = cur_square->y0 * ntmp1;
+     
+        ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
+
+        ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
+     
+        /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+         * query of current square
+         * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+         */
+     
+        out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp1;
+        out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp2;
+ 
+    } /* End of output run through fully covered squares */
+ 
+    if (out_nstack == 0)
+    /* If the list of fully covered squares is empty */
+    {
+        /* Now we just do nothing  -- the stack of ipix'es will be just empty */
+    }
+
+
+    /* Run through partly covered squares (we take them from work_stack where
+     * the cur_square->status == Q3C_PARTIAL)
+     */
+    for(i = 0, j = -1; i < work_nstack; i++)
+    {
+        cur_square = work_stack + i;
+        if (cur_square->status != Q3C_PARTIAL)
+            continue;
+        else
+            j+=1; 
+        ntmp1 = (nside / cur_square->nside0); 
+        //fprintf(stdout, "XX%lld\n", ntmp1);
+        xi = cur_square->x0 * ntmp1;
+        yi = cur_square->y0 * ntmp1;
+     
+        ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
+
+        ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
+
+        /* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
+         * query of current square
+         * The query should be     ipix_tmp1 =< II < ipix_tmp2 
+         */
+
+        out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp1;
+        out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp2;
+     
+ 
+    } /* End of output run through partly covered squares */
+
+}
+
+
+
+
 void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 							q3c_coord_t dec0, q3c_coord_t rad,
 							q3c_ipix_t *out_ipix_arr_fulls,
@@ -2124,10 +2207,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize,
 		points[4];
 	
-	q3c_ipix_t n0, nside = hprm->nside,
-		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
-		*ybits = hprm->ybits;
-	
+	q3c_ipix_t n0, nside = hprm->nside;
+		
 	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3]={0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
@@ -2303,70 +2384,14 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #endif
 		}
 	 
+		q3c_output_stack( hprm, out_stack, out_nstack,
+		               work_stack, work_nstack,
+                  face_num, nside,
+                  out_ipix_arr_fulls,
+                  &out_ipix_arr_fulls_pos,
+                  out_ipix_arr_partials,
+                  &out_ipix_arr_partials_pos);
 	 
-	 
-		/* Run through fully covered squares (we take them from out_stack) */
-		for(i = 0; i < out_nstack; i++)
-		{
-			cur_square = out_stack + i; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-
-			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
-
-
-		 
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-		 
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
-	 
-		} /* End of output run through fully covered squares */
-	 
-		if (out_nstack == 0)
-		/* If the list of fully covered squares is empty */
-		{
-			/* Now we just do nothing  -- the stack of ipix'es will be just empty */
-		}
-
-
-		/* Run through partly covered squares (we take them from work_stack where
-		 * the cur_square->status == Q3C_PARTIAL)
-		 */
-		for(i = 0, j = -1; i < work_nstack; i++)
-		{
-			cur_square = work_stack + i;
-			if (cur_square->status!=Q3C_PARTIAL)
-				continue;
-			else
-				j+=1; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-
-			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
-
-		 
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
-		 
-	 
-		} /* End of output run through partly covered squares */
 
 	} /* End of the mega-loop over the faces */
 
@@ -2413,9 +2438,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 				xc_cur = 0 , yc_cur = 0, cur_size, xesize, yesize,
 				points[4];
     
-	q3c_ipix_t n0, nside = hprm->nside,
-				ntmp1, xi, yi, ipix_tmp1, ipix_tmp2, *xbits = hprm->xbits,
-				*ybits = hprm->ybits;
+	q3c_ipix_t n0, nside = hprm->nside;
  
 	char face_num, multi_flag = 0, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
@@ -2566,71 +2589,14 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 #endif
 		}
 	 
+		q3c_output_stack( hprm, out_stack, out_nstack,
+		               work_stack, work_nstack,
+                  face_num, nside,
+                  out_ipix_arr_fulls,
+                  &out_ipix_arr_fulls_pos,
+                  out_ipix_arr_partials,
+                  &out_ipix_arr_partials_pos);
 	 
-	 
-		/* Run through fully covered squares (we take them from out_stack) */
-		for(i = 0; i < out_nstack; i++)
-		{
-			cur_square = out_stack + i; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-
-			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
-
-
-		 
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-		 
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
-	 
-		} /* End of output run through fully covered squares */
-	 
-		if (out_nstack == 0)
-		/* If the list of fully covered squares is empty */
-		{
-			/* Now we just do nothing  -- the stack of ipix'es will be just empty */
-		}
-
-
-		/* Run through partly covered squares (we take them from work_stack where
-		 * the cur_square->status == Q3C_PARTIAL)
-		 */
-		for(i = 0, j = -1; i < work_nstack; i++)
-		{
-			cur_square = work_stack + i;
-			if (cur_square->status != Q3C_PARTIAL)
-				continue;
-			else
-				j+=1; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-		 
-			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
-
-
-		 
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
-		 
-	 
-		} /* End of output run through partly covered squares */
 
 	} /* End of the mega-loop over the faces */
 
@@ -2668,6 +2634,9 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 } /* End of radial_query() */
 
 
+
+
+
 void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
 	q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
@@ -2677,9 +2646,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		yc_cur = 0, cur_size, xesize, yesize,
 		points[4], axx, ayy, axy, ax, ay, a;
 
-	q3c_ipix_t n0, nside = hprm->nside, 
-		ntmp1, xi, yi, ipix_tmp1, ipix_tmp2,
-		*xbits = hprm->xbits, *ybits = hprm->ybits;
+	q3c_ipix_t n0, nside = hprm->nside;
 	
 	char face_num, multi_flag = 0, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
@@ -2821,66 +2788,14 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #endif
 		}
 	 
-	 
-		/* Run through fully covered squares (we take them from out_stack) */
-		for(i = 0; i < out_nstack; i++)
-		{
-			cur_square = out_stack + i; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
+		q3c_output_stack( hprm, out_stack, out_nstack,
+		               work_stack, work_nstack,
+                  face_num, nside,
+                  out_ipix_arr_fulls,
+                  &out_ipix_arr_fulls_pos,
+                  out_ipix_arr_partials,
+                  &out_ipix_arr_partials_pos);
 
-			ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
-		 
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-		 
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp1;
-			out_ipix_arr_fulls[out_ipix_arr_fulls_pos++] = ipix_tmp2;
-	 
-		} /* End of output run through fully covered squares */
-	 
-		if (out_nstack == 0)
-		/* If the list of fully covered squares is empty */
-		{
-			/* Now we just do nothing  -- the stack of ipix'es will be just empty */
-		}
-
-
-		/* Run through partly covered squares (we take them from work_stack where
-		 * the cur_square->status == Q3C_PARTIAL)
-		 */
-		for(i = 0, j = -1; i < work_nstack; i++)
-		{
-			cur_square = work_stack + i;
-			if (cur_square->status != Q3C_PARTIAL)
-				continue;
-			else
-				j+=1; 
-			ntmp1 = (nside / cur_square->nside0); 
-			//fprintf(stdout, "XX%lld\n", ntmp1);
-			xi = cur_square->x0 * ntmp1;
-			yi = cur_square->y0 * ntmp1;
-		 
-			ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-
-			ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
-
-			/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
-			 * query of current square
-			 * The query should be     ipix_tmp1 =< II < ipix_tmp2 
-			 */
-
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp1;
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = ipix_tmp2;
-		 
-	 
-		} /* End of output run through partly covered squares */
 
 	} /* End of the mega-loop over the faces */
 

@@ -374,5 +374,13 @@ int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
 void q3c_stack_process(struct q3c_square* work_stack, int *work_nstack,
                        struct q3c_square* out_stack, int *out_nstack,
                        int cur_depth, int res_depth);
+void q3c_output_stack( struct q3c_prm *hprm,
+                struct q3c_square *out_stack, int out_nstack,
+                struct q3c_square *work_stack, int work_nstack,
+                  int face_num, int nside,
+                  q3c_ipix_t *out_ipix_arr_fulls,
+                  int *out_ipix_arr_fulls_pos,
+                  q3c_ipix_t *out_ipix_arr_partials,
+                  int *out_ipix_arr_partials_pos);
   
 #endif/*  Q3C_COMMON_H  */
