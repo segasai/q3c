@@ -2128,8 +2128,8 @@ void q3c_output_stack( struct q3c_prm *hprm,
                   q3c_ipix_t *out_ipix_arr_partials,
                   int *out_ipix_arr_partials_pos)
 {
-    int i,j,ntmp1;
-    q3c_ipix_t xi,yi, ipix_tmp1, ipix_tmp2;
+    int i, j;
+    q3c_ipix_t xi, yi, ipix_tmp1, ipix_tmp2, ntmp1;
 	q3c_ipix_t	*xbits = hprm->xbits, *ybits = hprm->ybits;
 
     struct q3c_square *cur_square;
