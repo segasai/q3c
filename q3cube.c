@@ -2225,6 +2225,15 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * It seems that each of stacks should have the size 4*(2^(depth-1))
 	 */
 	
+	/* 35 degrees is a magic size above which the cone from the search can 
+	 * produce a hyperbola or a parabola on a main face and where a lot of
+	 * code will start to break.
+	 * So if the query is that large, I just query the whole sphere 
+	 */
+	 /* TODO 
+	  * I can instead of querying the whole sphere, just query the appropriate 
+	  * faces 
+	  */
 	if (rad>=35)
 	{
 		q3c_ipix_t maxval = 6*(nside*nside);
