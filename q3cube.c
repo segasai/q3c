@@ -2230,13 +2230,20 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		q3c_ipix_t maxval = 6*(nside*nside);
 		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
 		{
+			/* don't have any fully covered squares*/
 			out_ipix_arr_fulls[i++] = 1 ;
 			out_ipix_arr_fulls[i++] = -1;
 		}
-		for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
+
+		i = out_ipix_arr_partials_pos;
+		out_ipix_arr_partials[i++] = -1;
+		out_ipix_arr_partials[i++] = maxval;
+		/* everything is partially covered */
+		for(; i < (2*Q3C_NPARTIALS);)
 		{
+			/* fill with dummy ranges the rest*/
+			out_ipix_arr_partials[i++] = 1;
 			out_ipix_arr_partials[i++] = -1;
-			out_ipix_arr_partials[i++] = maxval;
 		}
 		return;
 	}
