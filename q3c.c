@@ -504,6 +504,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
 	int iteration = PG_GETARG_INT32(1); /* iteration */
 	int full_flag = PG_GETARG_INT32(2); /* full_flag */
+	char too_large = 0;
 	/* 1 means full, 0 means partial*/
 	int16 typlen;
 	bool typbyval;
@@ -646,8 +647,11 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	qp.ay = ay;
 
 	/* fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]); */
-	q3c_poly_query(&hprm, &qp, fulls, partials);
-
+	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
 	invocation = 1;
 
 	if (full_flag)
@@ -686,7 +690,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
 
 	static int invocation ;
-
+	char too_large;
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
@@ -807,8 +811,12 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	}
 
 	result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
-											ra_cen, dec_cen, invocation)) !=
+											ra_cen, dec_cen, &too_large, invocation)) !=
 												Q3C_DISJUNCT;
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
 
 	PG_RETURN_BOOL((result));
 }

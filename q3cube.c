@@ -2446,7 +2446,8 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 					q3c_ipix_t *out_ipix_arr_fulls,
-					q3c_ipix_t *out_ipix_arr_partials)
+					q3c_ipix_t *out_ipix_arr_partials,
+					char *too_large)
 {
  
  
@@ -2456,7 +2457,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
     
 	q3c_ipix_t n0, nside = hprm->nside;
  
-	char face_num, multi_flag = 0, face_count, face_num0;
+	char face_num, multi_flag = 0, face_count, face_num0, large_flag;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
  
@@ -2473,7 +2474,11 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
  
 	face_num = q3c_get_facenum_poly(qp);
  
-	q3c_project_poly(qp, face_num);
+	q3c_project_poly(qp, face_num, &large_flag);
+	if (large_flag)
+	{
+		*too_large = 1;
+	}
 	q3c_prepare_poly(qp);
  
 	q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
@@ -2494,7 +2499,12 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			face_num = q3c_xy2facenum(2 * points[2 * (face_count - 1)],
 						2 * points[2 * (face_count - 1) + 1], face_num0);
 
-			q3c_project_poly(qp, face_num);
+			q3c_project_poly(qp, face_num, &large_flag);
+			if (large_flag)
+			{
+				*too_large = 1;
+			}
+
 			q3c_prepare_poly(qp);
 		 
 			q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);

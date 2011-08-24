@@ -239,8 +239,8 @@ void q3c_ipix2ang(struct q3c_prm *, q3c_ipix_t , q3c_coord_t *, q3c_coord_t *);
 
 q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth);
 
-void q3c_radial_query(struct q3c_prm *, char *, char *, char *,
-					  q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);
+//void q3c_radial_query(struct q3c_prm *, char *, char *, char *,
+//					  q3c_coord_t, q3c_coord_t, q3c_coord_t, char *);
 
 void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t, 
 						  q3c_coord_t, q3c_ipix_t *, int);
@@ -342,7 +342,7 @@ void q3c_init_poly(q3c_poly *qp, int n);
 
 void q3c_prepare_poly(q3c_poly *qp);
 
-void q3c_project_poly(q3c_poly *qp, char facenum);
+void q3c_project_poly(q3c_poly *qp, char facenum, char *large_flag);
 
 char q3c_get_facenum_poly(q3c_poly *qp);
 
@@ -356,11 +356,13 @@ void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax,
 
 void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 					q3c_ipix_t *out_ipix_arr_fulls,
-					q3c_ipix_t *out_ipix_arr_partials);
+					q3c_ipix_t *out_ipix_arr_partials,
+                    char *too_large);
 
 int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 								   q3c_coord_t in_ra[], q3c_coord_t in_dec[],
 								   q3c_coord_t ra0, q3c_coord_t dec0,
+								   char *too_large,
 								   int invocation);
 
 inline char q3c_get_region_facenum(q3c_region region, void *data);

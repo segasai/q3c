@@ -129,12 +129,12 @@ char q3c_get_facenum_poly(q3c_poly *qp)
 	return q3c_get_facenum(qp->ra[0], qp->dec[0]);
 }
 
-void q3c_project_poly(q3c_poly *qp, char face_num)
+void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 {
 	q3c_coord_t ra1, dec1, tmp0;
 	q3c_coord_t *ra = qp->ra, *dec = qp->dec;
 	q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
-
+	q3c_coord_t tmpval ; 
 	int i, n = qp->n;
 	if ((face_num > 0) && (face_num < 5))
 	{
@@ -143,8 +143,13 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 		{
 			ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
 			dec1 = Q3C_DEGRA * dec[i];
+			tmpval =  q3c_cos(ra1);
+			if (tmpval < 0)
+			{
+				*large_flag = 1;
+			}
 			x[i] = (q3c_tan(ra1)) / 2;
-			y[i] = (q3c_tan(dec1) / q3c_cos(ra1)) / 2;
+			y[i] = (q3c_tan(dec1)) / tmpval / 2;
 		}
 		/* Now x[i] and y[i] are coordinates on cube face [-0.5:0.5]x[-0.5:0.5] */
 	}
@@ -154,8 +159,12 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 		{
 			ra1 = Q3C_DEGRA * ra[i];
 			dec1 = Q3C_DEGRA * dec[i];
-
-			tmp0 = 1 / q3c_tan(dec1);
+			tmpval = q3c_tan(dec1);
+			if (tmpval<0)
+			{
+				*large_flag = 1;
+			}
+			tmp0 = 1 / tmpval;
 			q3c_sincos(ra1, x0, y0);
 
 			x0 *= tmp0;
@@ -170,8 +179,12 @@ void q3c_project_poly(q3c_poly *qp, char face_num)
 		{
 			ra1 = Q3C_DEGRA * ra[i];
 			dec1 = Q3C_DEGRA * dec[i];
-
-			tmp0 = 1 / q3c_tan(dec1);
+			tmpval = q3c_tan(dec1);
+			if (tmpval>0)
+			{
+				*large_flag = 1;
+			}
+			tmp0 = 1 / tmpval;
 
 			q3c_sincos(ra1, x0, y0);
 
@@ -334,13 +347,14 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
 int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
                                    q3c_coord_t in_ra[], q3c_coord_t in_dec[],
                                    q3c_coord_t ra0, q3c_coord_t dec0,
+                                   char *too_large,
                                    int invocation)
 {
 	q3c_coord_t xmin,xmax,ymin, ymax;
 	static char faces[6], multi_flag;
 	q3c_ipix_t ipix;
 	q3c_coord_t points[4];
-	char face_num, face_num0, cur_face_num;
+	char face_num, face_num0, cur_face_num, large_flag;
 	static q3c_coord_t x[3][Q3C_MAX_N_POLY_VERTEX], y[3][Q3C_MAX_N_POLY_VERTEX],
 		ax[3][Q3C_MAX_N_POLY_VERTEX], ay[3][Q3C_MAX_N_POLY_VERTEX], x0, y0;
 
@@ -364,7 +378,11 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 		qp.ax = ax[0];
 		qp.ay = ay[0];
 
-		q3c_project_poly(&qp, face_num);
+		q3c_project_poly(&qp, face_num, &large_flag);
+		if (large_flag)
+		{
+			*too_large=1;
+		}
 		q3c_prepare_poly(&qp);
 
 		q3c_get_minmax_poly(&qp, &xmin, &xmax, &ymin, &ymax);
@@ -487,7 +505,12 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 				qp.ax = ax[face_count];
 				qp.ay = ay[face_count];
 
-				q3c_project_poly(&qp, faces[face_count]);
+				q3c_project_poly(&qp, faces[face_count], &large_flag);
+				if (large_flag)
+				{
+					*too_large=1;
+				}
+
 				q3c_prepare_poly(&qp);
 			}
 		}
