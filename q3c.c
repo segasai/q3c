@@ -242,7 +242,11 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
 	int iteration = PG_GETARG_INT32(3); // iteration
-
+	
+	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
+	{
+		elog(ERROR, "The values of ra,dec are infinites or NaNs");
+	}
 
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
@@ -300,6 +304,11 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* axis_ratio */
 	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
 	int iteration = PG_GETARG_INT32(5); /* iteration */
+
+	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)) )
+	{
+		elog(ERROR, "The values of ra,dec,radius are infinites or NaNs");
+	}
 
 
 	if (invocation == 0)
