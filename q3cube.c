@@ -2689,6 +2689,38 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * value of res_depth variable !
 	 * It seems that each of stacks should have the size 4*(2^(depth-1))
 	 */
+
+	/* 35 degrees is a magic size above which the cone from the search can 
+	 * produce a hyperbola or a parabola on a main face and where a lot of
+	 * code will start to break.
+	 * So if the query is that large, I just query the whole sphere 
+	 */
+	 /* TODO 
+	  * I can instead of querying the whole sphere, just query the appropriate 
+	  * faces 
+	  */
+	if (majax>=35)
+	{
+		q3c_ipix_t maxval = 6*(nside*nside);
+		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
+		{
+			/* don't have any fully covered squares*/
+			out_ipix_arr_fulls[i++] = 1 ;
+			out_ipix_arr_fulls[i++] = -1;
+		}
+
+		i = out_ipix_arr_partials_pos;
+		out_ipix_arr_partials[i++] = -1;
+		out_ipix_arr_partials[i++] = maxval;
+		/* everything is partially covered */
+		for(; i < (2*Q3C_NPARTIALS);)
+		{
+			/* fill with dummy ranges the rest*/
+			out_ipix_arr_partials[i++] = 1;
+			out_ipix_arr_partials[i++] = -1;
+		}
+		return;
+	}
 	
 	face_num = q3c_get_facenum(ra0, dec0);
 
