@@ -2457,7 +2457,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
     
 	q3c_ipix_t n0, nside = hprm->nside;
  
-	char face_num, multi_flag = 0, face_count, face_num0, large_flag;
+	char face_num, multi_flag = 0, face_count, face_num0, large_flag = 0;
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
  

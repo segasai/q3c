@@ -699,7 +699,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
 
 	static int invocation ;
-	char too_large;
+	char too_large = 0;
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen

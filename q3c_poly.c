@@ -354,7 +354,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 	static char faces[6], multi_flag;
 	q3c_ipix_t ipix;
 	q3c_coord_t points[4];
-	char face_num, face_num0, cur_face_num, large_flag;
+	char face_num, face_num0, cur_face_num, large_flag=0;
 	static q3c_coord_t x[3][Q3C_MAX_N_POLY_VERTEX], y[3][Q3C_MAX_N_POLY_VERTEX],
 		ax[3][Q3C_MAX_N_POLY_VERTEX], ay[3][Q3C_MAX_N_POLY_VERTEX], x0, y0;
 
