@@ -453,6 +453,20 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	int i, nistack = 0;
 	const q3c_coord_t q3c_lg2 = Q3C_LG2;
 
+	if (q3c_too_big_check(region, region_data))
+	{
+		/* the whole sky */
+		q3c_ipix_t maxval = 6*(nside*nside);
+		*(ipix_cur++) = -1 ;
+		*(ipix_cur++) = maxval;
+		for(i = 1; i < 4; i++ )
+		{
+			*(ipix_cur++) = 1 ;
+			*(ipix_cur++) = -1;
+		}
+		return;	
+	}
+	
 	face_num = q3c_get_region_facenum(region, region_data);
 	face_num0 = face_num;
 	
@@ -1324,6 +1338,45 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 
 }
 
+char q3c_too_big_check(q3c_region region, void * region_data)
+{
+	switch (region)
+	{
+		case Q3C_CIRCLE:
+		{
+			q3c_circle_region circle = *(q3c_circle_region *)region_data;
+			if (circle.rad>Q3C_MAXRAD)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
+		case Q3C_ELLIPSE:
+		{
+			q3c_ellipse_region ellipse = *(q3c_ellipse_region *)region_data;
+			if (ellipse.rad>Q3C_MAXRAD)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
+		case Q3C_POLYGON:
+		{
+		}
+	}
+	/* should not happen */
+	return 0; /* DUMMY */
+	
+	
+}
 
 inline void q3c_fast_get_xy_minmax(char face_num, q3c_region region,
 				void *region_data,
@@ -2234,7 +2287,7 @@ void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	  * I can instead of querying the whole sphere, just query the appropriate 
 	  * faces 
 	  */
-	if (rad>=35)
+	if (rad>=Q3C_MAXRAD)
 	{
 		q3c_ipix_t maxval = 6*(nside*nside);
 		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
@@ -2699,7 +2752,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	  * I can instead of querying the whole sphere, just query the appropriate 
 	  * faces 
 	  */
-	if (majax>=35)
+	if (majax>= Q3C_MAXRAD)
 	{
 		q3c_ipix_t maxval = 6*(nside*nside);
 		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)

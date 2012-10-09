@@ -160,6 +160,9 @@ typedef long double q3c_coord_t;
 #define Q3C_NFULLS 50 
 /*length of the list of the fully covered ipix ranges*/
 
+#define Q3C_MAXRAD 35
+/* maximum allowed radius for circles and ellipses */
+
 #define UNWRAP_RA(ra) ( (ra < 0) ? \
                       (q3c_fmod(ra, 360) + 360) : \
                       ( (ra > 360) ? q3c_fmod(ra, 360) : ra ) \
@@ -384,5 +387,5 @@ void q3c_output_stack( struct q3c_prm *hprm,
                   int *out_ipix_arr_fulls_pos,
                   q3c_ipix_t *out_ipix_arr_partials,
                   int *out_ipix_arr_partials_pos);
-  
+char q3c_too_big_check(q3c_region region, void * region_data)  ;
 #endif/*  Q3C_COMMON_H  */
