@@ -113,6 +113,9 @@ dec0 = 12deg in table mytable you should do:
  
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 
+The order of arguments is important here, so that the column names would come 
+first, and the location where you search after, otherwise the index won't be used.
+
 x) The polygonal query (the query of the objects which lie inside the region
 bounded by the polygon on the sphere)
 
@@ -141,6 +144,10 @@ with the crossmatch radius of 0.001 degrees, we should do:
 
 mytable# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, 0.001);
+
+The order of arguments is important again, because it determines whether an
+index is going to be used or not. The ra,dec columns from the table with the 
+index should go after the ra,dec columns from the table without the index.
 
 If every object in the table1 have his own error circle (like with X-ray data
 for example) (suppose that the radius of that circle is the column "err"),
