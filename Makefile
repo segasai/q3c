@@ -53,6 +53,8 @@ test: gen_data all
 	psql q3c_test -c 'ANALYZE test'
 	cat tests/cone.sql | psql q3c_test > tests/cone.out
 	diff tests/cone.out tests/cone.expected
+	cat tests/cone_join_rev.sql | psql q3c_test > tests/cone.out
+	diff tests/cone.out tests/cone.expected
 	cat tests/ellipse.sql | psql q3c_test > tests/ellipse.out
 	diff tests/ellipse.out tests/ellipse.expected
 	cat tests/join.sql | psql q3c_test > tests/join.out
