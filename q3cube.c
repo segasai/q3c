@@ -1429,33 +1429,57 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		ra1 = (ra0 - (face_num - 1 ) * 90) * Q3C_DEGRA;
 		q3c_sincos(ra1, sr, cr);
 				
-		tmp2 = ((q3c_coord_t)1) / (2 * ( cd2 * cr * cr - srad * srad ));
+		tmp2 = 2 * ( cd2 * cr * cr - srad * srad );
+		/* tmp2 is the discriminant of the curve on the face
+		 * zero or negative values mean parabolas or hyperbolas
+		 * in that case we better take whole face
+		 */
+		if (tmp2 < 1e-10)
+		{
+			*xmin = -Q3C_HALF; 
+			*ymin = -Q3C_HALF; 
+			*xmax = Q3C_HALF; 
+			*ymax = Q3C_HALF; 
+			return;
+		}
 		tmp0 = sr * cr *cd2;
 		tmp1 = srad * q3c_sqrt(cd2 - srad * srad);
-		*xmin = (tmp0 - tmp1) * tmp2;
-		*xmax = (tmp0 + tmp1) * tmp2;
+		*xmin = (tmp0 - tmp1) / tmp2;
+		*xmax = (tmp0 + tmp1) / tmp2;
 		tmp0 = cr * cd * sd;
 		tmp1 = srad * q3c_sqrt(crad2 - cd2 * sr * sr);
-		*ymin = (tmp0 - tmp1) * tmp2;
-		*ymax = (tmp0 + tmp1) * tmp2;
+		*ymin = (tmp0 - tmp1) / tmp2;
+		*ymax = (tmp0 + tmp1) / tmp2;
 	}
 	else
 	{
 		ra1 = ra0 * Q3C_DEGRA;
 		q3c_sincos(ra1, sr, cr);
 		scd = sd * cd;
-
 		tmp0 = scd * sr;
 		tmp1 = srad * q3c_sqrt(crad2 - cr * cr * cd2);
-		tmp2 = ((q3c_coord_t)1) / (2 * (crad2 - cd2));
+		tmp2 = 2 * (crad2 - cd2);
+		if (tmp2<1e-10)
+		{
+		/* tmp2 is the discriminant of the curve on the face
+		 * zero or negative values mean parabolas or hyperbolas
+		 * in that case we better take whole face
+		 */
+			*xmin = -Q3C_HALF; 
+			*ymin = -Q3C_HALF; 
+			*xmax = Q3C_HALF; 
+			*ymax = Q3C_HALF; 
+			return;
+		}
+
 		if (face_num == 5) tmp0 = -tmp0;
 
-		*xmin = (tmp0 - tmp1) * tmp2;
-		*xmax = (tmp0 + tmp1) * tmp2;
+		*xmin = (tmp0 - tmp1) / tmp2;
+		*xmax = (tmp0 + tmp1) / tmp2;
 		tmp0 = - scd * cr;
 		tmp1 = srad * q3c_sqrt(crad2 - sr * sr * cd2);
-		*ymin = (tmp0 - tmp1) * tmp2;
-		*ymax = (tmp0 + tmp1) * tmp2;
+		*ymin = (tmp0 - tmp1) / tmp2;
+		*ymax = (tmp0 + tmp1) / tmp2;
 	}
 }
 
@@ -1520,6 +1544,14 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
 	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
+	if (tmpy2 < 1e-10)
+	{
+		*ymin = -Q3C_HALF;
+		*ymax = -Q3C_HALF;
+		*zmin = Q3C_HALF;
+		*zmax = Q3C_HALF;		
+		return; 
+	} 
 
 	*ymin = (tmpy0 - tmpy1) / tmpy2;
 	*ymax = (tmpy0 + tmpy1) / tmpy2;
@@ -1861,6 +1893,15 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
+
+	if (tmpy2 < 1e-10)
+	{
+		*ymin = -Q3C_HALF;
+		*ymax = -Q3C_HALF;
+		*zmin = Q3C_HALF;
+		*zmax = Q3C_HALF;		
+		return;
+	} 
 
 	*ymin = (tmpy0 - tmpy1) / tmpy2;
 	*ymax = (tmpy0 + tmpy1) / tmpy2;
