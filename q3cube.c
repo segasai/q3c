@@ -1317,7 +1317,7 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
  * because the parabolic/gyperbolic problem can possibly occur if radius
  * of the cone search is larger than ~ 23 degrees.
  */
-	if (tmp2< 1e-10)
+	if (tmp2< Q3C_MINDISCR)
 	{
 		*xmax = 2*Q3C_HALF;
 		*ymax = 2*Q3C_HALF;
@@ -1434,7 +1434,7 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		 * zero or negative values mean parabolas or hyperbolas
 		 * in that case we better take whole face
 		 */
-		if (tmp2 < 1e-10)
+		if (tmp2 < Q3C_MINDISCR)
 		{
 			*xmin = -Q3C_HALF; 
 			*ymin = -Q3C_HALF; 
@@ -1459,7 +1459,7 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 		tmp0 = scd * sr;
 		tmp1 = srad * q3c_sqrt(crad2 - cr * cr * cd2);
 		tmp2 = 2 * (crad2 - cd2);
-		if (tmp2<1e-10)
+		if (tmp2 < Q3C_MINDISCR)
 		{
 		/* tmp2 is the discriminant of the curve on the face
 		 * zero or negative values mean parabolas or hyperbolas
@@ -1544,7 +1544,7 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
 	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
-	if (tmpy2 < 1e-10)
+	if (tmpy2 < Q3C_MINDISCR)
 	{
 		*ymin = -Q3C_HALF;
 		*ymax = -Q3C_HALF;
@@ -1894,7 +1894,7 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
 
-	if (tmpy2 < 1e-10)
+	if (tmpy2 < Q3C_MINDISCR)
 	{
 		*ymin = -Q3C_HALF;
 		*ymax = -Q3C_HALF;
