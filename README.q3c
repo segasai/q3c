@@ -45,21 +45,36 @@ in the contrib subdirectory of PostgreSQL sources and execute
 After the installation you will have several new functions in PostgreSQL.
 All names of these functions start with the "q3c_" prefix.
 
-The useful functions installed by Q3C are: 
+-----------------------------------------------------------------------
 
-q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec in degrees
+           FUNCTIONS
+
+All the angles used by q3c are always in degrees. 
+The functions installed by Q3C are: 
+
+q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec
+
+q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between 
+(ra1,dec1) and (ra2,dec2)
 
 q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
-  is within radius degrees of (ra2, dec2).
+  is within radius spherical distance of (ra2, dec2). It should be used when 
+the index on q3c_ang2ipix(ra2,dec2) is created.
 
 q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
-  q3c_join, except (ra1, dec2) have to be within an ellipse with
+  q3c_join, except (ra1, dec1) have to be within an ellipse with
   major axis major, the axis ratio ratio and the position angle pa
   (from north through east)
 
 q3c_radial_query(ra, dec, center_ra, center_dec, radius) -- returns
-  true if ra, dec is within radius degrees of center_ra, center_dec (use
-  this for cone searches).
+  true if ra, dec is within radius degrees of center_ra, center_dec. This
+  function should be used if when the index on q3c_ang2ipix(ra,dec) is created)
+
+q3c_ellipse_query(ra, dec, center_ra, center_dec, maj_ax,
+						axis_ratio, PA ) -- returns
+  true if ra, dec is within the ellipse from center_ra, center_dec.
+  The ellipse is specified by major axis, axis ratio and positional angle.
+  function should be used if when the index on q3c_ang2ipix(ra,dec) is created)
 
 q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within
   the postgresql polygon poly.
@@ -115,6 +130,14 @@ my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 
 The order of arguments is important here, so that the column names would come 
 first, and the location where you search after, otherwise the index won't be used.
+
+x) The ellipse search: search for objects within the ellipse from a given point:
+
+my_db=# select * from mytable WHERE
+	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
+
+returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
+major axis of 1 degree, axis ratio of 0.5  and positional angle of 10 degrees.
 
 x) The polygonal query (the query of the objects which lie inside the region
 bounded by the polygon on the sphere)
