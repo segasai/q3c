@@ -330,7 +330,7 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
 										  q3c_coord_t *zmin,
 										  q3c_coord_t *zmax);
 
-inline void q3c_fast_get_xy_minmax(char, q3c_region, void *, q3c_coord_t *,
+void q3c_fast_get_xy_minmax(char, q3c_region, void *, q3c_coord_t *,
 								   q3c_coord_t *, q3c_coord_t *,
 								   q3c_coord_t *);
 
@@ -387,9 +387,9 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 								   char *too_large,
 								   int invocation);
 
-inline char q3c_get_region_facenum(q3c_region region, void *data);
+char q3c_get_region_facenum(q3c_region region, void *data);
 
-inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
+q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi);
 int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,

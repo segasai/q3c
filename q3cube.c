@@ -30,11 +30,11 @@
 #include "my_bits.h"
 
 /* Distance calculation routine, inputs and outputs are in degrees */
-inline q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
+q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
 							q3c_coord_t ra2, q3c_coord_t dec2)
 {
-	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
-	 * it uses just 3 !!! computation of trigonometric functions
+	/* Fast and precise way to compute the distance on the sphere
+	 * it uses just 3 evaluations of trigonometric functions
 	 */
 	
 	q3c_coord_t x, y, z;
@@ -51,11 +51,11 @@ inline q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
 }
 
 /* sin(Distance) calculation routine, inputs and outputs are in degrees */
-inline q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
+q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 								q3c_coord_t ra2, q3c_coord_t dec2)
 {
-	/* The FASTEST!!! (and precise) way to compute the distance on the sphere
-	 * it uses just 3 !!! computation of trigonometric functions
+	/* Fast and precise way to compute the distance on the sphere
+	 * it uses just 3 evaluations of trigonometric functions
 	 */
 	q3c_coord_t x, y, z;
 	x = q3c_sin ((ra1 - ra2) / 2 * Q3C_DEGRA);
@@ -230,7 +230,7 @@ char q3c_get_facenum(q3c_coord_t ra, q3c_coord_t dec)
 /* get the main cube face number for a given region
  * CIRCLE/ELLISPE/POLYGON
  */
-inline char q3c_get_region_facenum(q3c_region region, void *data)
+char q3c_get_region_facenum(q3c_region region, void *data)
 {
 	switch(region)
 	{
@@ -869,7 +869,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 /* Convert the integer coordinates on the cube face into
  * ipix number (do the bit interleaving)
  */
-inline q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
+q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi)
 {
@@ -1408,7 +1408,7 @@ char q3c_too_big_check(q3c_region region, void * region_data)
 }
 
 /* Get the xmin,ymin,xmax,ymax on a given face for a given region */
-inline void q3c_fast_get_xy_minmax(char face_num, q3c_region region,
+void q3c_fast_get_xy_minmax(char face_num, q3c_region region,
 				void *region_data,
 				q3c_coord_t *xmin, q3c_coord_t *xmax,
 				q3c_coord_t *ymin, q3c_coord_t *ymax)
