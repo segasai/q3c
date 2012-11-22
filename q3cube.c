@@ -1213,7 +1213,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{	
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"L", xbits[i]);
+		fprintf(fp, "Q3C_CONST("Q3C_IPIX_FMT")", xbits[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1226,7 +1226,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"L", ybits[i]);
+		fprintf(fp, "Q3C_CONST("Q3C_IPIX_FMT")", ybits[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1239,7 +1239,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"L", xbits1[i]);
+		fprintf(fp, "Q3C_CONST("Q3C_IPIX_FMT")", xbits1[i]);
 	}
 	fprintf(fp, "};");
 	
@@ -1252,12 +1252,12 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 		{
 			fprintf(fp, ",");
 		}
-		fprintf(fp, Q3C_IPIX_FMT"L", ybits1[i]);
+		fprintf(fp, "Q3C_CONST("Q3C_IPIX_FMT")", ybits1[i]);
 	}
 	fprintf(fp, "};\n");
 	
 	fprintf(fp, "struct q3c_prm hprm={"
-	Q3C_IPIX_FMT"L,____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
+	Q3C_IPIX_FMT",____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
 }
 
 

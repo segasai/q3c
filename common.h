@@ -41,6 +41,7 @@ typedef int64 q3c_ipix_t ;
 
 #ifndef Q3C_IPIX_FMT
 #define Q3C_IPIX_FMT "%"PRId64
+#define Q3C_CONST(c) __INT64_C(c)
 #endif /* Q3C_IPIX_FMT */
 
 
