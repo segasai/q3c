@@ -32,6 +32,7 @@
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
+#include <stdint.h>
 
 #ifndef Q3C_COMMON_H
 #define Q3C_COMMON_H
@@ -45,7 +46,7 @@ typedef int64 q3c_ipix_t ;
 
 #ifndef Q3C_IPIX_FMT
 #define Q3C_IPIX_FMT "%"PRId64
-#define Q3C_CONST(c) __INT64_C(c)
+#define Q3C_CONST(c) INT64_C(c)
 #endif /* Q3C_IPIX_FMT */
 
 
