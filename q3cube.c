@@ -75,6 +75,20 @@ q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 /* convert angular coordinates (ra,dec) -> ipix
  * ang2ipix is also outputting x,y on the cube face
  * Coordinates on the cube face are x[-0.5,0.5] y[-0.5,0.5]
+ * ipix structure is the following:
+ * Bit 0(leftmost) : unused
+ * Bit 1-3: Cube face id ( 0 corresponds to the top face, 
+ 					 	   5 corresponds to the bottom face,
+ 					 	   1-4 correspond to face towards (x,y)=(1,0),
+ 					 	                                        (0,1)
+ 					 	                                        (-1,0)
+ 					 	                                        (0,-1)
+ * Bit 4-63: 60-bit long location in the quadtree on the cube face, encoded by
+             z-order (e.g. two interleaved bit strings on for x,
+             another for y)
+ * The mapping between x,y,z to (ra,dec) is such that 
+   (x,y,z)=(1,0,0) corresponds to (ra,dec)=(0,0)
+   (x,y,z)=(0,0,1) corresponds to (ra,dec)=(0,90)
  */
 void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 					char *out_face_num, q3c_ipix_t *ipix, q3c_coord_t *x_out,
