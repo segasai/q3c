@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2011 Sergey Koposov
+	   Copyright (C) 2004-2012 Sergey Koposov
 
     Author: Sergey Koposov, Sternberg Astronomical Institute
     						Institute of Astronomy, Cambridge

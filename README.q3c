@@ -4,10 +4,10 @@
                             Max Planck Institute for Astronomy,
 							Institute of Astronomy, Cambridge
     Email: koposov@ast.cam.ac.uk
-    http://lnfm1.sai.msu.ru/~math
+    http://www.ast.cam.ac.uk/~koposov
 
-    Idea and realization by Sergey Koposov.
-    General formulation and testing by Oleg Bartunov 
+    Idea and implementation by Sergey Koposov.
+	With the help from Oleg Bartunov
                      (Sternberg Astronomical Institute, Moscow University).
 
 ---------------------------------------------------------------------
