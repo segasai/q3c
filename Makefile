@@ -6,7 +6,13 @@ DOCS=README.q3c
 OPT=-O3
 OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
+
+GITEXISTS := $(shell which git)
+ifeq ($(GITEXISTS),)
+Q3C_VERSION='""'
+else
 Q3C_VERSION='"'"`git describe`"'"'
+endif
 
 PG_CPPFLAGS = -DQ3C_VERSION=$(Q3C_VERSION) $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
 SHLIB_LINK += $(filter -lm, $(LIBS))

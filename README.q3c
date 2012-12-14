@@ -117,6 +117,7 @@ q3c_pixarea(ipix, bits) -- returns the area corresponding to ipix at level
 q3c_ipixcenter(ra, dec, bits) -- the function returning the ipix value of the
 	pixel center of certain depth covering the specified (ra,dec)
 
+q3c_version() -- returns the version of Q3C installed
 
 -----------------------------------------------------------------
 
