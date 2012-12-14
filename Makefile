@@ -3,10 +3,12 @@ OBJS=q3c.o dump.o q3cube.o q3c_poly.o
 DATA_built=q3c.sql
 DOCS=README.q3c
 
-OPT=-O3 #-mcpu=pentium4 -march=pentium4 -msse -msse2 -mfpmath=sse -mmmx
+OPT=-O3
 OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
-PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
+Q3C_VERSION='"'"`git describe`"'"'
+
+PG_CPPFLAGS = -DQ3C_VERSION=$(Q3C_VERSION) $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
 SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o \
 			tests/join.out tests/cone.out tests/ellipse.out \
@@ -25,8 +27,9 @@ $(error You should have `pg_config` program in your PATH or compile Q3C with\
 after putting it in the contrib subdirectory of Postgres sources)
 endif
 include $(PGXS)
-
 endif
+CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
+
 
 prepare: prepare.o q3cube.o q3c_poly.o
 
@@ -34,7 +37,7 @@ dump.c: prepare
 	./prepare
 
 prepare: prepare.o q3cube.o q3c_poly.o
-	$(CC) $(CFLAGS) prepare.o q3cube.o q3c_poly.o $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) prepare.o q3cube.o q3c_poly.o $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
               
 oldclean: 
 	rm -f *~ tests/*~
@@ -63,7 +66,8 @@ test: gen_data all
 
 dist: clean
 	mkdir -p dist
-	cp *.c *.h *.sql.in Makefile README.q3c COPYING dist
+	cp *.c *.h *.sql.in README.q3c COPYING dist
+	cat Makefile | sed 's/^Q3C_VERSION=.*$$/Q3C_VERSION="'`git describe`'"/'  > dist/Makefile
 	mkdir -p dist/tests
 	cp tests/*.expected tests/*.sql dist/tests
 	cat q3c.sql.in | perl create_drops.pl > dist/drop_q3c.sql

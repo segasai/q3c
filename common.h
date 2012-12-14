@@ -418,4 +418,6 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 								q3c_coord_t *points, char *multi_flag);
 
 char q3c_too_big_check(q3c_region region, void * region_data)  ;
+
+void q3c_get_version(char *, int);
 #endif/*  Q3C_COMMON_H  */

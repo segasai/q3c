@@ -61,6 +61,17 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
+Datum pgq3c_get_version(PG_FUNCTION_ARGS);
+
+PG_FUNCTION_INFO_V1(pgq3c_get_version);
+Datum pgq3c_get_version(PG_FUNCTION_ARGS)
+{
+	char VERSION_MAX_BYTES = 100; 
+	char *buf = palloc(VERSION_MAX_BYTES);
+	q3c_get_version(buf, VERSION_MAX_BYTES); 
+	PG_RETURN_CSTRING(buf);
+}
+
 
 
 PG_FUNCTION_INFO_V1(pgq3c_ang2ipix);

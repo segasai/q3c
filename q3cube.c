@@ -29,6 +29,14 @@
 #include <string.h>
 #include "my_bits.h"
 
+static char __q3c_version[]=Q3C_VERSION;
+
+void q3c_get_version(char *out, int maxchar)
+{
+	strncpy(out,__q3c_version,maxchar);
+}
+
+
 /* Distance calculation routine, inputs and outputs are in degrees */
 q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
 							q3c_coord_t ra2, q3c_coord_t dec2)
