@@ -62,6 +62,8 @@ test: gen_data all
 	diff tests/ellipse.out tests/ellipse.expected
 	cat tests/join.sql | psql q3c_test > tests/join.out
 	diff tests/join.out tests/join.expected
+	cat tests/version.sql | psql q3c_test > tests/version.out
+	diff tests/version.out tests/version.expected
 	dropdb q3c_test
 
 dist: clean

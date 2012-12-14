@@ -1,5 +1,15 @@
 BEGIN;
 SET search_path = public;
+
+
+CREATE OR REPLACE FUNCTION q3c_version()
+        RETURNS cstring
+        AS 'MODULE_PATHNAME', 'pgq3c_get_version'
+        LANGUAGE C IMMUTABLE STRICT;
+COMMENT ON FUNCTION q3c_version()
+	IS 'Function returning Q3C version';
+
+
 CREATE OR REPLACE FUNCTION q3c_ang2ipix(double precision, double precision)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_ang2ipix'
