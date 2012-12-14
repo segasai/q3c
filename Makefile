@@ -78,5 +78,5 @@ dist: clean
 	cat Makefile | sed 's/^Q3C_VERSION=.*$$/Q3C_VERSION="'`git describe`'"/'  > dist/Makefile
 	mkdir -p dist/tests
 	cp tests/*.expected tests/*.sql dist/tests
-	cat q3c.sql.in | perl create_drops.pl > dist/drop_q3c.sql
+	cat q3c.sql.in | perl utils/create_drops.pl > dist/drop_q3c.sql
 
