@@ -387,104 +387,13 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 
 		q3c_get_minmax_poly(&qp, &xmin, &xmax, &ymin, &ymax);
 
-		/* Now in a little bit ugly but fastest way I determine whether the ellipse
+		/* Now I determine whether the poly
 		 * intersect other faces or not, and if yes, I setup the array "points" to the
 		 * multi_face loop.
 		 */
+		 
+		 q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
-		if (xmin < -Q3C_HALF)
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = xmax;
-				points[1] = ymin;
-				points[2] = xmin;
-				points[3] = ymax;
-				multi_flag = 2;
-				xmin = -Q3C_HALF;
-				ymin = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = xmax;
-					points[1] = ymax;
-					points[2] = xmin;
-					points[3] = ymin;
-					multi_flag = 2;
-					xmin = -Q3C_HALF;
-					ymax = Q3C_HALF;
-				}
-				else
-				{
-					points[0] = xmin;
-					points[1] = (ymin + ymax) / 2;
-					multi_flag = 1;
-					xmin = -Q3C_HALF;
-				}
-			}
-		}
-		else
-		{
-			if (xmax > Q3C_HALF)
-			{
-				if (ymin < -Q3C_HALF)
-				{
-					points[0] = xmin;
-					points[1] = ymin;
-					points[2] = xmax;
-					points[3] = ymax;
-					multi_flag = 2;
-					xmax = Q3C_HALF;
-					ymin = -Q3C_HALF;
-				}
-				else
-				{
-					if (ymax > Q3C_HALF)
-					{
-						points[0] = xmin;
-						points[1] = ymax;
-						points[2] = xmax;
-						points[3] = ymax;
-						multi_flag = 2;
-						xmax = Q3C_HALF;
-						ymax = Q3C_HALF;
-					}
-					else
-					{
-						points[0] = xmax;
-						points[1] = (ymin + ymax) / 2;
-						multi_flag = 1;
-						xmax = Q3C_HALF;
-					}
-				}
-			}
-			else
-			{
-				if (ymin < -Q3C_HALF)
-				{
-					points[0] = (xmin + xmax) / 2;
-					points[1] = ymin;
-					multi_flag = 1;
-					ymin = -Q3C_HALF;
-				}
-				else
-				{
-					if (ymax > Q3C_HALF)
-					{
-						points[0] = (xmin + xmax) / 2;
-						points[1] = ymax;
-						multi_flag = 2;
-						ymax = Q3C_HALF;
-					}
-					else
-					{
-						multi_flag = 0;
-					}
-				}
-			}
-		}
 
 		face_num0 = face_num;
 

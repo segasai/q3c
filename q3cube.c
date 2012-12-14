@@ -363,7 +363,7 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
  * !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * !!!!!!! It does change the arguments (xmin,xmax, ymin, ymax) !!!!!!!!
  */
-static void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
+void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 								q3c_coord_t *xmax0, q3c_coord_t *ymax0,
 								q3c_coord_t *points, char *multi_flag)
 {
@@ -2239,7 +2239,7 @@ void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
 	 * (except for the case of last resolution step)
 	 */
 #ifdef Q3C_DEBUG
-			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", work_nstack, tmp_stack1, tmp_stack2);
+			fprintf(stdout,"STACK STATE nw_stack: %d nt_stack1: %d nt_stack2: %d\n", *work_nstack, tmp_stack1, tmp_stack2);
 #endif
 
 	if (tmp_stack1 == 0)

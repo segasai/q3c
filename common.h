@@ -412,5 +412,10 @@ void q3c_output_stack( struct q3c_prm *hprm,
                   int *out_ipix_arr_fulls_pos,
                   q3c_ipix_t *out_ipix_arr_partials,
                   int *out_ipix_arr_partials_pos);
+
+void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
+								q3c_coord_t *xmax0, q3c_coord_t *ymax0,
+								q3c_coord_t *points, char *multi_flag);
+
 char q3c_too_big_check(q3c_region region, void * region_data)  ;
 #endif/*  Q3C_COMMON_H  */
