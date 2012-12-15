@@ -55,8 +55,11 @@ test: gen_data all
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
 	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
-	./gen_data 1 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
-	./gen_data 2 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
+	psql q3c_test -c "CREATE TABLE test_small (ra double precision, dec double precision)"
+	./gen_data 1 1000000 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
+	./gen_data 2 1000000 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
+	./gen_data 3 10000 | psql q3c_test -c "COPY test_small FROM STDIN WITH DELIMITER ' '"
+
 	psql q3c_test -c '\i q3c.sql'
 	psql q3c_test -c 'CREATE INDEX q3c_idx ON test (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'ANALYZE test'

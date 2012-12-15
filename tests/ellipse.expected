@@ -1,21 +1,6 @@
  count 
 -------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
+     0
 (1 row)
 
  count 
@@ -30,12 +15,7 @@
 
  count 
 -------
-     1
-(1 row)
-
- count 
--------
-     3
+     2
 (1 row)
 
  count 
@@ -45,7 +25,7 @@
 
  count 
 -------
-     3
+     2
 (1 row)
 
  count 
@@ -55,12 +35,12 @@
 
  count 
 -------
-     3
+     0
 (1 row)
 
  count 
 -------
-     1
+     0
 (1 row)
 
  count 
@@ -75,77 +55,22 @@
 
  count 
 -------
-     2
+     0
 (1 row)
 
  count 
 -------
-     2
+     0
 (1 row)
 
  count 
 -------
-     2
+     0
 (1 row)
 
  count 
 -------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     3
+     0
 (1 row)
 
  count 
@@ -155,6 +80,76 @@
 
  count 
 -------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
      2
 (1 row)
 
@@ -170,7 +165,12 @@
 
  count 
 -------
-     2
+     1
+(1 row)
+
+ count 
+-------
+     0
 (1 row)
 
  count 
@@ -180,67 +180,7 @@
 
  count 
 -------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
+     0
 (1 row)
 
  count 
@@ -250,7 +190,17 @@
 
  count 
 -------
-     1
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
 (1 row)
 
  count 
@@ -260,67 +210,7 @@
 
  count 
 -------
-     2
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
+     0
 (1 row)
 
  count 
@@ -345,7 +235,7 @@
 
  count 
 -------
-     3
+     0
 (1 row)
 
  count 
@@ -355,47 +245,32 @@
 
  count 
 -------
-     2
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
 (1 row)
 
  count 
 -------
      1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
 (1 row)
 
  count 
@@ -410,6 +285,61 @@
 
  count 
 -------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
      1
 (1 row)
 
@@ -420,6 +350,46 @@
 
  count 
 -------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
      1
 (1 row)
 
@@ -430,22 +400,27 @@
 
  count 
 -------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
      1
 (1 row)
 
  count 
 -------
-     2
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
+     0
 (1 row)
 
  count 
@@ -465,22 +440,17 @@
 
  count 
 -------
-     1
+     0
 (1 row)
 
  count 
 -------
-     2
+     0
 (1 row)
 
  count 
 -------
-     1
-(1 row)
-
- count 
--------
-     3
+     0
 (1 row)
 
  count 
@@ -496,106 +466,61 @@
  count 
 -------
      1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+    10
 (1 row)
 
  count 
 -------
      5
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     2
 (1 row)
 
  count 
@@ -615,72 +540,12 @@
 
  count 
 -------
-     8
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
      2
 (1 row)
 
  count 
 -------
-     4
-(1 row)
-
- count 
--------
-     3
+     2
 (1 row)
 
  count 
@@ -695,32 +560,12 @@
 
  count 
 -------
-     5
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
      4
 (1 row)
 
  count 
 -------
-     6
+     5
 (1 row)
 
  count 
@@ -740,6 +585,121 @@
 
  count 
 -------
+     2
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
      3
 (1 row)
 
@@ -750,7 +710,37 @@
 
  count 
 -------
+     4
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
      3
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     2
 (1 row)
 
  count 
@@ -775,7 +765,202 @@
 
  count 
 -------
+     6
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
      5
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     4
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     3
+(1 row)
+
+ count 
+-------
+     3
 (1 row)
 
  count 
@@ -785,7 +970,7 @@
 
  count 
 -------
-     4
+     5
 (1 row)
 
  count 
@@ -795,97 +980,7 @@
 
  count 
 -------
-     3
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
      1
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     5
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     3
 (1 row)
 
  count 
@@ -901,341 +996,16 @@
  count 
 -------
      3
+(1 row)
+
+ count 
+-------
+    10
 (1 row)
 
  count 
 -------
      7
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     1
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     2
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     6
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     4
-(1 row)
-
- count 
--------
-     3
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    17
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    31
-(1 row)
-
- count 
--------
-    19
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    17
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-    22
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    16
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    18
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    20
-(1 row)
-
- count 
--------
-    10
 (1 row)
 
  count 
@@ -1255,232 +1025,12 @@
 
  count 
 -------
-    15
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    20
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-     7
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-     7
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
     11
 (1 row)
 
  count 
 -------
     17
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    20
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-    20
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    15
-(1 row)
-
- count 
--------
-    19
-(1 row)
-
- count 
--------
-    10
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    17
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    14
-(1 row)
-
- count 
--------
-     9
-(1 row)
-
- count 
--------
-     8
-(1 row)
-
- count 
--------
-    13
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    18
-(1 row)
-
- count 
--------
-    11
-(1 row)
-
- count 
--------
-     7
-(1 row)
-
- count 
--------
-    12
-(1 row)
-
- count 
--------
-    11
 (1 row)
 
  count 
@@ -1495,217 +1045,462 @@
 
  count 
 -------
+    11
+(1 row)
+
+ count 
+-------
+    16
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
+    16
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
      8
 (1 row)
 
  count 
 -------
-    38
+    12
 (1 row)
 
  count 
 -------
-    48
+    12
 (1 row)
 
  count 
 -------
-    57
+    12
 (1 row)
 
  count 
 -------
-    52
+    11
 (1 row)
 
  count 
 -------
-    43
+     9
 (1 row)
 
  count 
 -------
-    46
+    21
 (1 row)
 
  count 
 -------
-    53
+    12
 (1 row)
 
  count 
 -------
-    45
+     8
 (1 row)
 
  count 
 -------
-    57
+     9
 (1 row)
 
  count 
 -------
-    41
+    15
 (1 row)
 
  count 
 -------
-    51
+     9
 (1 row)
 
  count 
 -------
-    60
+    10
 (1 row)
 
  count 
 -------
-    60
+    14
 (1 row)
 
  count 
 -------
-    54
+     9
 (1 row)
 
  count 
 -------
-    61
+    13
 (1 row)
 
  count 
 -------
-    49
+    10
 (1 row)
 
  count 
 -------
-    67
+    12
 (1 row)
 
  count 
 -------
-    53
+    14
 (1 row)
 
  count 
 -------
-    37
+    10
 (1 row)
 
  count 
 -------
-    56
+     7
 (1 row)
 
  count 
 -------
-    47
+    19
 (1 row)
 
  count 
 -------
-    57
+    16
 (1 row)
 
  count 
 -------
-    55
+    13
 (1 row)
 
  count 
 -------
-    52
+    14
 (1 row)
 
  count 
 -------
-    49
+    12
 (1 row)
 
  count 
 -------
-    41
+    15
 (1 row)
 
  count 
 -------
-    49
+     9
 (1 row)
 
  count 
 -------
-    43
+    15
 (1 row)
 
  count 
 -------
-    54
+    12
 (1 row)
 
  count 
 -------
-    53
+    10
 (1 row)
 
  count 
 -------
-    45
+    12
 (1 row)
 
  count 
 -------
-    40
+    19
 (1 row)
 
  count 
 -------
-    57
+    18
 (1 row)
 
  count 
 -------
-    57
+    19
 (1 row)
 
  count 
 -------
-    49
+    11
 (1 row)
 
  count 
 -------
-    47
+     7
 (1 row)
 
  count 
 -------
-    45
+     9
 (1 row)
 
  count 
 -------
-    47
+    11
 (1 row)
 
  count 
 -------
-    51
+    10
 (1 row)
 
  count 
 -------
-    43
+     6
 (1 row)
 
  count 
 -------
-    60
+     9
 (1 row)
 
  count 
 -------
-    42
+    12
+(1 row)
+
+ count 
+-------
+    18
+(1 row)
+
+ count 
+-------
+    10
+(1 row)
+
+ count 
+-------
+    16
+(1 row)
+
+ count 
+-------
+     9
+(1 row)
+
+ count 
+-------
+     9
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    14
+(1 row)
+
+ count 
+-------
+    16
+(1 row)
+
+ count 
+-------
+    14
+(1 row)
+
+ count 
+-------
+    16
+(1 row)
+
+ count 
+-------
+     9
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+     6
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+     7
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+     7
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+    14
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+     7
+(1 row)
+
+ count 
+-------
+    15
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+     5
+(1 row)
+
+ count 
+-------
+    13
+(1 row)
+
+ count 
+-------
+    14
+(1 row)
+
+ count 
+-------
+     7
+(1 row)
+
+ count 
+-------
+    14
+(1 row)
+
+ count 
+-------
+    10
+(1 row)
+
+ count 
+-------
+     9
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
+    10
+(1 row)
+
+ count 
+-------
+    11
+(1 row)
+
+ count 
+-------
+    12
+(1 row)
+
+ count 
+-------
+    50
 (1 row)
 
  count 
@@ -1715,32 +1510,62 @@
 
  count 
 -------
-    54
-(1 row)
-
- count 
--------
-    54
-(1 row)
-
- count 
--------
-    40
+    44
 (1 row)
 
  count 
 -------
     55
+(1 row)
+
+ count 
+-------
+    52
+(1 row)
+
+ count 
+-------
+    52
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    45
+(1 row)
+
+ count 
+-------
+    53
+(1 row)
+
+ count 
+-------
+    39
+(1 row)
+
+ count 
+-------
+    48
+(1 row)
+
+ count 
+-------
+    46
+(1 row)
+
+ count 
+-------
+    49
 (1 row)
 
  count 
 -------
     51
-(1 row)
-
- count 
--------
-    55
 (1 row)
 
  count 
@@ -1750,7 +1575,37 @@
 
  count 
 -------
-    44
+    50
+(1 row)
+
+ count 
+-------
+    48
+(1 row)
+
+ count 
+-------
+    45
+(1 row)
+
+ count 
+-------
+    70
+(1 row)
+
+ count 
+-------
+    58
+(1 row)
+
+ count 
+-------
+    41
+(1 row)
+
+ count 
+-------
+    58
 (1 row)
 
  count 
@@ -1760,12 +1615,12 @@
 
  count 
 -------
-    37
+    52
 (1 row)
 
  count 
 -------
-    56
+    50
 (1 row)
 
  count 
@@ -1775,7 +1630,92 @@
 
  count 
 -------
+    57
+(1 row)
+
+ count 
+-------
+    48
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    59
+(1 row)
+
+ count 
+-------
+    53
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    56
+(1 row)
+
+ count 
+-------
+    51
+(1 row)
+
+ count 
+-------
+    32
+(1 row)
+
+ count 
+-------
+    50
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    40
+(1 row)
+
+ count 
+-------
+    46
+(1 row)
+
+ count 
+-------
+    53
+(1 row)
+
+ count 
+-------
+    56
+(1 row)
+
+ count 
+-------
     58
+(1 row)
+
+ count 
+-------
+    55
+(1 row)
+
+ count 
+-------
+    49
 (1 row)
 
  count 
@@ -1790,7 +1730,87 @@
 
  count 
 -------
+    49
+(1 row)
+
+ count 
+-------
     53
+(1 row)
+
+ count 
+-------
+    34
+(1 row)
+
+ count 
+-------
+    43
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    44
+(1 row)
+
+ count 
+-------
+    56
+(1 row)
+
+ count 
+-------
+    42
+(1 row)
+
+ count 
+-------
+    56
+(1 row)
+
+ count 
+-------
+    48
+(1 row)
+
+ count 
+-------
+    52
+(1 row)
+
+ count 
+-------
+    47
+(1 row)
+
+ count 
+-------
+    50
+(1 row)
+
+ count 
+-------
+    51
+(1 row)
+
+ count 
+-------
+    54
+(1 row)
+
+ count 
+-------
+    31
+(1 row)
+
+ count 
+-------
+    51
 (1 row)
 
  count 
@@ -1805,142 +1825,12 @@
 
  count 
 -------
-    59
-(1 row)
-
- count 
--------
-    45
-(1 row)
-
- count 
--------
-    38
-(1 row)
-
- count 
--------
-    56
-(1 row)
-
- count 
--------
-    44
-(1 row)
-
- count 
--------
-    45
-(1 row)
-
- count 
--------
-    35
-(1 row)
-
- count 
--------
     47
 (1 row)
 
  count 
 -------
-    37
-(1 row)
-
- count 
--------
-    43
-(1 row)
-
- count 
--------
-    47
-(1 row)
-
- count 
--------
-    55
-(1 row)
-
- count 
--------
-    48
-(1 row)
-
- count 
--------
-    51
-(1 row)
-
- count 
--------
-    46
-(1 row)
-
- count 
--------
-    35
-(1 row)
-
- count 
--------
-    48
-(1 row)
-
- count 
--------
-    42
-(1 row)
-
- count 
--------
-    43
-(1 row)
-
- count 
--------
-    56
-(1 row)
-
- count 
--------
-    50
-(1 row)
-
- count 
--------
-    48
-(1 row)
-
- count 
--------
-    50
-(1 row)
-
- count 
--------
-    41
-(1 row)
-
- count 
--------
-    35
-(1 row)
-
- count 
--------
-    58
-(1 row)
-
- count 
--------
-    44
-(1 row)
-
- count 
--------
-    48
+    40
 (1 row)
 
  count 
@@ -1955,7 +1845,37 @@
 
  count 
 -------
-    35
+    43
+(1 row)
+
+ count 
+-------
+    45
+(1 row)
+
+ count 
+-------
+    39
+(1 row)
+
+ count 
+-------
+    45
+(1 row)
+
+ count 
+-------
+    47
+(1 row)
+
+ count 
+-------
+    47
+(1 row)
+
+ count 
+-------
+    52
 (1 row)
 
  count 
@@ -1965,12 +1885,32 @@
 
  count 
 -------
-    58
+    45
 (1 row)
 
  count 
 -------
-    39
+    59
+(1 row)
+
+ count 
+-------
+    56
+(1 row)
+
+ count 
+-------
+    57
+(1 row)
+
+ count 
+-------
+    65
+(1 row)
+
+ count 
+-------
+    50
 (1 row)
 
  count 
@@ -1985,7 +1925,62 @@
 
  count 
 -------
+    51
+(1 row)
+
+ count 
+-------
+    51
+(1 row)
+
+ count 
+-------
+    38
+(1 row)
+
+ count 
+-------
+    43
+(1 row)
+
+ count 
+-------
+    52
+(1 row)
+
+ count 
+-------
+    59
+(1 row)
+
+ count 
+-------
+    44
+(1 row)
+
+ count 
+-------
+    34
+(1 row)
+
+ count 
+-------
     53
+(1 row)
+
+ count 
+-------
+    49
+(1 row)
+
+ count 
+-------
+    40
+(1 row)
+
+ count 
+-------
+    61
 (1 row)
 
  count 
@@ -1995,97 +1990,17 @@
 
  count 
 -------
-    55
+    50
 (1 row)
 
  count 
 -------
-   169
+    57
 (1 row)
 
  count 
 -------
-   208
-(1 row)
-
- count 
--------
-   202
-(1 row)
-
- count 
--------
-   179
-(1 row)
-
- count 
--------
-   189
-(1 row)
-
- count 
--------
-   184
-(1 row)
-
- count 
--------
-   183
-(1 row)
-
- count 
--------
-   187
-(1 row)
-
- count 
--------
-   196
-(1 row)
-
- count 
--------
-   213
-(1 row)
-
- count 
--------
-   200
-(1 row)
-
- count 
--------
-   205
-(1 row)
-
- count 
--------
-   194
-(1 row)
-
- count 
--------
-   195
-(1 row)
-
- count 
--------
-   211
-(1 row)
-
- count 
--------
-   198
-(1 row)
-
- count 
--------
-   205
-(1 row)
-
- count 
--------
-   184
+   204
 (1 row)
 
  count 
@@ -2095,7 +2010,47 @@
 
  count 
 -------
-   183
+   179
+(1 row)
+
+ count 
+-------
+   197
+(1 row)
+
+ count 
+-------
+   193
+(1 row)
+
+ count 
+-------
+   206
+(1 row)
+
+ count 
+-------
+   188
+(1 row)
+
+ count 
+-------
+   190
+(1 row)
+
+ count 
+-------
+   177
+(1 row)
+
+ count 
+-------
+   187
+(1 row)
+
+ count 
+-------
+   175
 (1 row)
 
  count 
@@ -2105,7 +2060,17 @@
 
  count 
 -------
-   185
+   167
+(1 row)
+
+ count 
+-------
+   183
+(1 row)
+
+ count 
+-------
+   196
 (1 row)
 
  count 
@@ -2120,82 +2085,22 @@
 
  count 
 -------
-   224
-(1 row)
-
- count 
--------
-   196
-(1 row)
-
- count 
--------
-   205
-(1 row)
-
- count 
--------
-   217
-(1 row)
-
- count 
--------
-   197
-(1 row)
-
- count 
--------
-   190
-(1 row)
-
- count 
--------
-   210
-(1 row)
-
- count 
--------
-   199
-(1 row)
-
- count 
--------
-   187
-(1 row)
-
- count 
--------
    185
 (1 row)
 
  count 
 -------
-   200
+   225
 (1 row)
 
  count 
 -------
-   179
+   206
 (1 row)
 
  count 
 -------
-   175
-(1 row)
-
- count 
--------
-   224
-(1 row)
-
- count 
--------
-   179
-(1 row)
-
- count 
--------
-   191
+   211
 (1 row)
 
  count 
@@ -2205,17 +2110,147 @@
 
  count 
 -------
+   179
+(1 row)
+
+ count 
+-------
+   176
+(1 row)
+
+ count 
+-------
+   209
+(1 row)
+
+ count 
+-------
+   212
+(1 row)
+
+ count 
+-------
+   197
+(1 row)
+
+ count 
+-------
+   161
+(1 row)
+
+ count 
+-------
+   184
+(1 row)
+
+ count 
+-------
+   200
+(1 row)
+
+ count 
+-------
+   192
+(1 row)
+
+ count 
+-------
+   191
+(1 row)
+
+ count 
+-------
+   185
+(1 row)
+
+ count 
+-------
+   187
+(1 row)
+
+ count 
+-------
+   213
+(1 row)
+
+ count 
+-------
+   178
+(1 row)
+
+ count 
+-------
+   178
+(1 row)
+
+ count 
+-------
+   202
+(1 row)
+
+ count 
+-------
+   190
+(1 row)
+
+ count 
+-------
+   203
+(1 row)
+
+ count 
+-------
+   202
+(1 row)
+
+ count 
+-------
+   175
+(1 row)
+
+ count 
+-------
+   219
+(1 row)
+
+ count 
+-------
+   195
+(1 row)
+
+ count 
+-------
+   187
+(1 row)
+
+ count 
+-------
    210
 (1 row)
 
  count 
 -------
-   173
+   184
 (1 row)
 
  count 
 -------
-   177
+   200
+(1 row)
+
+ count 
+-------
+   195
+(1 row)
+
+ count 
+-------
+   168
+(1 row)
+
+ count 
+-------
+   221
 (1 row)
 
  count 
@@ -2230,92 +2265,12 @@
 
  count 
 -------
-   185
-(1 row)
-
- count 
--------
-   210
-(1 row)
-
- count 
--------
-   175
+   205
 (1 row)
 
  count 
 -------
    199
-(1 row)
-
- count 
--------
-   183
-(1 row)
-
- count 
--------
-   208
-(1 row)
-
- count 
--------
-   133
-(1 row)
-
- count 
--------
-   187
-(1 row)
-
- count 
--------
-   206
-(1 row)
-
- count 
--------
-   204
-(1 row)
-
- count 
--------
-   206
-(1 row)
-
- count 
--------
-   204
-(1 row)
-
- count 
--------
-   198
-(1 row)
-
- count 
--------
-   211
-(1 row)
-
- count 
--------
-   179
-(1 row)
-
- count 
--------
-   217
-(1 row)
-
- count 
--------
-   183
-(1 row)
-
- count 
--------
-   202
 (1 row)
 
  count 
@@ -2326,21 +2281,6 @@
  count 
 -------
    187
-(1 row)
-
- count 
--------
-   191
-(1 row)
-
- count 
--------
-   183
-(1 row)
-
- count 
--------
-   140
 (1 row)
 
  count 
@@ -2350,57 +2290,17 @@
 
  count 
 -------
-   197
+   223
 (1 row)
 
  count 
 -------
-   190
+   214
 (1 row)
 
  count 
 -------
-   179
-(1 row)
-
- count 
--------
-   174
-(1 row)
-
- count 
--------
-   204
-(1 row)
-
- count 
--------
-   183
-(1 row)
-
- count 
--------
-   197
-(1 row)
-
- count 
--------
-   187
-(1 row)
-
- count 
--------
-   174
-(1 row)
-
- count 
--------
-   194
-(1 row)
-
- count 
--------
-   206
+   212
 (1 row)
 
  count 
@@ -2410,47 +2310,97 @@
 
  count 
 -------
-   199
+   220
 (1 row)
 
  count 
 -------
-   182
+   195
 (1 row)
 
  count 
 -------
-   193
+   172
 (1 row)
 
  count 
 -------
-   189
+   203
 (1 row)
 
  count 
 -------
-   166
+   191
 (1 row)
 
  count 
 -------
-   193
+   208
 (1 row)
 
  count 
 -------
-   186
+   197
 (1 row)
 
  count 
 -------
-   200
+   196
 (1 row)
 
  count 
 -------
-   199
+   174
+(1 row)
+
+ count 
+-------
+   208
+(1 row)
+
+ count 
+-------
+   204
+(1 row)
+
+ count 
+-------
+   184
+(1 row)
+
+ count 
+-------
+   204
+(1 row)
+
+ count 
+-------
+   213
+(1 row)
+
+ count 
+-------
+   184
+(1 row)
+
+ count 
+-------
+   197
+(1 row)
+
+ count 
+-------
+   205
+(1 row)
+
+ count 
+-------
+   198
+(1 row)
+
+ count 
+-------
+   225
 (1 row)
 
  count 
@@ -2460,32 +2410,12 @@
 
  count 
 -------
-   179
+   216
 (1 row)
 
  count 
 -------
-   236
-(1 row)
-
- count 
--------
-   219
-(1 row)
-
- count 
--------
-   185
-(1 row)
-
- count 
--------
-   173
-(1 row)
-
- count 
--------
-   175
+   192
 (1 row)
 
  count 
@@ -2500,447 +2430,72 @@
 
  count 
 -------
-   767
+   210
 (1 row)
 
  count 
 -------
-   780
+   198
 (1 row)
 
  count 
 -------
-   772
+   195
 (1 row)
 
  count 
 -------
-   685
+   189
 (1 row)
 
  count 
 -------
-   742
+   216
 (1 row)
 
  count 
 -------
-   763
+   197
 (1 row)
 
  count 
 -------
-   747
+   183
 (1 row)
 
  count 
 -------
-   748
+   176
 (1 row)
 
  count 
 -------
-   768
+   197
 (1 row)
 
  count 
 -------
-   729
+   171
 (1 row)
 
  count 
 -------
-   763
+   173
 (1 row)
 
  count 
 -------
-   762
+   194
 (1 row)
 
  count 
 -------
-   729
+   188
 (1 row)
 
  count 
 -------
-   752
-(1 row)
-
- count 
--------
-   753
-(1 row)
-
- count 
--------
-   793
-(1 row)
-
- count 
--------
-   799
-(1 row)
-
- count 
--------
-   790
-(1 row)
-
- count 
--------
-   769
-(1 row)
-
- count 
--------
-   788
-(1 row)
-
- count 
--------
-   817
-(1 row)
-
- count 
--------
-   757
-(1 row)
-
- count 
--------
-   619
-(1 row)
-
- count 
--------
-   739
-(1 row)
-
- count 
--------
-   762
-(1 row)
-
- count 
--------
-   778
-(1 row)
-
- count 
--------
-   797
-(1 row)
-
- count 
--------
-   745
-(1 row)
-
- count 
--------
-   761
-(1 row)
-
- count 
--------
-   830
-(1 row)
-
- count 
--------
-   767
-(1 row)
-
- count 
--------
-   714
-(1 row)
-
- count 
--------
-   755
-(1 row)
-
- count 
--------
-   735
-(1 row)
-
- count 
--------
-   766
-(1 row)
-
- count 
--------
-   657
-(1 row)
-
- count 
--------
-   773
-(1 row)
-
- count 
--------
-   789
-(1 row)
-
- count 
--------
-   767
-(1 row)
-
- count 
--------
-   767
-(1 row)
-
- count 
--------
-   734
-(1 row)
-
- count 
--------
-   808
-(1 row)
-
- count 
--------
-   744
-(1 row)
-
- count 
--------
-   751
-(1 row)
-
- count 
--------
-   790
-(1 row)
-
- count 
--------
-   777
-(1 row)
-
- count 
--------
-   834
-(1 row)
-
- count 
--------
-   775
-(1 row)
-
- count 
--------
-   811
-(1 row)
-
- count 
--------
-   774
-(1 row)
-
- count 
--------
-   686
-(1 row)
-
- count 
--------
-   666
-(1 row)
-
- count 
--------
-   733
-(1 row)
-
- count 
--------
-   764
-(1 row)
-
- count 
--------
-   793
-(1 row)
-
- count 
--------
-   809
-(1 row)
-
- count 
--------
-   745
-(1 row)
-
- count 
--------
-   757
-(1 row)
-
- count 
--------
-   747
-(1 row)
-
- count 
--------
-   771
-(1 row)
-
- count 
--------
-   774
-(1 row)
-
- count 
--------
-   748
-(1 row)
-
- count 
--------
-   765
-(1 row)
-
- count 
--------
-   712
-(1 row)
-
- count 
--------
-   750
-(1 row)
-
- count 
--------
-   802
-(1 row)
-
- count 
--------
-   768
-(1 row)
-
- count 
--------
-   774
-(1 row)
-
- count 
--------
-   787
-(1 row)
-
- count 
--------
-   798
-(1 row)
-
- count 
--------
-   839
-(1 row)
-
- count 
--------
-   817
-(1 row)
-
- count 
--------
-   741
-(1 row)
-
- count 
--------
-   746
-(1 row)
-
- count 
--------
-   775
-(1 row)
-
- count 
--------
-   753
-(1 row)
-
- count 
--------
-   768
-(1 row)
-
- count 
--------
-   787
-(1 row)
-
- count 
--------
-   758
-(1 row)
-
- count 
--------
-   760
-(1 row)
-
- count 
--------
-   816
-(1 row)
-
- count 
--------
-   717
-(1 row)
-
- count 
--------
-   785
-(1 row)
-
- count 
--------
-   790
-(1 row)
-
- count 
--------
-   758
-(1 row)
-
- count 
--------
-   736
-(1 row)
-
- count 
--------
-   756
-(1 row)
-
- count 
--------
-   625
-(1 row)
-
- count 
--------
-   788
+   180
 (1 row)
 
  count 
@@ -2950,7 +2505,42 @@
 
  count 
 -------
-   772
+   718
+(1 row)
+
+ count 
+-------
+   761
+(1 row)
+
+ count 
+-------
+   798
+(1 row)
+
+ count 
+-------
+   786
+(1 row)
+
+ count 
+-------
+   782
+(1 row)
+
+ count 
+-------
+   764
+(1 row)
+
+ count 
+-------
+   823
+(1 row)
+
+ count 
+-------
+   776
 (1 row)
 
  count 
@@ -2960,7 +2550,22 @@
 
  count 
 -------
-   757
+   778
+(1 row)
+
+ count 
+-------
+   745
+(1 row)
+
+ count 
+-------
+   778
+(1 row)
+
+ count 
+-------
+   740
 (1 row)
 
  count 
@@ -2970,7 +2575,237 @@
 
  count 
 -------
-   780
+   758
+(1 row)
+
+ count 
+-------
+   748
+(1 row)
+
+ count 
+-------
+   783
+(1 row)
+
+ count 
+-------
+   767
+(1 row)
+
+ count 
+-------
+   748
+(1 row)
+
+ count 
+-------
+   795
+(1 row)
+
+ count 
+-------
+   746
+(1 row)
+
+ count 
+-------
+   801
+(1 row)
+
+ count 
+-------
+   803
+(1 row)
+
+ count 
+-------
+   819
+(1 row)
+
+ count 
+-------
+   785
+(1 row)
+
+ count 
+-------
+   826
+(1 row)
+
+ count 
+-------
+   809
+(1 row)
+
+ count 
+-------
+   792
+(1 row)
+
+ count 
+-------
+   781
+(1 row)
+
+ count 
+-------
+   779
+(1 row)
+
+ count 
+-------
+   779
+(1 row)
+
+ count 
+-------
+   755
+(1 row)
+
+ count 
+-------
+   764
+(1 row)
+
+ count 
+-------
+   770
+(1 row)
+
+ count 
+-------
+   815
+(1 row)
+
+ count 
+-------
+   802
+(1 row)
+
+ count 
+-------
+   838
+(1 row)
+
+ count 
+-------
+   756
+(1 row)
+
+ count 
+-------
+   725
+(1 row)
+
+ count 
+-------
+   811
+(1 row)
+
+ count 
+-------
+   735
+(1 row)
+
+ count 
+-------
+   804
+(1 row)
+
+ count 
+-------
+   824
+(1 row)
+
+ count 
+-------
+   816
+(1 row)
+
+ count 
+-------
+   806
+(1 row)
+
+ count 
+-------
+   754
+(1 row)
+
+ count 
+-------
+   834
+(1 row)
+
+ count 
+-------
+   764
+(1 row)
+
+ count 
+-------
+   807
+(1 row)
+
+ count 
+-------
+   815
+(1 row)
+
+ count 
+-------
+   838
+(1 row)
+
+ count 
+-------
+   824
+(1 row)
+
+ count 
+-------
+   764
+(1 row)
+
+ count 
+-------
+   821
+(1 row)
+
+ count 
+-------
+   755
+(1 row)
+
+ count 
+-------
+   725
+(1 row)
+
+ count 
+-------
+   778
+(1 row)
+
+ count 
+-------
+   769
+(1 row)
+
+ count 
+-------
+   817
+(1 row)
+
+ count 
+-------
+   762
+(1 row)
+
+ count 
+-------
+   743
 (1 row)
 
  count 
@@ -2985,217 +2820,187 @@
 
  count 
 -------
-   784
+   716
 (1 row)
 
  count 
 -------
-   784
+   812
 (1 row)
 
  count 
 -------
-   793
+   822
 (1 row)
 
  count 
 -------
-  3148
+   803
 (1 row)
 
  count 
 -------
-  3073
+   760
 (1 row)
 
  count 
 -------
-  3079
+   829
 (1 row)
 
  count 
 -------
-  3132
+   756
 (1 row)
 
  count 
 -------
-  3082
+   785
 (1 row)
 
  count 
 -------
-  3102
+   777
 (1 row)
 
  count 
 -------
-  3024
+   789
 (1 row)
 
  count 
 -------
-  3044
+   785
 (1 row)
 
  count 
 -------
-  3093
+   808
 (1 row)
 
  count 
 -------
-  3134
+   741
 (1 row)
 
  count 
 -------
-  3034
+   752
 (1 row)
 
  count 
 -------
-  3164
+   788
 (1 row)
 
  count 
 -------
-  3076
+   725
 (1 row)
 
  count 
 -------
-  3047
+   779
 (1 row)
 
  count 
 -------
-  3044
+   816
 (1 row)
 
  count 
 -------
-  3094
+   801
 (1 row)
 
  count 
 -------
-  3015
+   796
 (1 row)
 
  count 
 -------
-  3092
+   740
 (1 row)
 
  count 
 -------
-  3002
+   753
 (1 row)
 
  count 
 -------
-  3050
+   740
 (1 row)
 
  count 
 -------
-  3065
+   801
 (1 row)
 
  count 
 -------
-  3058
+   746
 (1 row)
 
  count 
 -------
-  3162
+   781
 (1 row)
 
  count 
 -------
-  3080
+   797
 (1 row)
 
  count 
 -------
-  3022
+   802
 (1 row)
 
  count 
 -------
-  3105
+   761
 (1 row)
 
  count 
 -------
-  3113
+   751
 (1 row)
 
  count 
 -------
-  3051
+   782
 (1 row)
 
  count 
 -------
-  3069
+   772
 (1 row)
 
  count 
 -------
-  3083
+   781
 (1 row)
 
  count 
 -------
-  3081
+   790
 (1 row)
 
  count 
 -------
-  3062
+   811
 (1 row)
 
  count 
 -------
-  3013
+   789
 (1 row)
 
  count 
 -------
-  3078
-(1 row)
-
- count 
--------
-  3161
-(1 row)
-
- count 
--------
-  3139
-(1 row)
-
- count 
--------
-  3057
-(1 row)
-
- count 
--------
-  3146
-(1 row)
-
- count 
--------
-  3055
-(1 row)
-
- count 
--------
-  3045
+  3072
 (1 row)
 
  count 
@@ -3205,97 +3010,22 @@
 
  count 
 -------
-  2781
+  3036
 (1 row)
 
  count 
 -------
-  3101
+  3088
 (1 row)
 
  count 
 -------
-  3144
+  3250
 (1 row)
 
  count 
 -------
-  3094
-(1 row)
-
- count 
--------
-  3000
-(1 row)
-
- count 
--------
-  3059
-(1 row)
-
- count 
--------
-  3086
-(1 row)
-
- count 
--------
-  3204
-(1 row)
-
- count 
--------
-  2972
-(1 row)
-
- count 
--------
-  3111
-(1 row)
-
- count 
--------
-  3121
-(1 row)
-
- count 
--------
-  3106
-(1 row)
-
- count 
--------
-  3062
-(1 row)
-
- count 
--------
-  2984
-(1 row)
-
- count 
--------
-  3038
-(1 row)
-
- count 
--------
-  3074
-(1 row)
-
- count 
--------
-  2986
-(1 row)
-
- count 
--------
-  3103
-(1 row)
-
- count 
--------
-  3169
+  3177
 (1 row)
 
  count 
@@ -3305,152 +3035,37 @@
 
  count 
 -------
-  3067
+  3111
 (1 row)
 
  count 
 -------
-  3065
+  3160
 (1 row)
 
  count 
 -------
-  2995
+  3073
 (1 row)
 
  count 
 -------
-  3044
+  3124
 (1 row)
 
  count 
 -------
-  3026
+  3140
 (1 row)
 
  count 
 -------
-  2919
+  3055
 (1 row)
 
  count 
 -------
-  3001
-(1 row)
-
- count 
--------
-  3191
-(1 row)
-
- count 
--------
-  2887
-(1 row)
-
- count 
--------
-  3180
-(1 row)
-
- count 
--------
-  3098
-(1 row)
-
- count 
--------
-  3018
-(1 row)
-
- count 
--------
-  2860
-(1 row)
-
- count 
--------
-  3104
-(1 row)
-
- count 
--------
-  2986
-(1 row)
-
- count 
--------
-  3010
-(1 row)
-
- count 
--------
-  3216
-(1 row)
-
- count 
--------
-  3003
-(1 row)
-
- count 
--------
-  3053
-(1 row)
-
- count 
--------
-  3074
-(1 row)
-
- count 
--------
-  2942
-(1 row)
-
- count 
--------
-  3090
-(1 row)
-
- count 
--------
-  3115
-(1 row)
-
- count 
--------
-  3133
-(1 row)
-
- count 
--------
-  3062
-(1 row)
-
- count 
--------
-  3044
-(1 row)
-
- count 
--------
-  3112
-(1 row)
-
- count 
--------
-  3091
-(1 row)
-
- count 
--------
-  3011
-(1 row)
-
- count 
--------
-  3022
+  3144
 (1 row)
 
  count 
@@ -3460,32 +3075,317 @@
 
  count 
 -------
-  3007
+  3049
 (1 row)
 
  count 
 -------
-  3058
+  3021
 (1 row)
 
  count 
 -------
-  3041
+  3106
 (1 row)
 
  count 
 -------
-  2814
+  3161
 (1 row)
 
  count 
 -------
-  3182
+  2992
 (1 row)
 
  count 
 -------
-  3015
+  3171
+(1 row)
+
+ count 
+-------
+  3190
+(1 row)
+
+ count 
+-------
+  2983
+(1 row)
+
+ count 
+-------
+  3110
+(1 row)
+
+ count 
+-------
+  3197
+(1 row)
+
+ count 
+-------
+  3184
+(1 row)
+
+ count 
+-------
+  3197
+(1 row)
+
+ count 
+-------
+  3128
+(1 row)
+
+ count 
+-------
+  3146
+(1 row)
+
+ count 
+-------
+  3209
+(1 row)
+
+ count 
+-------
+  3121
+(1 row)
+
+ count 
+-------
+  3169
+(1 row)
+
+ count 
+-------
+  2988
+(1 row)
+
+ count 
+-------
+  3013
+(1 row)
+
+ count 
+-------
+  3164
+(1 row)
+
+ count 
+-------
+  3127
+(1 row)
+
+ count 
+-------
+  3148
+(1 row)
+
+ count 
+-------
+  3163
+(1 row)
+
+ count 
+-------
+  3203
+(1 row)
+
+ count 
+-------
+  3103
+(1 row)
+
+ count 
+-------
+  3140
+(1 row)
+
+ count 
+-------
+  3067
+(1 row)
+
+ count 
+-------
+  3137
+(1 row)
+
+ count 
+-------
+  3112
+(1 row)
+
+ count 
+-------
+  3163
+(1 row)
+
+ count 
+-------
+  2986
+(1 row)
+
+ count 
+-------
+  3112
+(1 row)
+
+ count 
+-------
+  3177
+(1 row)
+
+ count 
+-------
+  3019
+(1 row)
+
+ count 
+-------
+  3084
+(1 row)
+
+ count 
+-------
+  3045
+(1 row)
+
+ count 
+-------
+  3135
+(1 row)
+
+ count 
+-------
+  3193
+(1 row)
+
+ count 
+-------
+  3166
+(1 row)
+
+ count 
+-------
+  3074
+(1 row)
+
+ count 
+-------
+  3135
+(1 row)
+
+ count 
+-------
+  3086
+(1 row)
+
+ count 
+-------
+  3257
+(1 row)
+
+ count 
+-------
+  3113
+(1 row)
+
+ count 
+-------
+  3026
+(1 row)
+
+ count 
+-------
+  3146
+(1 row)
+
+ count 
+-------
+  3183
+(1 row)
+
+ count 
+-------
+  3099
+(1 row)
+
+ count 
+-------
+  3013
+(1 row)
+
+ count 
+-------
+  3250
+(1 row)
+
+ count 
+-------
+  3204
+(1 row)
+
+ count 
+-------
+  3178
+(1 row)
+
+ count 
+-------
+  3169
+(1 row)
+
+ count 
+-------
+  3151
+(1 row)
+
+ count 
+-------
+  3135
+(1 row)
+
+ count 
+-------
+  3095
+(1 row)
+
+ count 
+-------
+  3136
+(1 row)
+
+ count 
+-------
+  3130
+(1 row)
+
+ count 
+-------
+  3261
+(1 row)
+
+ count 
+-------
+  3124
+(1 row)
+
+ count 
+-------
+  3277
+(1 row)
+
+ count 
+-------
+  3114
+(1 row)
+
+ count 
+-------
+  3195
 (1 row)
 
  count 
@@ -3495,7 +3395,132 @@
 
  count 
 -------
-  3069
+  3128
+(1 row)
+
+ count 
+-------
+  3104
+(1 row)
+
+ count 
+-------
+  3029
+(1 row)
+
+ count 
+-------
+  3261
+(1 row)
+
+ count 
+-------
+  3050
+(1 row)
+
+ count 
+-------
+  3129
+(1 row)
+
+ count 
+-------
+  3208
+(1 row)
+
+ count 
+-------
+  3106
+(1 row)
+
+ count 
+-------
+  3148
+(1 row)
+
+ count 
+-------
+  3232
+(1 row)
+
+ count 
+-------
+  3154
+(1 row)
+
+ count 
+-------
+  3097
+(1 row)
+
+ count 
+-------
+  3104
+(1 row)
+
+ count 
+-------
+  3205
+(1 row)
+
+ count 
+-------
+  3079
+(1 row)
+
+ count 
+-------
+  3080
+(1 row)
+
+ count 
+-------
+  3089
+(1 row)
+
+ count 
+-------
+  3053
+(1 row)
+
+ count 
+-------
+  3165
+(1 row)
+
+ count 
+-------
+  3200
+(1 row)
+
+ count 
+-------
+  3127
+(1 row)
+
+ count 
+-------
+  2715
+(1 row)
+
+ count 
+-------
+  2625
+(1 row)
+
+ count 
+-------
+  2699
+(1 row)
+
+ count 
+-------
+  2602
+(1 row)
+
+ count 
+-------
+  2810
 (1 row)
 
  count 
@@ -3505,57 +3530,37 @@
 
  count 
 -------
-  2723
+  2798
 (1 row)
 
  count 
 -------
-  2799
+  2822
 (1 row)
 
  count 
 -------
-  2811
+  2650
 (1 row)
 
  count 
 -------
-  2751
+  2684
 (1 row)
 
  count 
 -------
-  2741
+  2565
 (1 row)
 
  count 
 -------
-  2736
+  2720
 (1 row)
 
  count 
 -------
-  2704
-(1 row)
-
- count 
--------
-  2694
-(1 row)
-
- count 
--------
-  2771
-(1 row)
-
- count 
--------
-  2718
-(1 row)
-
- count 
--------
-  2782
+  2659
 (1 row)
 
  count 
@@ -3565,52 +3570,27 @@
 
  count 
 -------
-  2758
+  2633
 (1 row)
 
  count 
 -------
-  2748
+  2734
 (1 row)
 
  count 
 -------
-  2719
+  2810
 (1 row)
 
  count 
 -------
-  2759
+  2734
 (1 row)
 
  count 
 -------
-  2751
-(1 row)
-
- count 
--------
-  2737
-(1 row)
-
- count 
--------
-  2726
-(1 row)
-
- count 
--------
-  2724
-(1 row)
-
- count 
--------
-  2712
-(1 row)
-
- count 
--------
-  2761
+  2767
 (1 row)
 
  count 
@@ -3620,27 +3600,22 @@
 
  count 
 -------
-  2679
+  2646
 (1 row)
 
  count 
 -------
-  2658
+  2600
 (1 row)
 
  count 
 -------
-  2686
+  2625
 (1 row)
 
  count 
 -------
-  2654
-(1 row)
-
- count 
--------
-  2744
+  2599
 (1 row)
 
  count 
@@ -3650,11 +3625,36 @@
 
  count 
 -------
-  2770
+  2741
 (1 row)
 
  count 
 -------
-  2787
+  2732
+(1 row)
+
+ count 
+-------
+  2728
+(1 row)
+
+ count 
+-------
+  2715
+(1 row)
+
+ count 
+-------
+  2712
+(1 row)
+
+ count 
+-------
+  2730
+(1 row)
+
+ count 
+-------
+  2732
 (1 row)
 

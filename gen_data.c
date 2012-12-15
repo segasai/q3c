@@ -29,8 +29,18 @@
 #include <math.h>
 #include "postgres.h"
 
-#define YN1(a,Yn,m) (a*Yn+1)%m
-#define XN(A,Yn,X0,m) (A*Yn+X0)%m
+
+
+static int64 rand_state = 1;
+static const int64 c = 12345;
+static const int64 m = ((int64)1)<<31;	
+static const int64 a = 1103515245;
+
+int64 get_rand()
+{
+	rand_state =  ( a * rand_state + c ) % m;
+	return rand_state;
+}
 
 /* Run as 
  * $ ./gen_data 1
@@ -44,49 +54,44 @@ int main(int argc, char *argv[])
 	const int ndecbins = 18000;
 	const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
 	double corrections[ndecbins], total = 0;
-	int number_array[ndecbins];
-	const int npoints = 1000000;
-	int npoints0 = 0;
+	int npoints; 
 	int i;
-	int64 x = 1;
-	int64 y = 0;
-	if (argc == 2)
+	char parsing_error = 1;
+	
+	// first argument is the seed and then number of points to generate
+	if (argc == 3)
 	{
-		x = atoi(argv[1]);
+		rand_state = atoi(argv[1]);
+		get_rand(); // advance one step
+		npoints = atoi(argv[2]);
+		parsing_error = 0;
 	}
-	else
+	if (parsing_error)
 	{
+		fprintf(stderr, "Wrong arguments!\n"
+						"MUST be ./gen_data [RANDOM SEED] [NPOINTS]");
 		exit(1);
 	}
 
 	for (i = 0; i < ndecbins; i++)
+	/* weights in order to have cosine distribution of declinations 
+	 * corresponding to uniform distribution on the sky */
 	{
 		corrections[i] = cos((-90. + (180. / ndecbins) * (i + 0.5)) *
 			M_PI / 180.);
-		total += corrections[i];
 	}
 	
-	for (i = 0; i < ndecbins; i++)
+	int npointsleft = npoints;
+	while (npointsleft)
 	{
-		number_array[i] = npoints * (corrections[i] / total);
-		npoints0 += number_array[i];
-	}	
-	const int64 b = 60 ,c = 7, m = ntotbins;	
-	const int64 a = b + 1;
-	const int64 X0 = x;
-	const int64 A = (X0 * b + c) % m;
-	int npoints1 = npoints0;
-	while (npoints1)
-	{
-		x = XN(A, (y = YN1(a,y,m)), X0, m);
-		int64 ra = x % nrabins;
-		int64 dec = (x - ra) / nrabins;
-		if (number_array[dec])
+		int64 ra = (int64)(get_rand() * 1./m * nrabins);
+		int64 dec = (int64)(get_rand() * 1./m * ndecbins);
+		
+		if (get_rand() < (corrections[dec]*m))
 		{
-			number_array[dec]--;
 			printf("%f %f\n", ra * (360. / nrabins),
 				-90 + dec * (180. / ndecbins));
-			npoints1--;
+			npointsleft--;
 		}
 	}
 	
