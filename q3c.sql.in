@@ -156,7 +156,8 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,0))) AND (q
 CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
                   double precision, double precision,
                   double precision, double precision, double precision)
-                                         returns boolean as 'SELECT ((
+                                         returns boolean as 'SELECT 
+(
 ($1>=q3c_radial_query_it($4,$5,$6,0,1) AND $1<q3c_radial_query_it($4,$5,$6,1,1)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,2,1) AND $1<q3c_radial_query_it($4,$5,$6,3,1)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,4,1) AND $1<q3c_radial_query_it($4,$5,$6,5,1)) OR
@@ -206,8 +207,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 ($1>=q3c_radial_query_it($4,$5,$6,92,1) AND $1<q3c_radial_query_it($4,$5,$6,93,1)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,94,1) AND $1<q3c_radial_query_it($4,$5,$6,95,1)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,96,1) AND $1<q3c_radial_query_it($4,$5,$6,97,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,98,1) AND $1<q3c_radial_query_it($4,$5,$6,99,1)) 
-) OR (
+($1>=q3c_radial_query_it($4,$5,$6,98,1) AND $1<q3c_radial_query_it($4,$5,$6,99,1)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,0,0) AND $1<q3c_radial_query_it($4,$5,$6,1,0)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,2,0) AND $1<q3c_radial_query_it($4,$5,$6,3,0)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,4,0) AND $1<q3c_radial_query_it($4,$5,$6,5,0)) OR
@@ -258,13 +258,13 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 ($1>=q3c_radial_query_it($4,$5,$6,94,0) AND $1<q3c_radial_query_it($4,$5,$6,95,0)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,96,0) AND $1<q3c_radial_query_it($4,$5,$6,97,0)) OR
 ($1>=q3c_radial_query_it($4,$5,$6,98,0) AND $1<q3c_radial_query_it($4,$5,$6,99,0)) 
-)
- AND q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
-)
+) AND 
+q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
+
 ' LANGUAGE SQL IMMUTABLE;CREATE OR REPLACE FUNCTION q3c_radial_query(
                   real, real,
                   double precision, double precision, double precision)
-                                         returns boolean as 'SELECT ((
+                                         returns boolean as 'SELECT (
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,0,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,1,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,2,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,3,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,4,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,5,1)) OR
@@ -314,8 +314,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,92,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,93,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,94,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,95,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,96,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,97,1)) OR
-(q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,1)) 
-) OR (
+(q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,0,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,1,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,2,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,3,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,4,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,5,0)) OR
@@ -366,13 +365,13 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,94,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,95,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,96,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,97,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
-)
- AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-)
+) AND
+q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;CREATE OR REPLACE FUNCTION q3c_radial_query(
                   double precision, double precision,
                   double precision, double precision, double precision)
-                                         returns boolean as 'SELECT ((
+                                         returns boolean as 'SELECT 
+(
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,0,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,1,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,2,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,3,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,4,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,5,1)) OR
@@ -422,8 +421,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,92,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,93,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,94,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,95,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,96,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,97,1)) OR
-(q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,1)) 
-) OR (
+(q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,1) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,0,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,1,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,2,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,3,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,4,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,5,0)) OR
@@ -474,9 +472,8 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,94,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,95,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,96,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,97,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
-)
- AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-)
+) AND
+q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_query(
@@ -586,8 +583,8 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_query(
 (q3c_ang2ipix($1,$2)>=q3c_ellipse_query_it($3,$4,$5,$6,$7,94,0) AND q3c_ang2ipix($1,$2)<q3c_ellipse_query_it($3,$4,$5,$6,$7,95,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_ellipse_query_it($3,$4,$5,$6,$7,96,0) AND q3c_ang2ipix($1,$2)<q3c_ellipse_query_it($3,$4,$5,$6,$7,97,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_ellipse_query_it($3,$4,$5,$6,$7,98,0) AND q3c_ang2ipix($1,$2)<q3c_ellipse_query_it($3,$4,$5,$6,$7,99,0)) 
-)
-AND q3c_in_ellipse($1,$2,$3,$4,$5,$6,$7)
+) AND 
+q3c_in_ellipse($1,$2,$3,$4,$5,$6,$7)
 ' LANGUAGE SQL IMMUTABLE;
 
 
