@@ -58,11 +58,14 @@ test: gen_data all
 	psql q3c_test -c "CREATE TABLE test_small (ra double precision, dec double precision)"
 	./gen_data 1 1000000 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
 	./gen_data 2 1000000 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
-	./gen_data 3 10000 | psql q3c_test -c "COPY test_small FROM STDIN WITH DELIMITER ' '"
-
+	./gen_data 3 100000 | psql q3c_test -c "COPY test_small FROM STDIN WITH DELIMITER ' '"
 	psql q3c_test -c '\i q3c.sql'
 	psql q3c_test -c 'CREATE INDEX q3c_idx ON test (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'CREATE INDEX q3c_idx1 ON test1 (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'CREATE INDEX q3c_idx_small ON test_small (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'ANALYZE test'
+	psql q3c_test -c 'ANALYZE test1'
+	psql q3c_test -c 'ANALYZE test_small'
 	cat tests/cone.sql | psql q3c_test > tests/cone.out
 	diff tests/cone.out tests/cone.expected
 	cat tests/cone_join_rev.sql | psql q3c_test > tests/cone.out
@@ -71,6 +74,8 @@ test: gen_data all
 	diff tests/ellipse.out tests/ellipse.expected
 	cat tests/join.sql | psql q3c_test > tests/join.out
 	diff tests/join.out tests/join.expected
+	cat tests/poly.sql | psql q3c_test > tests/poly.out
+	diff tests/poly.out tests/poly.expected
 	cat tests/version.sql | psql q3c_test > tests/version.out
 	diff tests/version.out tests/version.expected
 	dropdb q3c_test
