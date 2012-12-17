@@ -615,7 +615,8 @@ CREATE OR REPLACE FUNCTION q3c_join(double precision, double precision,
 CREATE OR REPLACE FUNCTION q3c_poly_query(
                 double precision, double precision,
                 double precision[])
-                                       returns boolean as 'SELECT (
+                                       returns boolean as 'SELECT 
+(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,0,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,1,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,2,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,3,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,4,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,5,1)) OR
@@ -661,6 +662,11 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,84,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,85,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,86,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,87,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,90,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,91,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,92,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,93,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,94,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,95,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,96,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,97,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,98,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,99,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,0,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,1,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,2,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,3,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,4,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,5,0)) OR
@@ -705,15 +711,21 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,82,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,83,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,84,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,85,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,86,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,87,0)) OR
-(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,0)) 
-)
-AND  q3c_in_poly($1,$2,$3);
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,90,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,91,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,92,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,93,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,94,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,95,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,96,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,97,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,98,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,99,0)) 
+) AND 
+q3c_in_poly($1,$2,$3);
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_poly_query(
                 real, real,
                 double precision[])
-                                       returns boolean as 'SELECT (
+                                       returns boolean as 'SELECT 
+(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,0,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,1,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,2,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,3,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,4,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,5,1)) OR
@@ -759,6 +771,11 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,84,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,85,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,86,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,87,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,90,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,91,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,92,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,93,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,94,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,95,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,96,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,97,1)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,98,1) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,99,1)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,0,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,1,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,2,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,3,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,4,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,5,0)) OR
@@ -803,9 +820,14 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,82,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,83,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,84,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,85,0)) OR
 (q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,86,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,87,0)) OR
-(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,0)) 
-)
-AND  q3c_in_poly($1,$2,$3);
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,88,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,89,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,90,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,91,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,92,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,93,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,94,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,95,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,96,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,97,0)) OR
+(q3c_ang2ipix($1,$2)>=q3c_poly_query_it($3,98,0) AND q3c_ang2ipix($1,$2)<q3c_poly_query_it($3,99,0)) 
+) AND 
+q3c_in_poly($1,$2,$3) ;
 ' LANGUAGE SQL IMMUTABLE;
 
 
