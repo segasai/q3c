@@ -19,7 +19,7 @@ def fromrect(x,y,z):
 	rad = np.sqrt(x**2+y**2+z**2)
 	return ra,dec
 	
-def within_poly(ra,dec,rapoly,decpoly):
+def within_poly(ra,dec,rapoly,decpoly,getmask=False):
 	rapolycen, decpolycen = (rapoly[0]), (decpoly[0])
 	x, y, z = torect(ra, dec)
 	xpoly,ypoly,zpoly=torect(rapoly,decpoly)
@@ -58,6 +58,8 @@ def within_poly(ra,dec,rapoly,decpoly):
 	result = int(np.array(arr).sum())
 	print >>sys.stderr , result
 	ind[ind]=arr[:]
+	if getmask:
+		return result,ind
 	return result#,ind
 
 def get_rotation_matrix(fi1, fi2, fi3):
@@ -108,7 +110,7 @@ def gen_random_poly():
 	return ras,decs	
 	
 def get_all_polys():
-	npolys = 1000
+	npolys = 10000
 	tab = 'test_small'
 	np.random.seed(1)
 	catra, catdec = readcol('/tmp/zz3_')#./gen_data 3 10000
