@@ -7,7 +7,7 @@ OPT=-O3
 OPT_LOW=-O2
 #DEBUG=-g3 -ggdb -DQ3C_DEBUG
 
-GITEXISTS := $(shell which git)
+GITEXISTS := $(shell which git 2>/dev/null)
 ifeq ($(GITEXISTS),)
 Q3C_VERSION='""'
 else
@@ -83,7 +83,7 @@ test: gen_data all
 dist: clean
 	mkdir -p dist
 	cp *.c *.h *.sql.in README.q3c COPYING dist
-	cat Makefile | sed 's/^Q3C_VERSION=.*$$/Q3C_VERSION="'`git describe`'"/'  > dist/Makefile
+	cat Makefile | sed 's/^Q3C_VERSION=.*$$/Q3C_VERSION='"'"$(Q3C_VERSION)"'"'/'  > dist/Makefile
 	mkdir -p dist/tests
 	cp tests/*.expected tests/*.sql dist/tests
 	cat q3c.sql.in | perl utils/create_drops.pl > dist/drop_q3c.sql
