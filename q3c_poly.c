@@ -144,7 +144,7 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 			ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
 			dec1 = Q3C_DEGRA * dec[i];
 			tmpval =  q3c_cos(ra1);
-			if (tmpval < 0)
+			if (tmpval < Q3C_MINDISCR)
 			{
 				*large_flag = 1;
 			}
@@ -160,7 +160,7 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 			ra1 = Q3C_DEGRA * ra[i];
 			dec1 = Q3C_DEGRA * dec[i];
 			tmpval = q3c_tan(dec1);
-			if (tmpval<0)
+			if (tmpval < Q3C_MINDISCR)
 			{
 				*large_flag = 1;
 			}
@@ -180,7 +180,7 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 			ra1 = Q3C_DEGRA * ra[i];
 			dec1 = Q3C_DEGRA * dec[i];
 			tmpval = q3c_tan(dec1);
-			if (tmpval>0)
+			if (tmpval > -Q3C_MINDISCR)
 			{
 				*large_flag = 1;
 			}
