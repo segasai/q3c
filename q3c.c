@@ -36,6 +36,10 @@
 #include "utils/array.h"
 #include "catalog/pg_type.h"
 #include "fmgr.h"
+#if PG_VERSION_NUM >= 90300
+#include "access/tupmacs.h"
+#endif
+
 
 /* For PostgreSQL versions >= 8.2 */
 #ifdef PG_MODULE_MAGIC
