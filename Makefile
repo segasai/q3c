@@ -78,6 +78,8 @@ test: gen_data all
 	diff tests/poly.out tests/poly.expected
 	cat tests/version.sql | psql q3c_test > tests/version.out
 	diff tests/version.out tests/version.expected
+	cat tests/area.sql | psql q3c_test > tests/area.out
+	diff tests/area.out tests/area.expected
 	dropdb q3c_test
 
 dist: clean
