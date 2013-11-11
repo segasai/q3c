@@ -274,81 +274,6 @@ char q3c_xy2facenum(q3c_coord_t, q3c_coord_t, char);
 
 char q3c_get_facenum(q3c_coord_t, q3c_coord_t);
 
-void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
-											   q3c_coord_t delta,
-											   q3c_coord_t d, q3c_coord_t e,
-											   q3c_coord_t PA,
-											   q3c_coord_t *ymin,
-											   q3c_coord_t *ymax,
-											   q3c_coord_t *zmin,
-											   q3c_coord_t *zmax);
-
-void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
-												q3c_coord_t delta,
-												q3c_coord_t d, q3c_coord_t e,
-												q3c_coord_t PA,
-												q3c_coord_t *ymin,
-												q3c_coord_t *ymax,
-												q3c_coord_t *zmin,
-												q3c_coord_t *zmax,
-												q3c_coord_t *ayy,
-												q3c_coord_t *azz,
-												q3c_coord_t *ayz,
-												q3c_coord_t *ay,
-												q3c_coord_t *az,
-												q3c_coord_t *a);
-void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
-												q3c_coord_t delta,
-												q3c_coord_t d, q3c_coord_t e,
-												q3c_coord_t PA,
-												q3c_coord_t *ymin,
-												q3c_coord_t *ymax,
-												q3c_coord_t *zmin,
-												q3c_coord_t *zmax,
-												q3c_coord_t *ayy,
-												q3c_coord_t *azz,
-												q3c_coord_t *ayz,
-												q3c_coord_t *ay,
-												q3c_coord_t *az,
-												q3c_coord_t *a);
-void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
-												q3c_coord_t ra0,
-												q3c_coord_t dec0,
-												q3c_coord_t d0,
-												q3c_coord_t e,
-												q3c_coord_t PA0,
-												q3c_coord_t *ymin,
-												q3c_coord_t *ymax,
-												q3c_coord_t *zmin,
-												q3c_coord_t *zmax,
-												q3c_coord_t *ayy,
-												q3c_coord_t *azz,
-												q3c_coord_t *ayz,
-												q3c_coord_t *ay,
-												q3c_coord_t *az,
-												q3c_coord_t *a);
-
-void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
-										  q3c_coord_t delta, q3c_coord_t d,
-										  q3c_coord_t e, q3c_coord_t PA,
-										  q3c_coord_t *ymin,
-										  q3c_coord_t *ymax,
-										  q3c_coord_t *zmin,
-										  q3c_coord_t *zmax);
-
-void q3c_fast_get_xy_minmax(char, q3c_region, void *, q3c_coord_t *,
-								   q3c_coord_t *, q3c_coord_t *,
-								   q3c_coord_t *);
-
-void q3c_fast_get_circle_xy_minmax(char, q3c_coord_t, q3c_coord_t, q3c_coord_t,
-								   q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-								   q3c_coord_t *);
-
-void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t,
-									q3c_coord_t,q3c_coord_t, q3c_coord_t,
-									q3c_coord_t *, q3c_coord_t *, q3c_coord_t *, 
-									q3c_coord_t *);
-
 char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0, q3c_coord_t alpha1,
 					q3c_coord_t delta01, q3c_coord_t d0, q3c_coord_t e,
 					q3c_coord_t PA0);
@@ -357,7 +282,7 @@ q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 
 q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 
-void q3c_new_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                           q3c_coord_t dec0, q3c_coord_t rad,
                           q3c_ipix_t *out_ipix_arr_fulls,
                           q3c_ipix_t *out_ipix_arr_partials);
@@ -398,20 +323,6 @@ char q3c_get_region_facenum(q3c_region region, void *data);
 q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 								q3c_ipix_t *ybits, char face_num,
 								q3c_ipix_t xi, q3c_ipix_t yi);
-int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
-                      q3c_coord_t ymin, q3c_coord_t xmax, q3c_coord_t ymax,
-                      int n0);
-void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
-                       struct q3c_square* out_stack, int *out_nstack,
-                       int cur_depth, int res_depth);
-void q3c_output_stack( struct q3c_prm *hprm,
-                struct q3c_square *out_stack, int out_nstack,
-                struct q3c_square *work_stack, int work_nstack,
-                  int face_num, int nside,
-                  q3c_ipix_t *out_ipix_arr_fulls,
-                  int *out_ipix_arr_fulls_pos,
-                  q3c_ipix_t *out_ipix_arr_partials,
-                  int *out_ipix_arr_partials_pos);
 
 void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 								q3c_coord_t *xmax0, q3c_coord_t *ymax0,

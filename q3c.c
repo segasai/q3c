@@ -428,7 +428,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	q3c_new_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+	q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
 
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
