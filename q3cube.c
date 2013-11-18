@@ -123,6 +123,9 @@ static void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t,
 									q3c_coord_t *, q3c_coord_t *, q3c_coord_t *, 
 									q3c_coord_t *);
 
+static void array_filler(q3c_ipix_t *fulls, int fullpos,
+						 q3c_ipix_t *parts, int partpos);
+
 void q3c_get_version(char *out, int maxchar)
 {
 	strncpy(out,__q3c_version,maxchar);
@@ -2450,6 +2453,28 @@ void q3c_output_stack( struct q3c_prm *hprm,
 
 }
 
+static void array_filler(q3c_ipix_t *fulls, int fullpos,
+						 q3c_ipix_t *parts, int partpos)
+{
+	/* We  fill the tail of the out_ipix_arr_fulls and out_ipix_arr_partials 
+	 * stack by
+	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
+	 */
+
+	int i; 
+	for(i = fullpos; i < (2*Q3C_NFULLS);)
+	{
+		fulls[i++] = 1;
+		fulls[i++] = -1;
+	}
+
+
+	for(i = partpos; i < (2*Q3C_NPARTIALS);)
+	{
+		parts[i++] = 1;
+		parts[i++] = -1;
+	}
+}
 
 
 /* Main radial query function */
@@ -2471,14 +2496,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	int work_nstack = 0, i, j, out_nstack = 0,
 		res_depth;
 	
-	const int max_depth = 4; /* log2(Maximal increase of resolution) */
-	
-	struct q3c_square work_stack[11024], out_stack[11024], *cur_square;
-	/* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Consider that the size of the stacks should directly depend on the
-	 * value of res_depth variable !
-	 * It seems that each of stacks should have the size 4*(2^(depth-1))
-	 */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 	
 	/* 35 degrees is a magic size above which the cone from the search can 
 	 * produce a hyperbola or a parabola on a main face and where a lot of
@@ -2593,10 +2611,10 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		 * for each axis
 		 */
 		res_depth = nside / n0;
-		/* If the the query is too small we cannot go up to max_depth since we
+		/* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
 		 * are limited by nside depth
 		 */
-		res_depth = max_depth > res_depth ? res_depth : max_depth;
+		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
 
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -2667,33 +2685,8 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	} /* End of the mega-loop over the faces */
 
 
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
-	{
-		out_ipix_arr_fulls[i++] = 1;
-		out_ipix_arr_fulls[i++] = -1;
-	}
-
-
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
-	{
-		out_ipix_arr_partials[i++] = 1;
-		out_ipix_arr_partials[i++] = -1;
-	}
-
-
- 
-#ifdef Q3C_DEBUG
-/*  fprintf(stderr, "COVER:%s\n", where_cover);*/
-/*  fprintf(stderr, "PARTLY:%s\n", where_part);*/
-#endif
-
- 
+	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
+					out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
 } /* End of q3c_radial_query() */
 
@@ -2718,14 +2711,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
  
 	int work_nstack = 0, i, j, out_nstack = 0, res_depth;
  
-	const int max_depth = 4; /* log2(Maximal increase of resolution) */
- 
-	struct q3c_square work_stack[11024], out_stack[11024], *cur_square;
-	/* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Consider that the size of the stacks should directly depend on the
-	 * value of res_depth variable !
-	 * It seems that each of stacks should have the size 4*(2^(depth-1))
-	 */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
  
 	face_num = q3c_get_facenum_poly(qp);
  
@@ -2804,10 +2790,10 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		 */
 	 
 		res_depth = nside / n0;
-		/* If the the query is too small we cannot go up to max_depth since we
+		/* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
 		 * are limited by nside depth
 		 */
-		res_depth = max_depth > res_depth ? res_depth : max_depth;
+		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
 
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -2882,36 +2868,9 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	} /* End of the mega-loop over the faces */
 
 
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	 for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
-	 {
-//     fprintf(stderr,"F%d\n",i);
-		 out_ipix_arr_fulls[i++] = 1;
-		 out_ipix_arr_fulls[i++] = -1;
-	 }
-
-
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	 for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
-	 {
-//     fprintf(stderr,"P%d\n",i);
-		 out_ipix_arr_partials[i++] = 1;
-		 out_ipix_arr_partials[i++] = -1;
-	 }
-
-
+	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
+					out_ipix_arr_partials, out_ipix_arr_partials_pos);
  
-#ifdef Q3C_DEBUG
-//  fprintf(stderr, "COVER:%s\n", where_cover);
-//  fprintf(stderr, "PARTLY:%s\n", where_part);
-#endif
-
- 
-
 } /* End of radial_query() */
 
 
@@ -2936,14 +2895,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	int work_nstack = 0, i, j, out_nstack = 0,
 		res_depth;
 	
-	const int max_depth = 4; /* log2(Maximal increase of resolution) */
-	
-	struct q3c_square work_stack[11024], out_stack[11024], *cur_square;
-	/* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Consider that the size of the stacks should directly depend on the
-	 * value of res_depth variable !
-	 * It seems that each of stacks should have the size 4*(2^(depth-1))
-	 */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
 	/* 35 degrees is a magic size above which the cone from the search can 
 	 * produce a hyperbola or a parabola on a main face and where a lot of
@@ -3036,10 +2988,10 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		 */
 			 
 		res_depth = nside / n0;
-		/* If the the query is too small we cannot go up to max_depth since we
+		/* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
 		 * are limited by nside depth
 		 */
-		res_depth = max_depth > res_depth ? res_depth : max_depth;
+		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
 		
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -3113,31 +3065,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	} /* End of the mega-loop over the faces */
 
 
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	 for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
-	 {
-//     fprintf(stderr,"F%d\n",i);
-		 out_ipix_arr_fulls[i++] = 1;
-		 out_ipix_arr_fulls[i++] = -1;
-	 }
-
-
-	/* Now we should fill the tail of the out_ipix_arr_fulls stack by
-	 * [1,-1] pairs  since our SQL code wants the arrays of fixed length
-	 */
-	 for(i = out_ipix_arr_partials_pos; i < (2*Q3C_NPARTIALS);)
-	 {
-//     fprintf(stderr,"P%d\n",i);
-		 out_ipix_arr_partials[i++] = 1;
-		 out_ipix_arr_partials[i++] = -1;
-	 }
-
-#ifdef Q3C_DEBUG
-	//fprintf(stderr, "COVER:%s\n", where_cover);
-	//fprintf(stderr, "PARTLY:%s\n", where_part);
-#endif
+	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
+					out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
 } /* End of q3c_ellipse_query() */
 

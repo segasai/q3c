@@ -166,6 +166,18 @@ typedef long double q3c_coord_t;
 #define Q3C_NFULLS 50 
 /*length of the list of the fully covered ipix ranges*/
 
+#define Q3C_MAX_DEPTH 4 
+/*the maximum depth of going down the quadtree when doing spatial searches */
+
+#define Q3C_STACK_SIZE 11000
+/* the size of the stacks for quadtrees when doing spatial searches */
+/* !!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+ * Consider that the size of the stacks should directly depend on the
+ * value of res_depth variable !
+ * It seems that each of stacks should have the size 4*(2^(depth-1))
+ */
+
+
 #define Q3C_MAXRAD 35
 /* maximum allowed radius for circles and ellipses */
 
