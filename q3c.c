@@ -97,7 +97,6 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	{
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
-			/*return PointerGetDatum((&ipix_buf));*/
 			PG_RETURN_INT64(ipix_buf);
 		}
 	}
@@ -109,9 +108,7 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	ipix_buf = ipix;
 	invocation=1;
 
-
 	PG_RETURN_INT64(ipix);
-	/*return PointerGetDatum((&ipix_buf));*/
 }
 
 
@@ -127,8 +124,6 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
 
-	//fprintf(stderr,"Y");
-
 	if (invocation==0)
 	{
 
@@ -137,7 +132,6 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	{
 		if ((ra == ra_buf) && (dec == dec_buf))
 		{
-			/*return PointerGetDatum((&ipix_buf));*/
 			PG_RETURN_INT64(ipix_buf);
 		}
 	}
@@ -150,8 +144,6 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	invocation=1;
 
 	PG_RETURN_INT64(ipix);
-	/* return PointerGetDatum((&ipix_buf)); */
-
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_ipix2ang);
@@ -279,7 +271,6 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
@@ -344,7 +335,6 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	/*q3c_get_nearby(&hprm, ra_cen, dec_cen, radius, ipix_array);*/
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 
@@ -387,13 +377,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	int full_flag = PG_GETARG_INT32(4); /* full_flag */
 	/* 1 means full, 0 means partial */
 
-	/* const int n_partials = 800, n_fulls = 800;*/
-
-
-
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-	/* static q3c_ipix_t partials[2 * n_partials]; */
-	/* static q3c_ipix_t fulls[2 * n_fulls]; */
 
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
@@ -401,7 +385,6 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
-
 
 	static int invocation;
 
@@ -460,12 +443,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	/* 1 means full, 0 means partial */
 
-	/* const int n_partials = 800, n_fulls = 800;*/
-
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-	/* static q3c_ipix_t partials[2 * n_partials]; */
-	/* static q3c_ipix_t fulls[2 * n_fulls]; */
-
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
@@ -515,8 +493,6 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 		PG_RETURN_INT64(partials[iteration]);
 	}
 }
-
-
 
 
 
