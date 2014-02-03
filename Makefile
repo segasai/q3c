@@ -26,7 +26,8 @@ top_builddir = ../..
 include $(top_builddir)/src/Makefile.global
 include $(top_srcdir)/contrib/contrib-global.mk
 else
-PGXS := $(shell pg_config --pgxs)
+PG_CONFIG = pg_config
+PGXS := $(shell $(PG_CONFIG) --pgxs)
 ifndef PGXS
 $(error You should have `pg_config` program in your PATH or compile Q3C with\
 'make NO_PGXS=1' \
