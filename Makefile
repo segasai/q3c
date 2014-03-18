@@ -11,7 +11,7 @@ GITEXISTS := $(shell which git 2>/dev/null)
 ifeq ($(GITEXISTS),)
 Q3C_VERSION='""'
 else
-Q3C_VERSION='"'"`git describe`"'"'
+Q3C_VERSION='"'"`git describe --tags`"'"'
 endif
 
 PG_CPPFLAGS = -DQ3C_VERSION=$(Q3C_VERSION) $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
