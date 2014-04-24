@@ -1375,6 +1375,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	
 	fprintf(fp, "struct q3c_prm hprm={"
 	Q3C_IPIX_FMT",____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
+	fclose(fp);
 }
 
 
