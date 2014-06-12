@@ -2720,6 +2720,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	if (large_flag)
 	{
 		*too_large = 1;
+		return;
 	}
 	q3c_prepare_poly(qp);
  
@@ -2745,6 +2746,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			if (large_flag)
 			{
 				*too_large = 1;
+				return;
 			}
 
 			q3c_prepare_poly(qp);
