@@ -17,7 +17,8 @@ endif
 PG_CPPFLAGS = -DQ3C_VERSION=$(Q3C_VERSION) $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS
 SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o \
-			tests/join.out tests/cone.out tests/ellipse.out \
+			results/join.out results/cone.out results/ellipse.out \
+			results/version.out results/poly.out results/area.out \
 			gen_data
 
 ifdef NO_PGXS
@@ -67,27 +68,30 @@ test: gen_data all
 	psql q3c_test -c 'ANALYZE test'
 	psql q3c_test -c 'ANALYZE test1'
 	psql q3c_test -c 'ANALYZE test_small'
-	cat tests/cone.sql | psql q3c_test > tests/cone.out
-	diff tests/cone.out tests/cone.expected
-	cat tests/cone_join_rev.sql | psql q3c_test > tests/cone.out
-	diff tests/cone.out tests/cone.expected
-	cat tests/ellipse.sql | psql q3c_test > tests/ellipse.out
-	diff tests/ellipse.out tests/ellipse.expected
-	cat tests/join.sql | psql q3c_test > tests/join.out
-	diff tests/join.out tests/join.expected
-	cat tests/poly.sql | psql q3c_test > tests/poly.out
-	diff tests/poly.out tests/poly.expected
-	cat tests/version.sql | psql q3c_test > tests/version.out
-	diff tests/version.out tests/version.expected
-	cat tests/area.sql | psql q3c_test > tests/area.out
-	diff tests/area.out tests/area.expected
+	mkdir -p results
+	cat sql/cone.sql | psql q3c_test > results/cone.out
+	diff results/cone.out expected/cone.expected
+	cat sql/cone_join_rev.sql | psql q3c_test > results/cone.out
+	diff results/cone.out expected/cone.expected
+	cat sql/ellipse.sql | psql q3c_test > results/ellipse.out
+	diff results/ellipse.out expected/ellipse.expected
+	cat sql/join.sql | psql q3c_test > results/join.out
+	diff results/join.out expected/join.expected
+	cat sql/poly.sql | psql q3c_test > results/poly.out
+	diff results/poly.out expected/poly.expected
+	cat sql/version.sql | psql q3c_test > results/version.out
+	diff results/version.out expected/version.expected
+	cat sql/area.sql | psql q3c_test > results/area.out
+	diff results/area.out expected/area.expected
 	dropdb q3c_test
 
 dist: clean
 	mkdir -p dist
 	cp *.c *.h *.sql.in README.q3c COPYING dist
 	cat Makefile | sed 's/^Q3C_VERSION=.*$$/Q3C_VERSION='"'"$(Q3C_VERSION)"'"'/'  > dist/Makefile
-	mkdir -p dist/tests
-	cp tests/*.expected tests/*.sql dist/tests
+	mkdir -p dist/sql
+	mkdir -p dist/expected	
+	cp expected/*.expected dist/expected
+	cp sql/*.sql dist/sql
 	cat q3c.sql.in | perl utils/create_drops.pl > dist/drop_q3c.sql
 
