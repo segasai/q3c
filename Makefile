@@ -69,6 +69,8 @@ test: gen_data all
 	psql q3c_test -c 'ANALYZE test1'
 	psql q3c_test -c 'ANALYZE test_small'
 	mkdir -p results
+	cat sql/ang2ipix.sql | psql q3c_test > results/ang2ipix.out
+	diff results/ang2ipix.out expected/ang2ipix.expected
 	cat sql/cone.sql | psql q3c_test > results/cone.out
 	diff results/cone.out expected/cone.expected
 	cat sql/cone_join_rev.sql | psql q3c_test > results/cone.out
