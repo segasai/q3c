@@ -261,7 +261,10 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 ) AND 
 q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
 
-' LANGUAGE SQL IMMUTABLE;CREATE OR REPLACE FUNCTION q3c_radial_query(
+' LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION q3c_radial_query(
                   real, real,
                   double precision, double precision, double precision)
                                          returns boolean as 'SELECT (
@@ -367,7 +370,9 @@ q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
 ) AND
 q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-' LANGUAGE SQL IMMUTABLE;CREATE OR REPLACE FUNCTION q3c_radial_query(
+' LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_radial_query(
                   double precision, double precision,
                   double precision, double precision, double precision)
                                          returns boolean as 'SELECT 
