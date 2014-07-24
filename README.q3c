@@ -6,19 +6,19 @@
 			Sternberg Astronomical Institute, Moscow, Russian
     Copyright (c) 2004-2014 Sergey Koposov
     Email: koposov@ast.cam.ac.uk
-    http://www.ast.cam.ac.uk/~koposov
 
     Idea and implementation by Sergey Koposov.
 	With the help from Oleg Bartunov
                      (Sternberg Astronomical Institute, Moscow University).
 
+    Fresh versions of the software could be obtained here: http://code.google.com/p/q3c/
+
 ---------------------------------------------------------------------
 			ABOUT
 
-To read more about the whole Q3C scheme, look into the paper on Q3C from the
+To read more about the Q3C scheme, look into the paper on Q3C from the
 ADASS proceedings. The URL of the paper: 
-http://lnfm1.sai.msu.ru/~math/docs/adass_proceedings2005.pdf
-The reference:
+http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 \bibitem[Koposov \& Bartunov(2006)]{2006ASPC..351..735K} Koposov, S., \& 
 Bartunov, O.\ 2006, Astronomical Society of the Pacific Conference Series, 
 351, 735
