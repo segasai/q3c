@@ -97,7 +97,10 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 			PG_RETURN_INT64(ipix_buf);
 		}
 	}
-
+	if ((!isfinite(ra)) || (!isfinite(dec)))
+	{
+		PG_RETURN_NULL();
+	}
 	q3c_ang2ipix(&hprm, ra, dec, &ipix);
 
 	ra_buf = ra;
@@ -132,7 +135,10 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 			PG_RETURN_INT64(ipix_buf);
 		}
 	}
-
+	if ((!isfinite(ra)) || (!isfinite(dec)))
+	{
+		PG_RETURN_NULL();
+	}
 	q3c_ang2ipix(&hprm, ra, dec, &ipix);
 
 	ra_buf = ra;
