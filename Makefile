@@ -48,7 +48,7 @@ prepare: prepare.o q3cube.o q3c_poly.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) prepare.o q3cube.o q3c_poly.o $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
               
 oldclean: 
-	rm -f *~ tests/*~
+	rm -f *~ sql/*~
 
 gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(PG_LIBS) $(LDFLAGS) $(LIBS) -o $@
