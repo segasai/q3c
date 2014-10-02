@@ -730,3 +730,4 @@ select count(*) from test where q3c_ellipse_query(ra,dec,314,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,314,-37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-37,6,1,0);
+select count(*) from test where  q3c_ellipse_query(ra,dec,-45,-6,1,1,0);
