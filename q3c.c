@@ -313,7 +313,6 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 		elog(ERROR, "The values of ra,dec,radius are infinites or NaNs");
 	}
 
-
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
@@ -378,12 +377,19 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
+
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
 	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	 * So we should have the array with the size twice bigger
 	 */
-
 	static int invocation;
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen)>90) 
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
 
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
@@ -449,6 +455,13 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	 */
 
 	static int invocation;
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen)>90) 
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
 
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
