@@ -41,8 +41,6 @@ MYBINLIBS = -lm
 # I have to use this instead of PG_LIBS, because PG_LIBS brings a
 # bunch of libraries which are often not installed
 
-prepare: prepare.o q3cube.o q3c_poly.o
-
 dump.c: prepare
 	./prepare
 
