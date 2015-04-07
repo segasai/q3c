@@ -5,7 +5,7 @@ Email: koposov@ast.cam.ac.uk
 
 Idea and implementation by Sergey Koposov With the help from Oleg Bartunov.
 
- Fresh versions of the software could be obtained here: http://code.google.com/p/q3c/
+ Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
 ---------------------------------------------------------------------
 			ABOUT
@@ -68,13 +68,14 @@ Now you should do the last step -- analyze your table:
 
 my_db# ANALYZE mytable;
 
-Now the power of Q3C is available to you!!! :) 
+Now you should be able to use q3c queries.
 
 -----------------------------------------------------------------------
 
            FUNCTIONS
 
-All the angles used by q3c are always in degrees. 
+Throughout q3c it is assumed that all the angles are in degrees. 
+
 The functions installed by Q3C are: 
 
 q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec
