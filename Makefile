@@ -51,7 +51,7 @@ oldclean:
 	rm -f *~ sql/*~
 
 gen_data: gen_data.c
-	$(CC) $< $(MYBINLIBS) -o $@
+	$(CC) $< $(CPPFLAGS) $(MYBINLIBS) -o $@
 
 test: gen_data all
 	createdb q3c_test
