@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2014 Sergey Koposov
+	   Copyright (C) 2004-2015 Sergey Koposov
    
     Email: koposov@ast.cam.ac.uk
 
