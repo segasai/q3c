@@ -3,21 +3,21 @@ Author: Sergey Koposov, Institute of Astronomy, Cambridge, UK
 Copyright (c) 2004-2015 Sergey Koposov
 Email: koposov@ast.cam.ac.uk
 
-Idea and implementation by Sergey Koposov With the help from Oleg Bartunov.
+Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
- Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
+Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
 ---------------------------------------------------------------------
 			ABOUT
 
-To read more about the Q3C scheme, look into the paper on Q3C from the
-ADASS proceedings. The URL of the paper: 
+To read more about the Q3C indexing, check out the paper on Q3C from 
+ADASS conference proceedings. The URL of the paper: 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 \bibitem[Koposov \& Bartunov(2006)]{2006ASPC..351..735K} Koposov, S., \& 
 Bartunov, O.\ 2006, Astronomical Society of the Pacific Conference Series, 
 351, 735
 If you use Q3C you are kindly asked to cite this paper. Also, I 
- would be also happy to hear about any usage of Q3C.
+would be also happy to hear about any usage of Q3C.
 
 ----------------------------------------------------------------------
 			PREREQUISITES
