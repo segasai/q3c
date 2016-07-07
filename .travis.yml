@@ -2,7 +2,7 @@ language: c
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libxml2-dev
-  - sudo apt-get install postgresql-server-dev-9.5 postgresql-common
+  - sudo apt-get install postgresql-server-dev-9.1 postgresql-common
 # -dev-all possible
 services:
   - postgresql
@@ -11,5 +11,5 @@ script: make test
 compiler:
   - clang
   - gcc
-addons:
-  postgresql: "9.5"
+#addons:
+#  postgresql: "9.5"
