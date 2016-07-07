@@ -2,7 +2,6 @@ language: c
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libxml2-dev
-before_script:
   - sudo apt-get install postgresql-server-dev-all postgresql-common
 services:
   - postgresql
