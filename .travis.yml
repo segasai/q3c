@@ -6,7 +6,8 @@ before_script:
   - sudo apt-get install postgresql-server-dev-all postgresql-common
 services:
   - postgresql
-script: make && make test
+install: make && make install
+script: make test
 compiler:
   - clang
   - gcc
