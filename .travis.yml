@@ -1,21 +1,28 @@
 language: c
+
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libxml2-dev
   - sudo apt-get install postgresql-server-dev-9.1 postgresql-common
 # -dev-all possible
+
 services:
   - postgresql
+
 install: make && sudo make install
-script: make test
+
+script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
+
 compiler:
   - clang
   - gcc
+
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "E3KdO0b04kO/0j6Kf87d+mHerK/9ZOBevibds1/wlm8T9F7PAKclTGgh6rxJZUWwTAbgbGxBv7GddIHbWTkrOjvIj7WP2/5sSg34P8q8aEeWvx/E99q8auVQge0/2MkNLcTIxfncqRnzbVbJjGpIvN0jkZ/A3t7DKlQquhvuMxw="
+
 addons:
   coverity_scan:
     project:
@@ -24,5 +31,5 @@ addons:
     notification_email: koposov@ast.cam.ac.uk
     build_command_prepend: "make clean"
     build_command:   "make"
-    branch_pattern: coverity_scan
+    branch_pattern: coverity_branch
 #  postgresql: "9.5"
