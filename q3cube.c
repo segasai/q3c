@@ -383,14 +383,14 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 	q3c_coord_t PA = PA0 * Q3C_DEGRA;
 	q3c_coord_t d = d0 * Q3C_DEGRA;
 	
-	q3c_coord_t t1 = cos(d_alpha);
-	q3c_coord_t t22 = sin(d_alpha);
-	q3c_coord_t t3 = cos(delta1);
-	q3c_coord_t t32 = sin(delta1);
-	q3c_coord_t t6 = cos(delta);
-	q3c_coord_t t26 = sin(delta);
-	q3c_coord_t t9 = cos(d);
-	q3c_coord_t t55 = sin(d);
+	q3c_coord_t t1 = q3c_cos(d_alpha);
+	q3c_coord_t t22 = q3c_sin(d_alpha);
+	q3c_coord_t t3 = q3c_cos(delta1);
+	q3c_coord_t t32 = q3c_sin(delta1);
+	q3c_coord_t t6 = q3c_cos(delta);
+	q3c_coord_t t26 = q3c_sin(delta);
+	q3c_coord_t t9 = q3c_cos(d);
+	q3c_coord_t t55 = q3c_sin(d);
 	
 	q3c_coord_t t2;
 	q3c_coord_t t4;
@@ -432,13 +432,13 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 	
 	t10 = t9*t9;
 	t11 = t7*t10;
-	t13 = cos(PA);
+	t13 = q3c_cos(PA);
 	t14 = t13*t13;
 	t15 = t14*t10;
 	t18 = t7*t14;
 	t19 = t18*t10;
 	
-	t24 = sin(PA);
+	t24 = q3c_sin(PA);
 	
 	t31 = t1*t3;
 	
@@ -1809,20 +1809,20 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 												q3c_coord_t *a)
 {
 	/* Thank you, Maple! */
-	q3c_coord_t t1 = sin(delta);
-	q3c_coord_t t2 = cos(d);
+	q3c_coord_t t1 = q3c_sin(delta);
+	q3c_coord_t t2 = q3c_cos(d);
 	q3c_coord_t t3 = t2*t2;
 	q3c_coord_t t4 = t1*t3;
-	q3c_coord_t t5 = cos(PA);
-	q3c_coord_t t6 = cos(alpha);
+	q3c_coord_t t5 = q3c_cos(PA);
+	q3c_coord_t t6 = q3c_cos(alpha);
 	q3c_coord_t t7 = t6*t6;
-	q3c_coord_t t9 = sin(PA);
+	q3c_coord_t t9 = q3c_sin(PA);
 	q3c_coord_t t13 = t5*t5;
 	q3c_coord_t t14 = t6*t13;
-	q3c_coord_t t15 = sin(alpha);
+	q3c_coord_t t15 = q3c_sin(alpha);
 	q3c_coord_t t18 = t15*t3;
 	q3c_coord_t t19 = t18*t14;
-	q3c_coord_t t21 = cos(delta);
+	q3c_coord_t t21 = q3c_cos(delta);
 	q3c_coord_t t22 = t21*t21;
 	q3c_coord_t t23 = t15*t22;
 	q3c_coord_t t29 = t15*t6;
@@ -1833,7 +1833,7 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	q3c_coord_t t44 = t7*t9;
 	q3c_coord_t t47 = -4.0*t4*t5*t7*t9-4.0*t14*t15+4.0*t19+2.0*t14*t23-2.0*t14*t23*t3+2.0*t29+2.0*t29*t31-2.0*t34*t9+2.0*t34*t37-2.0*t29*t3-t43+4.0*t34*t44;
 	q3c_coord_t t48 = e*e;
-	q3c_coord_t t51 = sin(d);
+	q3c_coord_t t51 = q3c_sin(d);
 	q3c_coord_t t52 = t51*t51;
 	q3c_coord_t t53 = t22*t13;
 	q3c_coord_t t54 = t53*t3;
@@ -1925,24 +1925,24 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 												q3c_coord_t *a)
 {
 	/* Thank you, Maple! */
-	q3c_coord_t t1 = sin(alpha);
-	q3c_coord_t t2 = sin(delta);
+	q3c_coord_t t1 = q3c_sin(alpha);
+	q3c_coord_t t2 = q3c_sin(delta);
 	q3c_coord_t t3 = t1*t2;
-	q3c_coord_t t4 = cos(d);
+	q3c_coord_t t4 = q3c_cos(d);
 	q3c_coord_t t5 = t4*t4;
 	q3c_coord_t t6 = t3*t5;
-	q3c_coord_t t7 = cos(PA);
+	q3c_coord_t t7 = q3c_cos(PA);
 	q3c_coord_t t8 = t7*t7;
 	q3c_coord_t t9 = t8*t5;
-	q3c_coord_t t11 = sin(PA);
+	q3c_coord_t t11 = q3c_sin(PA);
 	q3c_coord_t t12 = t7*t11;
-	q3c_coord_t t13 = cos(alpha);
+	q3c_coord_t t13 = q3c_cos(alpha);
 	q3c_coord_t t14 = t12*t13;
 	q3c_coord_t t15 = t13*t5;
-	q3c_coord_t t19 = cos(delta);
+	q3c_coord_t t19 = q3c_cos(delta);
 	q3c_coord_t t21 = e*e;
 	q3c_coord_t t23 = t3*t19;
-	q3c_coord_t t25 = sin(d);
+	q3c_coord_t t25 = q3c_sin(d);
 	q3c_coord_t t26 = t25*t25;
 	q3c_coord_t t28 = 2.0*t6*t14;
 	q3c_coord_t t29 = t19*t19;
