@@ -11,5 +11,18 @@ script: make test
 compiler:
   - clang
   - gcc
-#addons:
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "E3KdO0b04kO/0j6Kf87d+mHerK/9ZOBevibds1/wlm8T9F7PAKclTGgh6rxJZUWwTAbgbGxBv7GddIHbWTkrOjvIj7WP2/5sSg34P8q8aEeWvx/E99q8auVQge0/2MkNLcTIxfncqRnzbVbJjGpIvN0jkZ/A3t7DKlQquhvuMxw="
+addons:
+  coverity_scan:
+    project:
+      name: "segasai/q3c"
+      description: "Q3C sky indexing"
+    notification_email: koposov@ast.cam.ac.uk
+    build_command_prepend: "make clean"
+    build_command:   "make"
+    branch_pattern: coverity_scan
 #  postgresql: "9.5"
