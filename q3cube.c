@@ -802,8 +802,6 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			{
 				if (iymin == iymax)
 				{
-					xi = (q3c_ipix_t)(ixmax * n1);
-					yi = (q3c_ipix_t)(iymin * n1);
 					xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
 					yistack[nistack] = (q3c_ipix_t)(iymin * n1);
 					facestack[nistack] = face_num;
@@ -2652,24 +2650,20 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		} /* end of resolution loop */
 	 
 		//   Old printing of the results
-	 
+#ifdef Q3C_DEBUG	 
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-#ifdef Q3C_DEBUG
 			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
-		//fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
 	 
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
-#ifdef Q3C_DEBUG
 			if (cur_square->status == Q3C_PARTIAL)
 				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
+#endif
 	 
 		q3c_output_stack( hprm, out_stack, out_nstack,
 		               work_stack, work_nstack,
@@ -2837,24 +2831,20 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		}
 	 
 		//   Old printing of the results
-	 
+#ifdef Q3C_DEBUG
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-#ifdef Q3C_DEBUG
 			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
-		//fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
 	 
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
-#ifdef Q3C_DEBUG
 			if (cur_square->status == Q3C_PARTIAL)
 				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
+#endif
 	 
 		q3c_output_stack( hprm, out_stack, out_nstack,
 		               work_stack, work_nstack,
@@ -3034,24 +3024,20 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		} /* end of resolution loop */
 	 
 		//   Old printing of the results
-	 
+#ifdef Q3C_DEBUG
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-#ifdef Q3C_DEBUG
 			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
-		//fprintf(stdout,"XXX%d %d %d\n",work_nstack, tmp_stack1, tmp_stack2);
-	 
+
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
-#ifdef Q3C_DEBUG
 			if (cur_square->status == Q3C_PARTIAL)
 				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
-#endif
 		}
+#endif
 	 
 		q3c_output_stack( hprm, out_stack, out_nstack,
 		               work_stack, work_nstack,
