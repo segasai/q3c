@@ -34,7 +34,6 @@
 #ifndef Q3C_COMMON_H
 #define Q3C_COMMON_H
 
-
 #ifndef q3c_ipix_t
 /*#define q3c_ipix_t long long 
   typedef long long q3c_ipix_t ;*/
