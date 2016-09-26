@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/segasai/q3c.svg?branch=master)](https://travis-ci.org/segasai/q3c)
 # Q3C
 
 Author: Sergey Koposov, Institute of Astronomy, Cambridge, UK 
@@ -10,10 +11,10 @@ Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
 Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
-To read more about the Q3C indexing, please paper on Q3C from ADASS conference proceedings 
+To read more about the Q3C indexing, please read the Q3C paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
-The Citation is  "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
-If you use Q3C you are kindly asked to cite this paper. Also, I would be also happy to hear about any usage of Q3C.
+The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
+If you use Q3C you are kindly asked to cite this paper. I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
