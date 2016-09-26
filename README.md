@@ -13,22 +13,19 @@ Fresh versions of the software could be obtained here: https://github.com/segasa
 To read more about the Q3C indexing, please paper on Q3C from ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 The Citation is  "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
-If you use Q3C you are kindly asked to cite this paper. Also, I 
-would be also happy to hear about any usage of Q3C.
+If you use Q3C you are kindly asked to cite this paper. Also, I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
 To work with Q3C you will only need to have a PostgreSQL database installed (version 9.1
 or later). If you have PostgreSQL version lower than 9.1 your will need an older version 
 of Q3C (1.4.x). 
-For the installation of PostgreSQL refer to the PostgreSQL manual.
-
 
 ## Installation
 
 - make 
 - make install
-- Do "create extension q3c" in PostgreSQL shell
+- Execute "create extension q3c" in PostgreSQL client
 
 Note: To successfully compile Q3C have to have pg_config in your PATH
 
@@ -69,7 +66,7 @@ The functions installed by Q3C are:
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It should be used when 
-  the index on q3c_ang2ipix(ra2,dec2) is created.
+  the index on q3c_ang2ipix(ra2, dec2) is created. See below for examples.
 
 - q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec1) have to be within an ellipse with
@@ -78,17 +75,17 @@ The functions installed by Q3C are:
 
 - q3c_radial_query(ra, dec, center_ra, center_dec, radius) -- returns
   true if ra, dec is within radius degrees of center_ra, center_dec. 
-  This is the main function for cone searches. 
-  function should be used if when the index on q3c_ang2ipix(ra,dec) is created)
+  This is the main function for cone searches. This function should be used
+  when the index on q3c_ang2ipix(ra,dec) is created.
 
 - q3c_ellipse_query(ra, dec, center_ra, center_dec, maj_ax,
 						axis_ratio, PA ) -- returns
   true if ra, dec is within the ellipse from center_ra, center_dec.
   The ellipse is specified by major axis, axis ratio and positional angle.
-  function should be used if when the index on q3c_ang2ipix(ra,dec) is created)
+  This function should be used if when the index on q3c_ang2ipix(ra,dec) is created.
 
 - q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within
-   the postgresql polygon poly.
+  the postgresql polygon poly specified as an array of right ascensions and declinations.
 
 - q3c_ipix2ang(ipix) -- returns a 2-array of (ra,dec) corresponding to ipix.
 
@@ -98,7 +95,7 @@ The functions installed by Q3C are:
 - q3c_ipixcenter(ra, dec, bits) -- the function returning the ipix value of the
 	pixel center of certain depth covering the specified (ra,dec)
 
-- q3c_version() -- returns the version of Q3C installed
+- q3c_version() -- returns the version of Q3C that is installed
 
 
 ## Query examples

@@ -1,17 +1,12 @@
-EXTENSION=q3c
-EXTVERSION:=$(shell grep default_version $(EXTENSION).control | \
+EXTENSION = q3c
+EXTVERSION := $(shell grep default_version $(EXTENSION).control | \
 		 sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
-DOCS=README.md
-OBJS=dump.o q3c.o q3c_poly.o q3cube.o
-MODULE_big=q3c
-
-OPT=-O3
-OPT_LOW=-O2
-#DEBUG=-g3 -ggdb -DQ3C_DEBUG
-PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -DQ3C_VERSION='"'$(EXTVERSION)'"'
+DOCS = README.md
+OBJS = dump.o q3c.o q3c_poly.o q3cube.o
+MODULE_big = q3c
 
 SHLIB_LINK += $(filter -lm, $(LIBS))
-EXTRA_CLEAN=dump.c prepare prepare.o gen_data.o \
+EXTRA_CLEAN = dump.c prepare prepare.o gen_data.o \
 			results/join.out results/cone.out results/ellipse.out \
 			results/version.out results/poly.out results/area.out \
 			gen_data
@@ -20,9 +15,13 @@ PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
-
+OPT = -O3
+OPT_LOW = -O2
+#DEBUG = -g3 -ggdb -DQ3C_DEBUG
+PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -DQ3C_VERSION='"'$(EXTVERSION)'"'
 CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
 MYBINLIBS = -lm
+
 # I have to use this instead of PG_LIBS, because PG_LIBS brings a
 # bunch of libraries which are often not installed
 
@@ -68,5 +67,3 @@ test: gen_data all
 	cat sql/area.sql | psql q3c_test > results/area.out
 	diff results/area.out expected/area.expected
 	dropdb q3c_test
-
-
