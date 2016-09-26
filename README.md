@@ -1,6 +1,9 @@
 # Q3C
+
 Author: Sergey Koposov, Institute of Astronomy, Cambridge, UK 
+
 Copyright (c) 2004-2016 Sergey Koposov
+
 Email: koposov@ast.cam.ac.uk
 
 Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
@@ -23,12 +26,11 @@ For the installation of PostgreSQL refer to the PostgreSQL manual.
 
 ## Installation
 
-1) make 
-2) make install
-3) Do "create extension q3c" in PostgreSQL shell
+- make 
+- make install
+- Do "create extension q3c" in PostgreSQL shell
 
-Note: To successfully compile Q3C you need to have the program called 
-pg_config in your PATH
+Note: To successfully compile Q3C have to have pg_config in your PATH
 
 After the installation you will have several new functions in PostgreSQL.
 All names of these functions start with the "q3c_" prefix.
@@ -38,28 +40,21 @@ All names of these functions start with the "q3c_" prefix.
 To begin use Q3C for searches and cross-matches you should create the indexes
 on the tables.
 
-Suppose you have the table called "mytable" with "ra" and "dec" columns 
-(right ascension and declination in degrees).
+In this demonstration we'll assume that you have the table called "mytable" with "ra" and "dec" columns (right ascension and declination in degrees).
 
-First, you should create the spatial index, using the following command:
+First, you will need to create the spatial index, using the following command:
 
 `my_db# CREATE INDEX ON mytable (q3c_ang2ipix(ra, dec)); `
 
-After that it is better to cluster that table using that index. 
-Clustering procedure is the procedure of ordering the data on the disk
-according to the Q3C spatial index values. If the data is already loaded
-in the Database ordered by some spherical zones or something similar,
-the clustering step can be ommited (although still recommended). The
-clustering step may take a while if your dataset is large
+The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries. If the data have been ingested in the database while ordered by some spherical zones, the clustering step can be ommited (although still recommended). The clustering step may take a while if your dataset is large.
 
 `my_db# CLUSTER q3c_mytable_idx ON mytable;`
 
-Now you should do the last step -- analyze your table:
+Now the last step is analyzing your table:
 
 `my_db# ANALYZE mytable;`
 
 Now you should be able to use q3c queries.
-
 
 ## Q3C functions
 
