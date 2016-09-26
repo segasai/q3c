@@ -103,37 +103,31 @@ The functions installed by Q3C are:
 
 ## Query examples
 
-- The cone search (the query of all objects within the circular region of
-the sky):
-
-To query all objects lying within radius0=0.1 deg from ra0 = 11deg, 
-dec0 = 12deg in table mytable you should do:
-
-```
+- The cone search (the query of all objects within the circular region of the sky):
+  For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12)deg in the table mytable you should do:
+  ```
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 ```
+  The order of arguments is important, so that the column names of the table should come first, and the 
+  location where you search after, otherwise the index won't be used.
 
-The order of arguments is important here, so that the column names would come 
-first, and the location where you search after, otherwise the index won't be used.
-
-There is also another way of doing cone searches which may be appropriate if the
-table that you are working with is small. In that case q3c_radial_query may 
-be too CPU heavy. So you may want to query the table:
-
-```
-my_db# SELECT * FROM mytable WHERE q3c_join(11, 12, ra, dec, 0.1);
+  There is also another way of doing cone searches which may be appropriate if the
+  table that you are working with is small. In that case q3c_radial_query may 
+  be too CPU heavy. So you may want to query the table:
+  ```
+  my_db# SELECT * FROM mytable WHERE q3c_join(11, 12, ra, dec, 0.1);
 ```
 
 - The ellipse search: search for objects within the ellipse from a given point:
-```
+  ```
 my_db=# select * from mytable WHERE
 	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
 ```
-returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
-major axis of 1 degree, axis ratio of 0.5  and positional angle of 10 degrees.
+  returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
+  major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
 
-- The polygonal query (the query of the objects which lie inside the region
-  bounded by the polygon on the sphere)
+- The polygonal query, i.e. the query of the objects which lie inside the region
+  bounded by the polygon on the sphere. 
   
   To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) )
   (this is the spherical polygon with following vertices:
@@ -142,22 +136,13 @@ major axis of 1 degree, axis ratio of 0.5  and positional angle of 10 degrees.
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
 ```
-- The ellipse query (the query of objects which lie inside an ellipse, with
-  	ra=10, dec=20, major axis=1deg, axis ratio=0.5 and positional angle=10deg)
-  
-  ```
-my_db=# select * from mytable WHERE
-	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
-```
 
 - The positional cross-match of the tables:
-  
-  Lets Assume that we have a huge table "table2" with ra and dec columns and
-  an already created Q3C index and the smaller table "table1" with ra and dec 
-  columns.
+  In this example we will assume that we have a huge table "table2" with ra and dec columns and
+  an already created Q3C index on them and a smaller table "table1" with ra and dec columns.
   
   Now, if we want to cross-match the tables "table1" and "table2" by position 
-  with the crossmatch radius of 0.001 degrees, we should do:
+  with the crossmatch radius of say 0.001 degrees, we would do it with the following query:
   
   ```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
@@ -167,10 +152,13 @@ my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
   The order of arguments is important again, because it determines whether an
   index is going to be used or not. The ra,dec columns from the table with the 
   index should go after the ra,dec columns from the table without the index.
+
+  It is important that the query will return *ALL* the pairs within the matching distance, rather than 
+  say nearest neighbors. For nearest neighbors see below.
   
-  If every object in the table1 have his own error circle (like with X-ray data
-  for example) (suppose that the radius of that circle is the column "err"),
-  then you can run the query:
+  If every object in the table1 have his own error circle, here we'll assume 
+  that the radius of that circle in degrees is stored in the column "err",
+  then you should run the query:
   
   ```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
@@ -180,7 +168,7 @@ my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 - The positional cross-match of the tables with the ellipse error-area:
   (for example if you want to find all the objects from one catalogue which lies
   inside the elliptical bodies of the galaxies from the second catalogue)
-
+  
   It is possible to do the join when the error area of each record of the 
   catalogue is an ellipse. Then you can do the query like this
   ```
@@ -193,8 +181,7 @@ my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
   axises of those ellipses.
   
 - The density estimation of your objects using pixelation depth of 25:
-  
-```
+  ```
 my_db# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
 				q3c_pixarea(i,25) as area from 
 					(select q3c_ipixcenter(ra,dec, 25) as i, count(*) as c from
@@ -207,8 +194,9 @@ my_db# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
 
 - Nearest neighbor queries: 
 
-  This query selects the only nearest neighbor for each row in your table. If there are no neighbor, the columns are filled with nulls.
-```
+  This query selects the only nearest neighbor for each row in your table. If there is no neighbor, 
+  the columns are filled with nulls.
+  ```
 my_db# SELECT  t.*, ss.* FROM mytable AS t,
        LEFT JOIN LATERAL (
                SELECT s.* 
