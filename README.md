@@ -22,13 +22,13 @@ To work with Q3C you will only need to have a PostgreSQL database installed (ver
 or later). If you have PostgreSQL version lower than 9.1 your will need an older version 
 of Q3C (1.4.x). 
 
+To successfully compile Q3C you must have pg_config in your PATH (that means that you may need to install the -devel versions of PostgreSQL packages)
+
 ## Installation
 
 - make 
 - make install
-- Execute "create extension q3c" in PostgreSQL client
-
-Note: To successfully compile Q3C have to have pg_config in your PATH
+- Execute "create extension q3c" in the PostgreSQL client(psql) for the database where you plan to use q3c
 
 After the installation you will have several new functions in PostgreSQL.
 All names of these functions start with the "q3c_" prefix.
@@ -44,11 +44,11 @@ First, you will need to create the spatial index, using the following command:
 
 `my_db# CREATE INDEX ON mytable (q3c_ang2ipix(ra, dec)); `
 
-The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries. If the data have been ingested in the database while ordered by some spherical zones, the clustering step can be ommited (although still recommended). The clustering step may take a while if your dataset is large.
+The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries. If the data have been ingested in the database in an ordered by some spherical zones fashion, the clustering step can be ommited (although still recommended). The clustering step may take a while (hours) if your dataset is large.
 
 `my_db# CLUSTER mytable_q3c_ang2ipix_idx ON mytable;`
 
-Now the last step is analyzing your table:
+The last step is analyzing your table:
 
 `my_db# ANALYZE mytable;`
 
@@ -56,13 +56,13 @@ Now you should be able to use q3c queries.
 
 ## Q3C functions
 
-*IMPORTANT* Throughout q3c it is assumed that all the angles are in degrees. 
+*IMPORTANT* Throughout q3c it is assumed that all the angles are in degrees.
 
 The functions installed by Q3C are: 
 
 - q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec
 
-- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between 
+- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two points
 (ra1,dec1) and (ra2,dec2)
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
@@ -88,13 +88,13 @@ The functions installed by Q3C are:
 - q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within
   the postgresql polygon poly specified as an array of right ascensions and declinations.
 
-- q3c_ipix2ang(ipix) -- returns a 2-array of (ra,dec) corresponding to ipix.
+- q3c_ipix2ang(ipix) -- returns a two-element array of (ra,dec) corresponding to a given ipix.
 
-- q3c_pixarea(ipix, bits) -- returns the area corresponding to ipix at level
+- q3c_pixarea(ipix, bits) -- returns the area corresponding to a given ipix at the pixelisation level given by 
 	bits (1 is smallest, 30 is the cube face) in steradians.
 
-- q3c_ipixcenter(ra, dec, bits) -- the function returning the ipix value of the
-	pixel center of certain depth covering the specified (ra,dec)
+- q3c_ipixcenter(ra, dec, bits) -- returns the ipix value of the
+	pixel center at certain pixel depth covering the specified (ra,dec)
 
 - q3c_version() -- returns the version of Q3C that is installed
 
@@ -102,14 +102,14 @@ The functions installed by Q3C are:
 ## Query examples
 
 - The cone search (the query of all objects within the circular region of the sky):
-  For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12)deg in the table mytable you should do:
+  For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12)deg in the table mytable you would do:
   ```
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 ```
   The order of arguments is important, so that the column names of the table should come first, and the 
   location where you search after, otherwise the index won't be used.
 
-  There is also another way of doing cone searches which may be appropriate if the
+  There is also an alternative way of doing cone searches which could be a bit faster if the
   table that you are working with is small. In that case q3c_radial_query may 
   be too CPU heavy. So you may want to query the table:
   ```
