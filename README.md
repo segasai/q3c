@@ -42,7 +42,7 @@ In this demonstration we'll assume that you have the table called "mytable" with
 
 First, you will need to create the spatial index, using the following command:
 
-`my_db# CREATE INDEX ON mytable (q3c_ang2ipix(ra, dec)); `
+`my_db# CREATE INDEX q3c_mytable_idx ON mytable (q3c_ang2ipix(ra, dec)); `
 
 The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries. If the data have been ingested in the database while ordered by some spherical zones, the clustering step can be ommited (although still recommended). The clustering step may take a while if your dataset is large.
 
