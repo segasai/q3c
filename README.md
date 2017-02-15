@@ -3,7 +3,7 @@
 
 Author: Sergey Koposov, Institute of Astronomy, Cambridge, UK 
 
-Copyright (c) 2004-2016 Sergey Koposov
+Copyright (c) 2004-2017 Sergey Koposov
 
 Email: koposov@ast.cam.ac.uk
 
@@ -11,14 +11,14 @@ Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
 Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
-To read more about the Q3C indexing, please read the Q3C paper published in ADASS conference proceedings 
+To read more about the Q3C indexing, check out the Q3C paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
 If you use Q3C you are kindly asked to cite this paper. I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
-To work with Q3C you will only need to have a PostgreSQL database installed (version 9.1
+To use Q3C you need to have a PostgreSQL database installed (version 9.1
 or later). If you have PostgreSQL version lower than 9.1 your will need an older version 
 of Q3C (1.4.x). 
 
