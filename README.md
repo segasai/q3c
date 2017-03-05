@@ -1,11 +1,11 @@
 [![Build Status](https://travis-ci.org/segasai/q3c.svg?branch=master)](https://travis-ci.org/segasai/q3c)
 # Q3C
 
-Author: Sergey Koposov, Institute of Astronomy, Cambridge, UK 
+Author: Sergey Koposov, Carnegie Mellon University 
 
 Copyright (c) 2004-2017 Sergey Koposov
 
-Email: koposov@ast.cam.ac.uk
+Email: koposov _AT_ cmu _DOT_ edu
 
 Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
