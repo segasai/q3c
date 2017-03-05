@@ -5,7 +5,7 @@ Author: Sergey Koposov, Carnegie Mellon University
 
 Copyright (c) 2004-2017 Sergey Koposov
 
-Email: koposov _AT_ cmu _DOT_ edu
+Email: skoposov _AT_ cmu _DOT_ edu
 
 Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
