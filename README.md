@@ -103,98 +103,96 @@ The functions installed by Q3C are:
 
 - The cone search (the query of all objects within the circular region of the sky):
   For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12)deg in the table mytable you would do:
-  ```
+```
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 ```
-  The order of arguments is important, so that the column names of the table should come first, and the 
-  location where you search after, otherwise the index won't be used.
+The order of arguments is important, so that the column names of the table should come first, and the 
+location where you search after, otherwise the index won't be used.
 
-  There is also an alternative way of doing cone searches which could be a bit faster if the
-  table that you are working with is small. In that case q3c_radial_query may 
-  be too CPU heavy. So you may want to query the table:
-  ```
+There is also an alternative way of doing cone searches which could be a bit faster if the table that you are working with is small. In that case q3c_radial_query may be too CPU heavy. So you may want to query the table:
+ 
+```
   my_db# SELECT * FROM mytable WHERE q3c_join(11, 12, ra, dec, 0.1);
 ```
 
 - The ellipse search: search for objects within the ellipse from a given point:
-  ```
+```
 my_db=# select * from mytable WHERE
 	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
 ```
-  returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
-  major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
+returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
+major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
 
-- The polygonal query, i.e. the query of the objects which lie inside the region
-  bounded by the polygon on the sphere. 
-  
-  To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) )
-  (this is the spherical polygon with following vertices:
-  (ra=0, dec=0) ; (ra=2, dec=0); (ra=2, dec=1); (ra=0, dec=1)):
-  ```
+- The polygonal query, i.e. the query of the objects which lie inside the region 
+bounded by the polygon on the sphere. 
+To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) ) 
+(this is the spherical polygon with following vertices:
+(ra=0, dec=0) ; (ra=2, dec=0); (ra=2, dec=1); (ra=0, dec=1)):
+
+```
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
 ```
 
-- The positional cross-match of the tables:
-  In this example we will assume that we have a huge table "table2" with ra and dec columns and
-  an already created Q3C index on them and a smaller table "table1" with ra and dec columns.
+- The positional cross-match of the tables: 
+In this example we will assume that we have a huge table "table2" with ra and dec columns and
+an already created Q3C index on them and a smaller table "table1" with ra and dec columns.
+
+Now, if we want to cross-match the tables "table1" and "table2" by position 
+with the crossmatch radius of say 0.001 degrees, we would do it with the following query:
   
-  Now, if we want to cross-match the tables "table1" and "table2" by position 
-  with the crossmatch radius of say 0.001 degrees, we would do it with the following query:
-  
-  ```
+```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, 0.001);
 ```
   
-  The order of arguments is important again, because it determines whether an
-  index is going to be used or not. The ra,dec columns from the table with the 
-  index should go after the ra,dec columns from the table without the index.
+The order of arguments is important again, because it determines whether an
+index is going to be used or not. The ra,dec columns from the table with the 
+index should go after the ra,dec columns from the table without the index.
 
-  It is important that the query will return *ALL* the pairs within the matching distance, rather than 
-  say nearest neighbors. For nearest neighbors see below.
+It is important that the query will return *ALL* the pairs within the matching distance, rather than 
+say nearest neighbors. For nearest neighbors see below.
   
-  If every object in the table1 have his own error circle, here we'll assume 
-  that the radius of that circle in degrees is stored in the column "err",
-  then you should run the query:
+If every object in the table1 have his own error circle, here we'll assume 
+that the radius of that circle in degrees is stored in the column "err",
+then you should run the query:
   
-  ```
+```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_join(a.ra, a.dec, b.ra, b.dec, a.err);
 ```
 
 - The positional cross-match of the tables with the ellipse error-area:
-  (for example if you want to find all the objects from one catalogue which lies
-  inside the elliptical bodies of the galaxies from the second catalogue)
+(for example if you want to find all the objects from one catalogue which lies
+inside the elliptical bodies of the galaxies from the second catalogue)
   
-  It is possible to do the join when the error area of each record of the 
-  catalogue is an ellipse. Then you can do the query like this
-  ```
+It is possible to do the join when the error area of each record of the 
+catalogue is an ellipse. Then you can do the query like this
+```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 		q3c_ellipse_join(a.ra, a.dec, b.ra, b.dec, a.maj_ax
 		a.axis_ratio, a.PA);
 ```
-  where axis_ratio is the column with axis ratio of the ellipses and PA is the 
-  column with the positional angles of them, and maj_ax is the column with major
-  axises of those ellipses.
+where axis_ratio is the column with axis ratio of the ellipses and PA is the 
+column with the positional angles of them, and maj_ax is the column with major
+axises of those ellipses.
   
 - The density estimation of your objects using pixelation depth of 25:
-  ```
+```
 my_db# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
 				q3c_pixarea(i,25) as area from 
 					(select q3c_ipixcenter(ra,dec, 25) as i, count(*) as c from
 						mytable group by i) as x;
 ```
-  returns the list of ra,dec of the Q3C pixel center, number of objects
-  within a given pixel, and pixel area. If you use that query you should
-  keep in mind that Q3C doesn't have the property of uniform pixel areas (as 
-  opposed to HEALPIX).
+returns the list of ra,dec of the Q3C pixel center, number of objects
+within a given pixel, and pixel area. If you use that query you should
+keep in mind that Q3C doesn't have the property of uniform pixel areas (as 
+opposed to HEALPIX).
 
 - Nearest neighbor queries: 
-
-  This query selects the only nearest neighbor for each row in your table. If there is no neighbor, 
-  the columns are filled with nulls.
-  ```
+This query selects the only nearest neighbor for each row in your table. If there is no neighbor, 
+the columns are filled with nulls.
+```
 my_db# SELECT  t.*, ss.* FROM mytable AS t,
        LEFT JOIN LATERAL (
                SELECT s.* 
@@ -207,11 +205,11 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t,
                     ASC LIMIT 1
                ) as ss ON true;
 ```
-  The idea is very simple for every row of your table mytable LATERAL() executes the "subquery" orders them by distance and limit by 1.
+The idea is very simple for every row of your table mytable LATERAL() executes the "subquery" orders them by distance and limit by 1.
   
-  If you want only the objects which do have the neighbors then the query will look like that
+If you want only the objects which do have the neighbors then the query will look like that
   
-  ```
+```
 my_db# SELECT  t.*, ss.* FROM mytable AS t,
        LATERAL (
                SELECT s.* 
@@ -227,8 +225,8 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t,
 
 -  Nearest neighbor 2 
 
-  This query selects the only nearest neighbor for each row in your table. If there are no neighbor, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
-  ```
+This query selects the only nearest neighbor for each row in your table. If there are no neighbor, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
+```
 my_db# WITH x AS (
       SELECT *, ( SELECT objid FROM sdssdr9.phototag AS p WHERE q3c_join(m.ra, m.dec, p.ra, p.dec, 1./3600)
                   ORDER BY q3c_dist(m.ra, m.dec, p.ra, p.dec) ASC LIMIT 1) AS match_objid  FROM mytable AS m 
