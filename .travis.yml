@@ -40,7 +40,6 @@ env:
     - PGVERSION=9.3
     - PGVERSION=9.2
     - PGVERSION=9.1
-    - PGVERSION=9.2 ARCHITECTURE_32BIT="True"
 
 addons:
   coverity_scan:
