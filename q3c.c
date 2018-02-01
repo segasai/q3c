@@ -376,10 +376,10 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_coord_t new_radius;
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-	q3c_coord_t pmra = PG_GETARG_FLOAT8(2); // ra_cen
-	q3c_coord_t pmdec = PG_GETARG_FLOAT8(3); // dec_cen
-	q3c_coord_t epoch = PG_GETARG_FLOAT8(4); // ra_cen
-	q3c_coord_t min_epoch = PG_GETARG_FLOAT8(5); // dec_cen
+	q3c_coord_t pmra = PG_GETARG_FLOAT8(2); // pmra
+	q3c_coord_t pmdec = PG_GETARG_FLOAT8(3); // pmdec
+	q3c_coord_t epoch = PG_GETARG_FLOAT8(4); // epoch
+	q3c_coord_t min_epoch = PG_GETARG_FLOAT8(5); // min_epoch
 	q3c_coord_t radius = PG_GETARG_FLOAT8(6); // error radius
 	int iteration = PG_GETARG_INT32(7); // iteration
 	

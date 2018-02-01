@@ -68,8 +68,7 @@ CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision,
 CREATE OR REPLACE FUNCTION q3c_nearby_pm_it(
        ra1 double precision, dec1 double precision, 
        pmra1 double precision, pmdec1 double precision, 
-       epoch1 double precision, 
-       ra2 double precision, dec2 double precision, 
+       epoch1 double precision,  
        minepoch2 double precision, flag integer)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_nearby_pm_it'
