@@ -65,6 +65,17 @@ CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision,
         AS 'MODULE_PATHNAME', 'pgq3c_nearby_it'
         LANGUAGE C IMMUTABLE STRICT COST 100;
 
+CREATE OR REPLACE FUNCTION q3c_nearby_pm_it(
+       ra1 double precision, dec1 double precision, 
+       pmra1 double precision, pmdec1 double precision, 
+       epoch1 double precision, 
+       ra2 double precision, dec2 double precision, 
+       minepoch2 double precision, flag integer)
+        RETURNS bigint
+        AS 'MODULE_PATHNAME', 'pgq3c_nearby_pm_it'
+        LANGUAGE C IMMUTABLE COST 100; 
+-- Importantly this is NOT as strict function because we accept nulls as pms
+
 CREATE OR REPLACE FUNCTION q3c_ellipse_nearby_it(double precision, double precision, 
 		double precision, double precision, double precision, integer)
         RETURNS bigint
@@ -137,6 +148,31 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
+
+
+
+CREATE OR REPLACE FUNCTION q3c_join_pm(
+       leftra double precision,  -- 1
+       leftdec double precision,  -- 2
+       leftpmra double precision, -- 3
+       leftpmdec double precision, -- 4
+       leftepoch  double precision, -- 5
+       rightra double precision, -- 6
+       rightdec double precision, -- 7
+       rightepoch double precision, -- 8
+       minrightepoch double precision, --9 
+       radius double precision -- 10
+        )
+
+        RETURNS boolean AS
+'
+SELECT (((q3c_ang2ipix($6,$7)>=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,0))) AND (q3c_ang2ipix($6,$7)<=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,1))))
+    OR ((q3c_ang2ipix($6,$7)>=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,2))) AND (q3c_ang2ipix($6,$7)<=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,3))))
+    OR ((q3c_ang2ipix($6,$7)>=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,4))) AND (q3c_ang2ipix($6,$7)<=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,5))))
+    OR ((q3c_ang2ipix($6,$7)>=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,6))) AND (q3c_ang2ipix($6,$7)<=(q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,7))))) 
+    AND q3c_sindist_pm($1,$2,$3,$4,$5,$6,$7,$8)<POW(SIN(RADIANS($5)/2),2)
+' LANGUAGE SQL IMMUTABLE;
+
 
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision,

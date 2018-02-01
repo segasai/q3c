@@ -53,8 +53,10 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS);
 Datum pgq3c_pixarea(PG_FUNCTION_ARGS);
 Datum pgq3c_dist(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS);
+Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS);
 Datum q3c_strquery(PG_FUNCTION_ARGS);
 Datum pgq3c_nearby_it(PG_FUNCTION_ARGS);
+Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
@@ -63,6 +65,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
+
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS)
@@ -230,6 +233,76 @@ Datum pgq3c_sindist(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(pgq3c_sindist_pm);
+Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
+	bool pm_enabled = true;
+	q3c_coord_t res;
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || 
+		PG_ARGISNULL(5) || PG_ARGISNULL(6))
+	{
+		elog(ERROR, " The ra,dec's are not allowed to be null");
+	}
+
+	ra1 = PG_GETARG_FLOAT8(0);
+	dec1 = PG_GETARG_FLOAT8(1);
+
+	if (!PG_ARGISNULL(2)) 
+	{
+	    pmra1 = PG_GETARG_FLOAT8(2);
+	} 
+	else
+	{
+		pm_enabled = false;
+	}
+	
+	if (!PG_ARGISNULL(3)) 
+	{
+	    pmdec1 = PG_GETARG_FLOAT8(3);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+	
+   	if (!PG_ARGISNULL(4))
+	{
+		epoch1 = PG_GETARG_FLOAT8(4);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+	
+	ra2 = PG_GETARG_FLOAT8(5);
+	dec2 = PG_GETARG_FLOAT8(6);
+   	if (!PG_ARGISNULL(7))
+	{
+		epoch2 = PG_GETARG_FLOAT8(7);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+		
+       
+
+    if (pm_enabled)
+	{
+		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1)*3600000;
+		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1)*3600000;
+	}
+	else
+	{
+		ra1_shift = ra1;
+		dec1_shift = dec1;
+	}
+	res = q3c_sindist(ra1_shift, dec1_shift, ra2, dec2);
+	PG_RETURN_FLOAT8(res);
+}
+
 
 PG_FUNCTION_INFO_V1(pgq3c_nearby_it);
 Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
@@ -284,6 +357,88 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
 
+	invocation=1;
+	PG_RETURN_INT64(ipix_array_buf[iteration]);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_nearby_pm_it);
+Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
+{
+	q3c_ipix_t ipix_array[8];
+	static q3c_ipix_t ipix_array_buf[8];
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static q3c_coord_t pmra_buf, pmdec_buf, epoch_buf, min_epoch_buf;
+	static int invocation;
+	int i;
+	extern struct q3c_prm hprm;
+	q3c_circle_region circle;
+	q3c_coord_t new_radius;
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	q3c_coord_t pmra = PG_GETARG_FLOAT8(2); // ra_cen
+	q3c_coord_t pmdec = PG_GETARG_FLOAT8(3); // dec_cen
+	q3c_coord_t epoch = PG_GETARG_FLOAT8(4); // ra_cen
+	q3c_coord_t min_epoch = PG_GETARG_FLOAT8(5); // dec_cen
+	q3c_coord_t radius = PG_GETARG_FLOAT8(6); // error radius
+	int iteration = PG_GETARG_INT32(7); // iteration
+	
+	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
+	{
+		elog(ERROR, "The values of ra,dec are infinites or NaNs");
+	}
+	if (!isfinite(pmra))
+	{
+	    pmra = 0;
+	}
+	if (!isfinite(pmdec))
+	  {
+	    pmdec=0;
+	  }
+	if (!isfinite(epoch+min_epoch))
+	  {
+	    pmra=0;
+	    pmdec=0;
+	    epoch=0;
+	    min_epoch=0;
+	  }
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+   	 * ipix_buf. Because if the program will be canceled or crashed
+	 * for some reason the invocation should be == 0
+ 	 */
+	}
+	else
+	{
+	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf) && (pmra == pmra_buf) && (pmdec == pmdec_buf) && (epoch == epoch_buf) && (min_epoch == min_epoch_buf))
+		{
+			PG_RETURN_INT64(ipix_array_buf[iteration]);
+		}
+	}
+	
+	new_radius = q3c_sqrt(pmra*pmra+pmdec*pmdec) * 3600000 * q3c_fabs(epoch-min_epoch) + radius;
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
+	circle.ra = ra_cen;
+	circle.dec = dec_cen;
+	circle.rad = new_radius;
+	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+
+	for(i = 0; i < 8; i++)
+	{
+		ipix_array_buf[i] = ipix_array[i];
+	}
+
+	ra_cen_buf = ra_cen;
+	dec_cen_buf = dec_cen;
+	radius_buf = radius;
+	epoch_buf = epoch;
+	min_epoch_buf = min_epoch;
+	pmra_buf = pmra;
+	pmdec_buf = pmdec;
 	invocation=1;
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
 }
