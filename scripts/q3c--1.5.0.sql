@@ -67,6 +67,16 @@ CREATE OR REPLACE FUNCTION q3c_sindist_pm(
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_sindist_pm'
         LANGUAGE C IMMUTABLE COST 100;
+
+-- Importantly this is not strict 
+CREATE OR REPLACE FUNCTION q3c_dist_pm(
+       ra1 double precision, dec1 double precision,
+       pmra1 double precision, pmdec1 double precision,
+       epoch1 double precision, ra2 double precision, dec2 double precision,
+       epoch2 double precision)
+        RETURNS double precision
+        AS 'MODULE_PATHNAME', 'pgq3c_dist_pm'
+        LANGUAGE C IMMUTABLE COST 100;
 -- Importantly this is not strict 
 
 CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision, 

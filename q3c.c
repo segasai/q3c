@@ -52,6 +52,7 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS);
 Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS);
 Datum pgq3c_pixarea(PG_FUNCTION_ARGS);
 Datum pgq3c_dist(PG_FUNCTION_ARGS);
+Datum pgq3c_dist_pm(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS);
 Datum q3c_strquery(PG_FUNCTION_ARGS);
@@ -299,6 +300,76 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 		dec1_shift = dec1;
 	}
 	res = q3c_sindist(ra1_shift, dec1_shift, ra2, dec2);
+	PG_RETURN_FLOAT8(res);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_dist_pm);
+Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
+	bool pm_enabled = true;
+	q3c_coord_t res;
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || 
+		PG_ARGISNULL(5) || PG_ARGISNULL(6))
+	{
+		elog(ERROR, "The RA, DEC columns are not allowed to be null");
+	}
+
+	ra1 = PG_GETARG_FLOAT8(0);
+	dec1 = PG_GETARG_FLOAT8(1);
+
+	if (!PG_ARGISNULL(2)) 
+	{
+	    pmra1 = PG_GETARG_FLOAT8(2);
+	} 
+	else
+	{
+		pm_enabled = false;
+	}
+	
+	if (!PG_ARGISNULL(3)) 
+	{
+	    pmdec1 = PG_GETARG_FLOAT8(3);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+	
+   	if (!PG_ARGISNULL(4))
+	{
+		epoch1 = PG_GETARG_FLOAT8(4);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+	
+	ra2 = PG_GETARG_FLOAT8(5);
+	dec2 = PG_GETARG_FLOAT8(6);
+   	if (!PG_ARGISNULL(7))
+	{
+		epoch2 = PG_GETARG_FLOAT8(7);
+	}
+	else
+	{
+		pm_enabled = false;
+	}
+       
+
+    if (pm_enabled)
+	{
+		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / 3600000;
+		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
+	}
+	else
+	{
+		ra1_shift = ra1;
+		dec1_shift = dec1;
+	}
+	res = q3c_dist(ra1_shift, dec1_shift, ra2, dec2);
 	PG_RETURN_FLOAT8(res);
 }
 
