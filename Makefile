@@ -37,16 +37,27 @@ test: gen_data all
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
 	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
+	psql q3c_test -c "CREATE TABLE test_pm0 (ra double precision, dec double precision, pmra real, pmdec real, epoch real)"
+	psql q3c_test -c "CREATE TABLE test_pm1 (ra double precision, dec double precision, pmra real, pmdec real, epoch real)"
 	psql q3c_test -c "CREATE TABLE test_small (ra double precision, dec double precision)"
 	./gen_data 1 1000000 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
 	./gen_data 2 1000000 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
 	./gen_data 3 100000 | psql q3c_test -c "COPY test_small FROM STDIN WITH DELIMITER ' '"
+
+	./gen_data 4 1000000 --withpm --pmscale=0 --randomepoch | psql q3c_test -c "COPY test_pm0 FROM STDIN WITH DELIMITER ' '"
+	./gen_data 5 1000000 --withpm --pmscale=1000 --epoch=2015 | psql q3c_test -c "COPY test_pm1 FROM STDIN WITH DELIMITER ' '"
+
 	psql q3c_test -c 'create extension q3c'
-	psql q3c_test -c 'CREATE INDEX q3c_idx ON test (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'CREATE INDEX q3c_idx1 ON test1 (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'CREATE INdex ON test_pm0 (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'CREATE INDEX on test_pm1 (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'CREATE INDEX q3c_idx ON test (q3c_ang2ipix(ra,dec))'
+
 	psql q3c_test -c 'CREATE INDEX q3c_idx_small ON test_small (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'ANALYZE test'
 	psql q3c_test -c 'ANALYZE test1'
+	psql q3c_test -c 'ANALYZE test_pm0'
+	psql q3c_test -c 'ANALYZE test_pm1'
 	psql q3c_test -c 'ANALYZE test_small'
 	mkdir -p results
 	cat sql/ang2ipix.sql | psql q3c_test > results/ang2ipix.out
@@ -59,6 +70,10 @@ test: gen_data all
 	diff results/ellipse.out expected/ellipse.expected
 	cat sql/join.sql | psql q3c_test > results/join.out
 	diff results/join.out expected/join.expected
+	cat sql/join_pm1.sql | psql q3c_test > results/join_pm1.out
+	diff results/join_pm1.out expected/join_pm1.expected
+	cat sql/join_pm2.sql | psql q3c_test > results/join_pm2.out
+	diff results/join_pm2.out expected/join_pm2.expected
 	cat sql/poly.sql | psql q3c_test > results/poly.out
 	diff results/poly.out expected/poly.expected
 	cat sql/version.sql | psql q3c_test > results/version.out

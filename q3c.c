@@ -286,13 +286,12 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-		
        
 
     if (pm_enabled)
 	{
-		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1)*3600000;
-		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1)*3600000;
+		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / 3600000;
+		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1)/ 3600000;
 	}
 	else
 	{
@@ -368,7 +367,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_ipix_t ipix_array[8];
 	static q3c_ipix_t ipix_array_buf[8];
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-	static q3c_coord_t pmra_buf, pmdec_buf, epoch_buf, min_epoch_buf;
+	static q3c_coord_t pmra_buf, pmdec_buf, epoch_buf, max_epoch_delta_buf;
 	static int invocation;
 	int i;
 	extern struct q3c_prm hprm;
@@ -379,7 +378,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_coord_t pmra = PG_GETARG_FLOAT8(2); // pmra
 	q3c_coord_t pmdec = PG_GETARG_FLOAT8(3); // pmdec
 	q3c_coord_t epoch = PG_GETARG_FLOAT8(4); // epoch
-	q3c_coord_t min_epoch = PG_GETARG_FLOAT8(5); // min_epoch
+	q3c_coord_t max_epoch_delta = PG_GETARG_FLOAT8(5); 
 	q3c_coord_t radius = PG_GETARG_FLOAT8(6); // error radius
 	int iteration = PG_GETARG_INT32(7); // iteration
 	
@@ -395,12 +394,12 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	  {
 	    pmdec=0;
 	  }
-	if (!isfinite(epoch+min_epoch))
+	if (!isfinite(epoch + max_epoch_delta))
 	  {
 	    pmra=0;
 	    pmdec=0;
 	    epoch=0;
-	    min_epoch=0;
+	    max_epoch_delta=0;
 	  }
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
@@ -412,19 +411,21 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf) && (pmra == pmra_buf) && (pmdec == pmdec_buf) && (epoch == epoch_buf) && (min_epoch == min_epoch_buf))
+	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf) && (pmra == pmra_buf) && (pmdec == pmdec_buf) && (epoch == epoch_buf) && (max_epoch_delta == max_epoch_delta_buf))
 		{
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 		}
 	}
 	
-	new_radius = q3c_sqrt(pmra*pmra+pmdec*pmdec) * 3600000 * q3c_fabs(epoch-min_epoch) + radius;
+	new_radius = q3c_sqrt(pmra * pmra + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
 
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = new_radius;
+
+
 	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
 
 	for(i = 0; i < 8; i++)
@@ -436,7 +437,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
 	epoch_buf = epoch;
-	min_epoch_buf = min_epoch;
+	max_epoch_delta_buf = max_epoch_delta;
 	pmra_buf = pmra;
 	pmdec_buf = pmdec;
 	invocation=1;
