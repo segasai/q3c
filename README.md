@@ -3,7 +3,7 @@
 
 Author: Sergey Koposov, Carnegie Mellon University 
 
-Copyright (c) 2004-2017 Sergey Koposov
+Copyright (c) 2004-2018 Sergey Koposov
 
 Email: skoposov _AT_ cmu _DOT_ edu
 
