@@ -40,33 +40,64 @@ int64 get_rand()
 }
 
 /* Run as 
- * $ ./gen_data 1
- * The number argument of the program is the starting point for the 'random'
- * sequence of numbers. The sequence was based on Knuth's theoreme A (from 
- * the his second book)
+ * $ ./gen_data 1 100
+ * The first argument of the program is the random seed for the pseudorandom
+ * sequence.
+ * The second number is the number of objects outputted
+ * Additional flags 
+ * --withpm  output pms as well
+ * --pmscale= maximum allowed pm in mas/yr
+ * --epoch= epoch of coordinates
+ * --randomepoch assign random epoch
+ * 
+ */ 
+/* The random number sequence was based on Knuth's theorem A (from 
+ * his second book)
  */
 int main(int argc, char *argv[])
 {
 	const int nrabins = 36000; 
 	const int ndecbins = 18000;
 	const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
-	double corrections[ndecbins], total = 0;
+	double corrections[ndecbins], total = 0, pmra, pmdec, pmscale=1;
 	int npoints; 
-	int i;
+	bool random_epoch=false;
+	double epoch, cur_epoch;
+	int i, extraarg;
 	char parsing_error = 1;
-	
+	bool withpm = false;
 	// first argument is the seed and then number of points to generate
-	if (argc == 3)
+	if (argc >= 3)
 	{
 		rand_state = atoi(argv[1]);
 		get_rand(); // advance one step
 		npoints = atoi(argv[2]);
 		parsing_error = 0;
+		for (extraarg=0; extraarg<(argc-3);extraarg++)
+		{
+  			char *curarg = argv[3+extraarg];
+			if (strncmp(curarg,"--randomepoch", 13)==0) {random_epoch=true;}
+			if (strncmp(curarg,"--withpm", 9)==0) {withpm=true;}
+			if (strncmp(curarg,"--pmscale=", 10)==0)
+			{
+				if (sscanf(curarg, "--pmscale=%lf", &pmscale)==0)
+				{
+				    fprintf(stderr, "Formatting error of pmscale\n");
+				    exit(1);
+                }
+			}
+
+			if (strncmp(curarg,"--epoch=",8)==0)
+			{
+				sscanf(curarg, "--epoch=%lf", &epoch);
+			}
+		}
 	}
+
 	if (parsing_error)
 	{
 		fprintf(stderr, "Wrong arguments!\n"
-						"MUST be ./gen_data [RANDOM SEED] [NPOINTS]");
+						"MUST be ./gen_data [RANDOM SEED] [NPOINTS] [PROPERMOTIONSCALE(optional)]");
 		exit(1);
 	}
 
@@ -83,11 +114,33 @@ int main(int argc, char *argv[])
 	{
 		int64 ra = (int64)(get_rand() * 1./m * nrabins);
 		int64 dec = (int64)(get_rand() * 1./m * ndecbins);
+		if (withpm )
+		{
+			pmra = ((get_rand() * 1./m)*2 -1) * pmscale;
+ 			pmdec = ((get_rand() * 1./m)*2 -1) * pmscale;		
+			if (random_epoch)
+			{
+ 				cur_epoch = ((get_rand() * 1./m) ) * 20 + 1980;					
+			}
+			else
+			{
+				cur_epoch = epoch;
+			}
+		}
 		
 		if (get_rand() < (corrections[dec]*m))
 		{
-			printf("%f %f\n", ra * (360. / nrabins),
+			if (withpm) 
+			{
+				printf("%f %f %f %f %f\n", ra * (360. / nrabins),
+				-90 + dec * (180. / ndecbins), pmra, pmdec, cur_epoch);
+
+			}
+			else 
+			{
+				printf("%f %f\n", ra * (360. / nrabins),
 				-90 + dec * (180. / ndecbins));
+			}
 			npointsleft--;
 		}
 	}

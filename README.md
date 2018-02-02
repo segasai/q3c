@@ -65,9 +65,21 @@ The functions installed by Q3C are:
 - q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two points
 (ra1,dec1) and (ra2,dec2)
 
+- q3c_dist_pm(ra1, dec1, pmra1, pmdec1, epoch1, ra2, dec2, epoch2) -- returns the distance in degrees between  two points (ra1,dec1) and (ra2,dec2) at
+the epoch epoch2 while taking the proper motion into account
+into account the proper motion 
+
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It should be used when 
   the index on q3c_ang2ipix(ra2, dec2) is created. See below for examples.
+
+- q3c_join_pm(ra1, dec1, pmra1, pmdec1, epoch1, 
+  		   ra2, dec2, epoch2, max_delta_epoch, radius)  -- returns true if (ra1, dec1)
+  is within radius spherical distance of (ra2, dec2). It takes into account 
+  the proper motion of the source pmra1, pmdec1 (in mas/yr). 
+  epoch1, and epoch2 are the epochs of source coordinates in years.
+  max_delta_epoch is the maximum epoch difference possible between two
+  tables. 
 
 - q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec1) have to be within an ellipse with
