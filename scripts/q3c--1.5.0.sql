@@ -77,8 +77,7 @@ CREATE OR REPLACE FUNCTION q3c_nearby_it(double precision, double precision,
 
 CREATE OR REPLACE FUNCTION q3c_nearby_pm_it(
        ra1 double precision, dec1 double precision, 
-       pmra1 double precision, pmdec1 double precision, 
-       epoch1 double precision, 
+       pmra1 double precision, pmdec1 double precision,  
        maxepoch_delta double precision, rad double precision, flag integer)
         RETURNS bigint
         AS 'MODULE_PATHNAME', 'pgq3c_nearby_pm_it'
@@ -176,20 +175,20 @@ CREATE OR REPLACE FUNCTION q3c_join_pm(
         RETURNS boolean AS
 '
 SELECT (
-       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,0)) AND
-       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,1)))
+       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,0)) AND
+       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,1)))
     OR 
-       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,2)) AND
-       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,3)))
+       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,2)) AND
+       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,3)))
     OR 
-       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,4)) AND
-       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,5)))
+       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,4)) AND
+       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,5)))
     OR 
-       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,6)) AND
-       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$5,$9,$10,7)))) 
+       ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,6)) AND
+       (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,7)))) 
     AND q3c_sindist_pm($1,$2,$3,$4,$5,$6,$7,$8)<POW(SIN(RADIANS($10)/2),2)
 ' LANGUAGE SQL IMMUTABLE;
-
+-- not strict
 
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision,

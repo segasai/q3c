@@ -86,7 +86,6 @@ int main(int argc, char *argv[])
 				    exit(1);
                 }
 			}
-            fprintf(stderr, "%s %d %lf\n", curarg, strncmp(curarg,"--pmscale=", 10), pmscale);
 
 			if (strncmp(curarg,"--epoch=",8)==0)
 			{
