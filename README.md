@@ -205,7 +205,7 @@ opposed to HEALPIX).
 This query selects the only nearest neighbor for each row in your table. If there is no neighbor, 
 the columns are filled with nulls.
 ```
-my_db# SELECT  t.*, ss.* FROM mytable AS t,
+my_db# SELECT  t.*, ss.* FROM mytable AS t
        LEFT JOIN LATERAL (
                SELECT s.* 
                     FROM 
