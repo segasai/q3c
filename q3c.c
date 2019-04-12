@@ -200,7 +200,7 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	}
 	if (depth > 30)
 	{
-		elog(ERROR, "Invalid depth. It should be less than 30.");
+		elog(ERROR, "Invalid depth. It should be less than 31.");
 	}
 
 	res = q3c_pixarea(&hprm, ipix, depth);
