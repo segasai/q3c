@@ -1,5 +1,28 @@
 \echo Use "CREATE EXTENSION pair" to load this file. \quit
 
+create type q3c_type as (ra double precision, dec double precision,	
+       ra1 double precision, dec1 double precision);
+
+
+CREATE OR REPLACE FUNCTION pgq3c_oper(double precision, q3c_type)
+        RETURNS bool
+        AS 'MODULE_PATHNAME', 'pgq3c_oper'
+        LANGUAGE C STRICT IMMUTABLE COST 1000000000;
+
+CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
+        RETURNS float8
+        AS 'MODULE_PATHNAME', 'pgq3c_sel'
+        LANGUAGE C IMMUTABLE STRICT ;
+ 
+
+ -- distance operator with correct selectivity
+CREATE OPERATOR ==<<>>== (                                                          LEFTARG = double precision,                                                                RIGHTARG = q3c_type,
+   PROCEDURE = pgq3c_oper,
+   RESTRICT = pgq3c_sel
+--   JOIN = pgq3c_seljoin
+   );
+
+
 
 CREATE OR REPLACE FUNCTION q3c_version()
         RETURNS cstring
@@ -153,8 +176,10 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
+ 
 CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
 				    rightra real, rightdec real,
 				    radius double precision)
@@ -165,6 +190,8 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
+
 ' LANGUAGE SQL IMMUTABLE;
 
 
@@ -321,7 +348,6 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
 ($1>=q3c_radial_query_it($4,$5,$6,98,0) AND $1<q3c_radial_query_it($4,$5,$6,99,0)) 
 ) AND 
 q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
-
 ' LANGUAGE SQL IMMUTABLE;
 
 
@@ -431,6 +457,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
 ) AND
 q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_radial_query(
@@ -540,6 +567,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
 ) AND
 q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_query(

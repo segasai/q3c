@@ -36,6 +36,9 @@
 #if PG_VERSION_NUM >= 90300
 #include "access/tupmacs.h"
 #endif
+#include "nodes/relation.h"
+#include "utils/selfuncs.h"
+
 
 
 /* For PostgreSQL versions >= 8.2 */
@@ -45,6 +48,8 @@ PG_MODULE_MAGIC;
 /* End of Postgres stuff */
 
 #include "common.h"
+
+extern Node *estimate_expression_value(PlannerInfo *root, Node *node);
 
 /* Postgres functions */
 Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS);
@@ -66,6 +71,49 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
+Datum pgq3c_sel(PG_FUNCTION_ARGS);
+Datum pgq3c_oper(PG_FUNCTION_ARGS);
+
+
+PG_FUNCTION_INFO_V1(pgq3c_oper);
+Datum pgq3c_oper(PG_FUNCTION_ARGS)
+{
+  PG_RETURN_BOOL(true);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_sel);
+Datum pgq3c_sel(PG_FUNCTION_ARGS)
+{
+  PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
+  List   *args = (List *) PG_GETARG_POINTER(2);
+  Node   *left;
+  Node *other; 
+  VariableStatData vardata;
+  Datum val; 
+  bool isnull;
+  int varRelid = PG_GETARG_INT32(3);
+  double rad;
+  double ratio;
+
+  left = (Node *) linitial(args);
+  examine_variable(root, left, varRelid, &vardata);
+  other = estimate_expression_value(root, vardata.var);
+  val= ((Const *) other)->constvalue;
+  isnull= ((Const *) other)->constisnull;
+  if (~isnull)
+    {
+      rad=DatumGetFloat8(val);
+    }
+  ratio = 3*rad*rad/40000.;
+  ratio = (ratio<0)?0:ratio;
+  ratio = (ratio>1)?1:ratio;
+  //elog(WARNING, "HERE0.... %e", ratio);
+
+  PG_RETURN_FLOAT8(ratio);
+}
+
+
 
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
