@@ -1,14 +1,18 @@
 \echo Use "CREATE EXTENSION pair" to load this file. \quit
 
+
+-- A dummy type used in the selectivity operator
 create type q3c_type as (ra double precision, dec double precision,	
        ra1 double precision, dec1 double precision);
 
 
+-- A dummy operator function (always returns true)
 CREATE OR REPLACE FUNCTION pgq3c_oper(double precision, q3c_type)
         RETURNS bool
         AS 'MODULE_PATHNAME', 'pgq3c_oper'
         LANGUAGE C STRICT IMMUTABLE COST 1000000000;
 
+-- A selectivity function for the q3c operator
 CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
         RETURNS float8
         AS 'MODULE_PATHNAME', 'pgq3c_sel'
@@ -16,11 +20,11 @@ CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
  
 
  -- distance operator with correct selectivity
-CREATE OPERATOR ==<<>>== (                                                          LEFTARG = double precision,                                                                RIGHTARG = q3c_type,
-   PROCEDURE = pgq3c_oper,
-   RESTRICT = pgq3c_sel
---   JOIN = pgq3c_seljoin
-   );
+CREATE OPERATOR ==<<>>== (
+        LEFTARG = double precision,                                                    RIGHTARG = q3c_type,
+        PROCEDURE = pgq3c_oper,
+        RESTRICT = pgq3c_sel
+);
 
 
 
