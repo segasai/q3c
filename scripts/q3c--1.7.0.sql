@@ -353,7 +353,6 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
 ) AND
 q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_radial_query(
@@ -463,7 +462,6 @@ CREATE OR REPLACE FUNCTION q3c_radial_query(
 (q3c_ang2ipix($1,$2)>=q3c_radial_query_it($3,$4,$5,98,0) AND q3c_ang2ipix($1,$2)<q3c_radial_query_it($3,$4,$5,99,0)) 
 ) AND
 q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_query(
@@ -575,7 +573,6 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_query(
 (q3c_ang2ipix($1,$2)>=q3c_ellipse_query_it($3,$4,$5,$6,$7,98,0) AND q3c_ang2ipix($1,$2)<q3c_ellipse_query_it($3,$4,$5,$6,$7,99,0)) 
 ) AND 
 q3c_in_ellipse($1,$2,$3,$4,$5,$6,$7)
-AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)                    
 ' LANGUAGE SQL IMMUTABLE;
 
 
