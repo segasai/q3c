@@ -51,7 +51,8 @@ CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
 CREATE OPERATOR ==<<>>== (
         LEFTARG = double precision,                                                    RIGHTARG = q3c_type,
         PROCEDURE = pgq3c_oper,
-        RESTRICT = pgq3c_sel
+        RESTRICT = pgq3c_sel,
+	JOIN = q3c_seljoin
 );
 
 DROP FUNCTION q3c_radial_query(bigint,
