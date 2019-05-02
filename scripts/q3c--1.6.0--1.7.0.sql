@@ -9,7 +9,7 @@ create type q3c_type as (ra double precision, dec double precision,
 CREATE OR REPLACE FUNCTION pgq3c_oper(double precision, q3c_type)
         RETURNS bool
         AS 'MODULE_PATHNAME', 'pgq3c_oper'
-        LANGUAGE C STRICT IMMUTABLE COST 1000000000;
+        LANGUAGE C STRICT IMMUTABLE COST 1000;
  
 -- A selectivity function for the q3c operator
 CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
