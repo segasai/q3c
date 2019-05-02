@@ -7,19 +7,19 @@ create type q3c_type as (ra double precision, dec double precision,
 
 
 -- A dummy operator function (always returns true)
-CREATE OR REPLACE FUNCTION pgq3c_oper(double precision, q3c_type)
+CREATE OR REPLACE FUNCTION q3c_seloper(double precision, q3c_type)
         RETURNS bool
-        AS 'MODULE_PATHNAME', 'pgq3c_oper'
+        AS 'MODULE_PATHNAME', 'pgq3c_seloper'
         LANGUAGE C STRICT IMMUTABLE COST 1000;
 
 -- A selectivity function for the q3c operator
-CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
+CREATE OR REPLACE FUNCTION q3c_sel(internal, oid, internal, int4)
         RETURNS float8
         AS 'MODULE_PATHNAME', 'pgq3c_sel'
         LANGUAGE C IMMUTABLE STRICT ;
  
 -- A selectivity function for the q3c operator
-CREATE OR REPLACE FUNCTION pgq3c_seljoin(internal, oid, internal, int2, internal)
+CREATE OR REPLACE FUNCTION q3c_seljoin(internal, oid, internal, int2, internal)
         RETURNS float8
         AS 'MODULE_PATHNAME', 'pgq3c_seljoin'
         LANGUAGE C IMMUTABLE STRICT ;
