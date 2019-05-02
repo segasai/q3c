@@ -18,12 +18,19 @@ CREATE OR REPLACE FUNCTION pgq3c_sel(internal, oid, internal, int4)
         AS 'MODULE_PATHNAME', 'pgq3c_sel'
         LANGUAGE C IMMUTABLE STRICT ;
  
+-- A selectivity function for the q3c operator
+CREATE OR REPLACE FUNCTION pgq3c_seljoin(internal, oid, internal, int2, internal)
+        RETURNS float8
+        AS 'MODULE_PATHNAME', 'pgq3c_seljoin'
+        LANGUAGE C IMMUTABLE STRICT ;
+ 
 
  -- distance operator with correct selectivity
 CREATE OPERATOR ==<<>>== (
         LEFTARG = double precision,                                                    RIGHTARG = q3c_type,
         PROCEDURE = pgq3c_oper,
-        RESTRICT = pgq3c_sel
+        RESTRICT = pgq3c_sel,
+	JOIN = pgq3c_seljoin
 );
 
 

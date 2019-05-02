@@ -72,6 +72,7 @@ Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
+Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_oper(PG_FUNCTION_ARGS);
 
 
@@ -122,6 +123,48 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	CLAMP_PROBABILITY(ratio);
 
 	//elog(WARNING, "HERE0.... %e", ratio);
+	
+	PG_RETURN_FLOAT8(ratio);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_seljoin);
+Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
+{
+	PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
+	List   *args = (List *) PG_GETARG_POINTER(2);
+	int varRelid = 0;
+	/* Because there is no varrelid in the join selectivity call
+         * I just set it to zero */
+	Node   *left;
+	Node *other; 
+	VariableStatData vardata;
+	Datum radDatum; 
+	bool isnull;
+	double rad;
+	double ratio;
+	
+	/* this needs more protections against crazy inputs */
+	if (list_length(args) != 2) { elog(ERROR, "Wrong inputs to selectivity function");} 
+	left = (Node *) linitial(args);
+
+	examine_variable(root, left, varRelid, &vardata);
+	other = estimate_expression_value(root, vardata.var);
+	radDatum = ((Const *) other)->constvalue;
+	isnull = ((Const *) other)->constisnull;
+	/* We shouldn't be really getting null inputs here */ 
+	if (!isnull)
+	{
+		rad = DatumGetFloat8(radDatum);
+	}
+	else
+	{
+		rad = 0;
+	}
+	ratio = 3.14 * rad * rad/41252. ; /* pi*r^2/whole_sky_area */
+
+	/* clamp at 0, 1*/
+	CLAMP_PROBABILITY(ratio);
 	
 	PG_RETURN_FLOAT8(ratio);
 }
