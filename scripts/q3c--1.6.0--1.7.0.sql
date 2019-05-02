@@ -28,9 +28,9 @@ CREATE OR REPLACE FUNCTION q3c_seljoin(internal, oid, internal, int2, internal)
 CREATE OPERATOR ==<<>>== (
         LEFTARG = double precision, 
         RIGHTARG = q3c_type,
-        PROCEDURE = pgq3c_oper,
-        RESTRICT = pgq3c_sel,
-        JOIN = pgq3c_seljoin
+        PROCEDURE = q3c_seloper,
+        RESTRICT = q3c_sel,
+        JOIN = q3c_seljoin
 );
 
  

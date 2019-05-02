@@ -73,12 +73,12 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
-Datum pgq3c_oper(PG_FUNCTION_ARGS);
+Datum pgq3c_seloper(PG_FUNCTION_ARGS);
 
 
 /* Dummy function that implements the selectivity operator */
-PG_FUNCTION_INFO_V1(pgq3c_oper);
-Datum pgq3c_oper(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(pgq3c_seloper);
+Datum pgq3c_seloper(PG_FUNCTION_ARGS)
 {
 	PG_RETURN_BOOL(true);
 }
