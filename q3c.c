@@ -169,13 +169,15 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(ratio);
 }
 
+static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert);
+
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS)
 {
-	char VERSION_MAX_BYTES = 100; 
+	char VERSION_MAX_BYTES = 100;
 	char *buf = palloc(VERSION_MAX_BYTES);
-	q3c_get_version(buf, VERSION_MAX_BYTES); 
+	q3c_get_version(buf, VERSION_MAX_BYTES);
 	PG_RETURN_CSTRING(buf);
 }
 
@@ -343,7 +345,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
 	bool pm_enabled = true;
 	q3c_coord_t res;
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || 
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
 		PG_ARGISNULL(5) || PG_ARGISNULL(6))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
@@ -352,16 +354,16 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	ra1 = PG_GETARG_FLOAT8(0);
 	dec1 = PG_GETARG_FLOAT8(1);
 
-	if (!PG_ARGISNULL(2)) 
+	if (!PG_ARGISNULL(2))
 	{
 	    pmra1 = PG_GETARG_FLOAT8(2);
-	} 
+	}
 	else
 	{
 		pm_enabled = false;
 	}
-	
-	if (!PG_ARGISNULL(3)) 
+
+	if (!PG_ARGISNULL(3))
 	{
 	    pmdec1 = PG_GETARG_FLOAT8(3);
 	}
@@ -369,7 +371,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-	
+
    	if (!PG_ARGISNULL(4))
 	{
 		epoch1 = PG_GETARG_FLOAT8(4);
@@ -378,7 +380,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-	
+
 	ra2 = PG_GETARG_FLOAT8(5);
 	dec2 = PG_GETARG_FLOAT8(6);
    	if (!PG_ARGISNULL(7))
@@ -389,7 +391,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-       
+
 
     if (pm_enabled)
 	{
@@ -413,7 +415,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
 	bool pm_enabled = true;
 	q3c_coord_t res;
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || 
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
 		PG_ARGISNULL(5) || PG_ARGISNULL(6))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
@@ -422,16 +424,16 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	ra1 = PG_GETARG_FLOAT8(0);
 	dec1 = PG_GETARG_FLOAT8(1);
 
-	if (!PG_ARGISNULL(2)) 
+	if (!PG_ARGISNULL(2))
 	{
 	    pmra1 = PG_GETARG_FLOAT8(2);
-	} 
+	}
 	else
 	{
 		pm_enabled = false;
 	}
-	
-	if (!PG_ARGISNULL(3)) 
+
+	if (!PG_ARGISNULL(3))
 	{
 	    pmdec1 = PG_GETARG_FLOAT8(3);
 	}
@@ -439,7 +441,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-	
+
    	if (!PG_ARGISNULL(4))
 	{
 		epoch1 = PG_GETARG_FLOAT8(4);
@@ -448,7 +450,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-	
+
 	ra2 = PG_GETARG_FLOAT8(5);
 	dec2 = PG_GETARG_FLOAT8(6);
    	if (!PG_ARGISNULL(7))
@@ -459,7 +461,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	{
 		pm_enabled = false;
 	}
-       
+
 
     if (pm_enabled)
 	{
@@ -491,7 +493,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
 	int iteration = PG_GETARG_INT32(3); // iteration
-	
+
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
 	{
 		elog(ERROR, "The values of ra,dec are infinites or NaNs");
@@ -549,7 +551,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_coord_t ra_cen, dec_cen, pmra=0, pmdec=0;
 	q3c_coord_t max_epoch_delta=0, radius=0 ;
 	bool pm_enabled = true;
-	int iteration; 
+	int iteration;
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(6))
 	  {
 	    elog(ERROR, "Right Ascensions and raddii must be not null");
@@ -558,7 +560,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	if (!PG_ARGISNULL(2))
-	{	
+	{
 		pmra = PG_GETARG_FLOAT8(2); // pmra
 	}
 	else
@@ -566,7 +568,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		pm_enabled = false;
 	}
 	if (!PG_ARGISNULL(3))
-	{	
+	{
 		pmdec = PG_GETARG_FLOAT8(3); // pmdec
 	}
 	else
@@ -575,8 +577,8 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	}
 
 	if (!PG_ARGISNULL(4))
-	{	
-		max_epoch_delta = PG_GETARG_FLOAT8(4); 
+	{
+		max_epoch_delta = PG_GETARG_FLOAT8(4);
 	}
 	else
 	{
@@ -584,14 +586,14 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	}
 
 	radius = PG_GETARG_FLOAT8(5); // error radius
-	
+
 	iteration = PG_GETARG_INT32(6); // iteration
-	
+
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
 	{
 		elog(ERROR, "The values of ra,dec are infinites or NaNs");
 	}
-	if ((!pm_enabled) ||  (!isfinite(pmra)) || (!isfinite(pmdec)) || 
+	if ((!pm_enabled) ||  (!isfinite(pmra)) || (!isfinite(pmdec)) ||
 		(!isfinite(max_epoch_delta)) )
 	  {
 	    pmra =  0;
@@ -612,14 +614,14 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && 
+	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
 	  	(radius == radius_buf) && (pmra == pmra_buf) &&
 		(pmdec == pmdec_buf) && (max_epoch_delta == max_epoch_delta_buf))
 		{
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 		}
 	}
-	
+
 	new_radius = q3c_sqrt(pmra * pmra + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
 
 	ra_cen = UNWRAP_RA(ra_cen);
@@ -742,7 +744,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	static int invocation;
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90) 
+	if (q3c_fabs(dec_cen)>90)
 	{
 		elog(ERROR, "The absolute value of declination > 90!");
 	}
@@ -814,7 +816,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	static int invocation;
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90) 
+	if (q3c_fabs(dec_cen)>90)
 	{
 		elog(ERROR, "The absolute value of declination > 90!");
 	}
@@ -862,222 +864,21 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 }
 
 
-
-PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
-Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
+static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert)
 {
-	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0);
-	extern struct q3c_prm hprm;
-
-	int iteration = PG_GETARG_INT32(1); /* iteration */
-	int full_flag = PG_GETARG_INT32(2); /* full_flag */
-	char too_large = 0;
-	/* 1 means full, 0 means partial*/
+	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
+	Oid element_type=FLOAT8OID;
+	static int invocation ;
 	int16 typlen;
 	bool typbyval;
 	char typalign;
 	int i;
-	int poly_nitems;
-	Oid element_type;
-	char *p;
-#if PG_VERSION_NUM >= 80300
-	bits8 *bitmap;
-	int bitmask;
-#endif
-
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
-	 * So we should have the array with the size twice bigger
-	 */
-	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
-	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
-	static q3c_poly qp;
-
-	static q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX],
-		x[Q3C_MAX_N_POLY_VERTEX], y[Q3C_MAX_N_POLY_VERTEX],
-		ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
-
-	static int invocation;
-
-	if (invocation == 0)
-	/* If this is the first invocation of the function */
-	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
-	}
-	else
-	{
-		/* TODO !!!!!!!!!! */
-		/* bad realization currently .... */
-		/* Probably I should check that the polygon is the same ... */
-		if (iteration > 0)
-		{
-			if (full_flag)
-			{
-				PG_RETURN_INT64(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT64(partials[iteration]);
-			}
-		}
-	}
-
-	poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-	element_type = FLOAT8OID;
-
-	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
-
-/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
- function deconstruct_array*/
-
-	p = ARR_DATA_PTR(poly_arr);
-
-	if (poly_nitems % 2 != 0)
-	{
-		elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
-	}
-	else if (poly_nitems <=4)
-	{
-		elog(ERROR, "Invalid polygon! Less then 4 vertexes");
-	}
-	else if (poly_nitems > 2 * Q3C_MAX_N_POLY_VERTEX)
-	{
-		elog(ERROR, "Q3C does not support polygons with number of vertices > %d", Q3C_MAX_N_POLY_VERTEX);
-	}
-
-	poly_nitems /= 2;
-	qp.n = poly_nitems;
-#if PG_VERSION_NUM >= 80300
-
-	bitmap = ARR_NULLBITMAP(poly_arr);
-	bitmask=1;
-#endif
-
-	for (i = 0; i < poly_nitems; i++)
-	{
-#if PG_VERSION_NUM >= 80300
-		if (bitmap && (*bitmap & bitmask) == 0)
-		{
-			ereport(ERROR,
-					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("null array element not allowed in this context")));
-		}
-		ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align_nominal(p, typalign);
-		if (bitmap)
-		{
-			bitmask <<= 1;
-			if (bitmask == 0x100)
-			{
-				bitmap++;
-				bitmask = 1;
-			}
-		}
-		if (bitmap && (*bitmap & bitmask) == 0)
-		{
-			ereport(ERROR,
-					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("null array element not allowed in this context")));
-		}
-
-		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align_nominal(p, typalign);
-		if (bitmap)
-		{
-			bitmask <<= 1;
-			if (bitmask == 0x100)
-			{
-				bitmap++;
-				bitmask = 1;
-			}
-		}
-#else
-		ra[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align(p, typalign);
-		dec[i] = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align(p, typalign);
-#endif
-	}
-
-	qp.ra = ra;
-	qp.dec = dec;
-	qp.x = x;
-	qp.y = y;
-	qp.ax = ax;
-	qp.ay = ay;
-
-	/* fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]); */
-	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
-	if (too_large)
-	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-	}
-	invocation = 1;
-
-	if (full_flag)
-	{
-		PG_RETURN_INT64(fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT64(partials[iteration]);
-	}
-}
-
-
-PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
-Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
-{
-
-	q3c_coord_t ra = PG_GETARG_FLOAT8(0); // ra_cen
-	q3c_coord_t dec = PG_GETARG_FLOAT8(1); // dec_cen
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2); // ra_cen
-	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3); // dec_cen
-	q3c_coord_t radius = PG_GETARG_FLOAT8(4); // error radius
-	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5); // axis_ratio
-	q3c_coord_t PA = PG_GETARG_FLOAT8(6); // PA
-	q3c_coord_t e = q3c_sqrt(1 - axis_ratio * axis_ratio);
-	bool result = q3c_in_ellipse(ra_cen, dec_cen, ra,dec, radius, e, PA);
-	PG_RETURN_BOOL(result);
-}
-
-
-PG_FUNCTION_INFO_V1(pgq3c_in_poly);
-Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
-{
-	extern struct q3c_prm hprm;
-
-	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
-
-	static int invocation ;
-	char too_large = 0;
-	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-	int16 typlen;
-	bool typbyval;
-	char typalign;
-
-	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-	int n, i;
 	q3c_coord_t ra_cur, dec_cur;
-	Oid element_type=FLOAT8OID;
 	char *p;
-	bool result;
-
-#if PG_VERSION_NUM >= 80300
-	bits8 *bitmap;
-	int bitmask;
-#endif
-
-
+	#if PG_VERSION_NUM >= 80300
+		bits8 *bitmap;
+		int bitmask;
+	#endif
 	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
 
 	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
@@ -1095,7 +896,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 
 	p = ARR_DATA_PTR(poly_arr);
 	poly_nitems /= 2;
-	n = poly_nitems;
+	*nvert = poly_nitems;
 	invocation = 1;
 
 #if PG_VERSION_NUM >= 80300
@@ -1177,7 +978,125 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 #endif
 	}
 
-	result = (q3c_check_sphere_point_in_poly(&hprm, n, in_ra, in_dec,
+return invocation;
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
+Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
+{
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0);
+	extern struct q3c_prm hprm;
+
+	int iteration = PG_GETARG_INT32(1); /* iteration */
+	int full_flag = PG_GETARG_INT32(2); /* full_flag */
+	/* 1 means full, 0 means partial*/
+	char too_large = 0;
+
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
+	 * So we should have the array with the size twice bigger
+	 */
+	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	static q3c_poly qp;
+
+	static q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX],
+		x[Q3C_MAX_N_POLY_VERTEX], y[Q3C_MAX_N_POLY_VERTEX],
+		ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
+
+	static int invocation;
+
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		/* The implementation assumes if the code is called with invocation==1, then
+		   one can use the fulls and partials array without the recomputations
+			 That assumes that the underlying array didn't change
+		 Probably I should check that the polygon is the same ... */
+		if (iteration > 0)
+		{
+			if (full_flag)
+			{
+				PG_RETURN_INT64(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT64(partials[iteration]);
+			}
+		}
+	}
+
+	invocation = convert_pgarray2poly(poly_arr, ra, dec, &qp.n);
+
+	qp.ra = ra;
+	qp.dec = dec;
+	qp.x = x;
+	qp.y = y;
+	qp.ax = ax;
+	qp.ay = ay;
+
+	/* fprintf(stderr,"%f %f %f %f",qp.ra[0],qp.dec[0],qp.ra[1],qp.dec[1]); */
+	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+	invocation = 1;
+
+	if (full_flag)
+	{
+		PG_RETURN_INT64(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT64(partials[iteration]);
+	}
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
+Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
+{
+
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1); // dec_cen
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3); // dec_cen
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4); // error radius
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5); // axis_ratio
+	q3c_coord_t PA = PG_GETARG_FLOAT8(6); // PA
+	q3c_coord_t e = q3c_sqrt(1 - axis_ratio * axis_ratio);
+	bool result = q3c_in_ellipse(ra_cen, dec_cen, ra,dec, radius, e, PA);
+	PG_RETURN_BOOL(result);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_in_poly);
+Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+
+	static q3c_coord_t in_ra[Q3C_MAX_N_POLY_VERTEX], in_dec[Q3C_MAX_N_POLY_VERTEX];
+
+	static int invocation ;
+	char too_large = 0;
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	int nvert;
+	bool result;
+
+	invocation = convert_pgarray2poly(poly_arr, in_ra, in_dec, &nvert);
+
+	result = (q3c_check_sphere_point_in_poly(&hprm, nvert, in_ra, in_dec,
 											ra_cen, dec_cen, &too_large, invocation)) !=
 												Q3C_DISJUNCT;
 	if (too_large)
