@@ -1,6 +1,40 @@
 \echo Use "CREATE EXTENSION q3c" to load this file. \quit
 
 
+-- A dummy type used in the selectivity operator
+create type q3c_type as (ra double precision, dec double precision,	
+       ra1 double precision, dec1 double precision);
+
+
+-- A dummy operator function (always returns true)
+CREATE OR REPLACE FUNCTION q3c_seloper(double precision, q3c_type)
+        RETURNS bool
+        AS 'MODULE_PATHNAME', 'pgq3c_seloper'
+        LANGUAGE C STRICT IMMUTABLE COST 1000;
+
+-- A selectivity function for the q3c operator
+CREATE OR REPLACE FUNCTION q3c_sel(internal, oid, internal, int4)
+        RETURNS float8
+        AS 'MODULE_PATHNAME', 'pgq3c_sel'
+        LANGUAGE C IMMUTABLE STRICT ;
+ 
+-- A selectivity function for the q3c operator
+CREATE OR REPLACE FUNCTION q3c_seljoin(internal, oid, internal, int2, internal)
+        RETURNS float8
+        AS 'MODULE_PATHNAME', 'pgq3c_seljoin'
+        LANGUAGE C IMMUTABLE STRICT ;
+ 
+
+ -- distance operator with correct selectivity
+CREATE OPERATOR ==<<>>== (
+        LEFTARG = double precision,                                                    RIGHTARG = q3c_type,
+        PROCEDURE = q3c_seloper,
+        RESTRICT = q3c_sel,
+	JOIN = q3c_seljoin
+);
+
+
+
 CREATE OR REPLACE FUNCTION q3c_version()
         RETURNS cstring
         AS 'MODULE_PATHNAME', 'pgq3c_get_version'
@@ -153,8 +187,10 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
+ 
 CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
 				    rightra real, rightdec real,
 				    radius double precision)
@@ -165,6 +201,8 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
+
 ' LANGUAGE SQL IMMUTABLE;
 
 
@@ -197,6 +235,7 @@ SELECT (
        ((q3c_ang2ipix($6,$7) >= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,6)) AND
        (q3c_ang2ipix($6,$7)  <= q3c_nearby_pm_it($1,$2,$3,$4,$9,$10,7)))) 
     AND q3c_sindist_pm($1,$2,$3,$4,$5,$6,$7,$8)<POW(SIN(RADIANS($10)/2),2)
+    AND ($10::double precision ==<<>>== ($1,$2,$6,$7)::q3c_type) 
 ' LANGUAGE SQL IMMUTABLE;
 -- not strict
 
@@ -212,118 +251,8 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,0))) AND (q
     OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,7))))) 
     AND q3c_in_ellipse($3,$4,$1,$2,$5,$6,$7)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type) 
 ' LANGUAGE SQL IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION q3c_radial_query(bigint,
-                  double precision, double precision,
-                  double precision, double precision, double precision)
-                                         returns boolean as 'SELECT 
-(
-($1>=q3c_radial_query_it($4,$5,$6,0,1) AND $1<q3c_radial_query_it($4,$5,$6,1,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,2,1) AND $1<q3c_radial_query_it($4,$5,$6,3,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,4,1) AND $1<q3c_radial_query_it($4,$5,$6,5,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,6,1) AND $1<q3c_radial_query_it($4,$5,$6,7,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,8,1) AND $1<q3c_radial_query_it($4,$5,$6,9,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,10,1) AND $1<q3c_radial_query_it($4,$5,$6,11,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,12,1) AND $1<q3c_radial_query_it($4,$5,$6,13,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,14,1) AND $1<q3c_radial_query_it($4,$5,$6,15,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,16,1) AND $1<q3c_radial_query_it($4,$5,$6,17,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,18,1) AND $1<q3c_radial_query_it($4,$5,$6,19,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,20,1) AND $1<q3c_radial_query_it($4,$5,$6,21,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,22,1) AND $1<q3c_radial_query_it($4,$5,$6,23,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,24,1) AND $1<q3c_radial_query_it($4,$5,$6,25,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,26,1) AND $1<q3c_radial_query_it($4,$5,$6,27,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,28,1) AND $1<q3c_radial_query_it($4,$5,$6,29,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,30,1) AND $1<q3c_radial_query_it($4,$5,$6,31,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,32,1) AND $1<q3c_radial_query_it($4,$5,$6,33,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,34,1) AND $1<q3c_radial_query_it($4,$5,$6,35,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,36,1) AND $1<q3c_radial_query_it($4,$5,$6,37,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,38,1) AND $1<q3c_radial_query_it($4,$5,$6,39,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,40,1) AND $1<q3c_radial_query_it($4,$5,$6,41,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,42,1) AND $1<q3c_radial_query_it($4,$5,$6,43,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,44,1) AND $1<q3c_radial_query_it($4,$5,$6,45,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,46,1) AND $1<q3c_radial_query_it($4,$5,$6,47,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,48,1) AND $1<q3c_radial_query_it($4,$5,$6,49,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,50,1) AND $1<q3c_radial_query_it($4,$5,$6,51,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,52,1) AND $1<q3c_radial_query_it($4,$5,$6,53,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,54,1) AND $1<q3c_radial_query_it($4,$5,$6,55,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,56,1) AND $1<q3c_radial_query_it($4,$5,$6,57,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,58,1) AND $1<q3c_radial_query_it($4,$5,$6,59,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,60,1) AND $1<q3c_radial_query_it($4,$5,$6,61,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,62,1) AND $1<q3c_radial_query_it($4,$5,$6,63,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,64,1) AND $1<q3c_radial_query_it($4,$5,$6,65,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,66,1) AND $1<q3c_radial_query_it($4,$5,$6,67,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,68,1) AND $1<q3c_radial_query_it($4,$5,$6,69,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,70,1) AND $1<q3c_radial_query_it($4,$5,$6,71,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,72,1) AND $1<q3c_radial_query_it($4,$5,$6,73,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,74,1) AND $1<q3c_radial_query_it($4,$5,$6,75,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,76,1) AND $1<q3c_radial_query_it($4,$5,$6,77,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,78,1) AND $1<q3c_radial_query_it($4,$5,$6,79,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,80,1) AND $1<q3c_radial_query_it($4,$5,$6,81,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,82,1) AND $1<q3c_radial_query_it($4,$5,$6,83,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,84,1) AND $1<q3c_radial_query_it($4,$5,$6,85,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,86,1) AND $1<q3c_radial_query_it($4,$5,$6,87,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,88,1) AND $1<q3c_radial_query_it($4,$5,$6,89,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,90,1) AND $1<q3c_radial_query_it($4,$5,$6,91,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,92,1) AND $1<q3c_radial_query_it($4,$5,$6,93,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,94,1) AND $1<q3c_radial_query_it($4,$5,$6,95,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,96,1) AND $1<q3c_radial_query_it($4,$5,$6,97,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,98,1) AND $1<q3c_radial_query_it($4,$5,$6,99,1)) OR
-($1>=q3c_radial_query_it($4,$5,$6,0,0) AND $1<q3c_radial_query_it($4,$5,$6,1,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,2,0) AND $1<q3c_radial_query_it($4,$5,$6,3,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,4,0) AND $1<q3c_radial_query_it($4,$5,$6,5,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,6,0) AND $1<q3c_radial_query_it($4,$5,$6,7,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,8,0) AND $1<q3c_radial_query_it($4,$5,$6,9,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,10,0) AND $1<q3c_radial_query_it($4,$5,$6,11,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,12,0) AND $1<q3c_radial_query_it($4,$5,$6,13,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,14,0) AND $1<q3c_radial_query_it($4,$5,$6,15,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,16,0) AND $1<q3c_radial_query_it($4,$5,$6,17,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,18,0) AND $1<q3c_radial_query_it($4,$5,$6,19,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,20,0) AND $1<q3c_radial_query_it($4,$5,$6,21,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,22,0) AND $1<q3c_radial_query_it($4,$5,$6,23,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,24,0) AND $1<q3c_radial_query_it($4,$5,$6,25,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,26,0) AND $1<q3c_radial_query_it($4,$5,$6,27,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,28,0) AND $1<q3c_radial_query_it($4,$5,$6,29,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,30,0) AND $1<q3c_radial_query_it($4,$5,$6,31,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,32,0) AND $1<q3c_radial_query_it($4,$5,$6,33,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,34,0) AND $1<q3c_radial_query_it($4,$5,$6,35,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,36,0) AND $1<q3c_radial_query_it($4,$5,$6,37,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,38,0) AND $1<q3c_radial_query_it($4,$5,$6,39,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,40,0) AND $1<q3c_radial_query_it($4,$5,$6,41,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,42,0) AND $1<q3c_radial_query_it($4,$5,$6,43,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,44,0) AND $1<q3c_radial_query_it($4,$5,$6,45,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,46,0) AND $1<q3c_radial_query_it($4,$5,$6,47,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,48,0) AND $1<q3c_radial_query_it($4,$5,$6,49,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,50,0) AND $1<q3c_radial_query_it($4,$5,$6,51,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,52,0) AND $1<q3c_radial_query_it($4,$5,$6,53,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,54,0) AND $1<q3c_radial_query_it($4,$5,$6,55,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,56,0) AND $1<q3c_radial_query_it($4,$5,$6,57,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,58,0) AND $1<q3c_radial_query_it($4,$5,$6,59,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,60,0) AND $1<q3c_radial_query_it($4,$5,$6,61,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,62,0) AND $1<q3c_radial_query_it($4,$5,$6,63,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,64,0) AND $1<q3c_radial_query_it($4,$5,$6,65,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,66,0) AND $1<q3c_radial_query_it($4,$5,$6,67,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,68,0) AND $1<q3c_radial_query_it($4,$5,$6,69,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,70,0) AND $1<q3c_radial_query_it($4,$5,$6,71,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,72,0) AND $1<q3c_radial_query_it($4,$5,$6,73,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,74,0) AND $1<q3c_radial_query_it($4,$5,$6,75,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,76,0) AND $1<q3c_radial_query_it($4,$5,$6,77,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,78,0) AND $1<q3c_radial_query_it($4,$5,$6,79,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,80,0) AND $1<q3c_radial_query_it($4,$5,$6,81,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,82,0) AND $1<q3c_radial_query_it($4,$5,$6,83,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,84,0) AND $1<q3c_radial_query_it($4,$5,$6,85,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,86,0) AND $1<q3c_radial_query_it($4,$5,$6,87,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,88,0) AND $1<q3c_radial_query_it($4,$5,$6,89,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,90,0) AND $1<q3c_radial_query_it($4,$5,$6,91,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,92,0) AND $1<q3c_radial_query_it($4,$5,$6,93,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,94,0) AND $1<q3c_radial_query_it($4,$5,$6,95,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,96,0) AND $1<q3c_radial_query_it($4,$5,$6,97,0)) OR
-($1>=q3c_radial_query_it($4,$5,$6,98,0) AND $1<q3c_radial_query_it($4,$5,$6,99,0)) 
-) AND 
-q3c_sindist($2,$3,$4,$5)<POW(SIN(RADIANS($6)/2),2)
-
-' LANGUAGE SQL IMMUTABLE;
-
 
 CREATE OR REPLACE FUNCTION q3c_radial_query(
                   real, real,
@@ -654,24 +583,6 @@ q3c_in_ellipse($1,$2,$3,$4,$5,$6,$7)
 ' LANGUAGE SQL IMMUTABLE;
 
 
-
-
-CREATE OR REPLACE FUNCTION q3c_join(double precision, double precision, 
-				    double precision, double precision,
-				    bigint, double precision)
-        RETURNS boolean AS
-'SELECT ((($5>=(q3c_nearby_it($1,$2,$6,0))) AND ($5<=(q3c_nearby_it($1,$2,$6,1))))
-    OR (($5>=(q3c_nearby_it($1,$2,$6,2))) AND ($5<=(q3c_nearby_it($1,$2,$6,3))))
-    OR (($5>=(q3c_nearby_it($1,$2,$6,4))) AND ($5<=(q3c_nearby_it($1,$2,$6,5))))
-    OR (($5>=(q3c_nearby_it($1,$2,$6,6))) AND ($5<=(q3c_nearby_it($1,$2,$6,7))))) 
-    AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($6)/2),2)
-'LANGUAGE SQL IMMUTABLE;
--- $1 left.ra
--- $2 left.dec
--- $3 right.ra
--- $4 right.dec
--- $5 right.ipix
--- $6 radius
 
 
 
