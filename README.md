@@ -3,7 +3,7 @@
 
 Author: Sergey Koposov, Carnegie Mellon University 
 
-Copyright (c) 2004-2018 Sergey Koposov
+Copyright (c) 2004-2019 Sergey Koposov
 
 Email: skoposov _AT_ cmu _DOT_ edu
 
@@ -145,6 +145,12 @@ To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) )
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
 ```
+- The polygonal query using postgresql polygon type
+```
+my_db# SELECT * FROM mytable WHERE
+		q3c_poly_query(ra, dec, '((0, 0), (2, 0), (2, 1), (0, 1))'::polygon);
+```
+
 
 - The positional cross-match of the tables: 
 In this example we will assume that we have a huge table "table2" with ra and dec columns and
