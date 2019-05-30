@@ -977,7 +977,7 @@ typedef struct q3c_poly_info_type{
 	* Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
 	* So we should have the array with the size twice bigger
 	*/
-	int invocation;
+	int ready;
 	q3c_ipix_t partials[2 * Q3C_NPARTIALS]; /* array of ipixes partially covered */
 	q3c_ipix_t fulls[2 * Q3C_NFULLS]; /* array of ipixes fully covered */
 	q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX],
@@ -991,7 +991,7 @@ typedef struct q3c_poly_info_type{
 	/* IF YOU MAKE CHANGES MAKE SURE YOU CHANGE THE COPY() FUNCTION */
 } q3c_poly_info_type;
 
-void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
+static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
 {
 	int i,j;
 	for (i=0; i<(2* Q3C_NPARTIALS); i++)
@@ -1044,11 +1044,11 @@ PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 {
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0);
-	extern struct q3c_prm hprm;
-
 	int iteration = PG_GETARG_INT32(1); /* iteration */
 	int full_flag = PG_GETARG_INT32(2); /* full_flag */
 	/* 1 means full, 0 means partial*/
+	extern struct q3c_prm hprm;
+
 	char too_large = 0;
 	q3c_poly_info_type *qpit;
 	q3c_poly qp;
@@ -1122,33 +1122,53 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	}
 }
 
+
 PG_FUNCTION_INFO_V1(pgq3c_poly_query1_it);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 {
 	POLYGON *poly_arr = PG_GETARG_POLYGON_P(0);
-	extern struct q3c_prm hprm;
-
 	int iteration = PG_GETARG_INT32(1); /* iteration */
 	int full_flag = PG_GETARG_INT32(2); /* full_flag */
 	/* 1 means full, 0 means partial*/
+	extern struct q3c_prm hprm;
 	char too_large = 0;
 	q3c_poly_info_type *qpit;
 	q3c_poly qp;
-	q3c_ipix_t *fulls, *partials;
-	int invocation;
+	static int good_cache;
+	int first_call;
+	int identical=0;
+	static q3c_poly_info_type lqpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+		first_call=1;
+	}
+	else
+	{
+		first_call =0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
-	invocation = qpit->invocation;
 
-	fulls = qpit->fulls;
-	partials = qpit->partials;
+	/* if second call it is easy */
+	if (!first_call)
+	{
+		if (full_flag)
+		{
+			PG_RETURN_INT64(qpit->fulls[iteration]);
+		}
+		else
+		{
+			PG_RETURN_INT64(qpit->partials[iteration]);
+		}
+	}
+
+	if (iteration > 0)
+	{
+		copy_q3c_poly_info_type(&lqpit, qpit);
+	}
 	qp.ra = qpit->ra;
 	qp.dec = qpit->dec;
 	qp.x = qpit->x;
@@ -1156,53 +1176,33 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 	qp.ax = qpit->ax;
 	qp.ay = qpit->ay;
 
-	if (invocation == 0)
-	/* If this is the first invocation of the function */
-	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
-	}
-	else
-	{
-		/* The implementation assumes if the code is called with invocation==1, then
-		   one can use the fulls and partials array without the recomputations
-			 That assumes that the underlying array didn't change
+	identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+	/* We fill the arrays and check if it matches what we had before */
 
-		 Probably I should check that the polygon is the same ... */
-		if (iteration > 0)
+	if (!identical || !good_cache)
+	{
+		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
+		if (too_large)
 		{
-			if (full_flag)
-			{
-				PG_RETURN_INT64(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT64(partials[iteration]);
-			}
+			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 		}
 	}
-
-	invocation = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
-
-	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
-	if (too_large)
+	if (iteration==0)
 	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+		good_cache=0;
+		copy_q3c_poly_info_type(qpit, &lqpit);
+		good_cache=1;
 	}
-	qpit->invocation = 1;
 
 	if (full_flag)
 	{
-		PG_RETURN_INT64(fulls[iteration]);
+		PG_RETURN_INT64(qpit->fulls[iteration]);
 	}
 	else
 	{
-		PG_RETURN_INT64(partials[iteration]);
+		PG_RETURN_INT64(qpit->partials[iteration]);
 	}
 }
-
 
 PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
@@ -1228,80 +1228,78 @@ Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_in_poly);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
-	extern struct q3c_prm hprm;
-
-	char too_large = 0;
-	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
+	extern struct q3c_prm hprm;
+	char too_large = 0;
 	int nvert;
 	bool result;
-	int invocation;
+	int identical;
 	q3c_poly_info_type *qpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
-			fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-			((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	invocation = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->invocation;
+	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-											ra_cen, dec_cen, &too_large, invocation,
+											ra_cen, dec_cen, &too_large, identical,
 											qpit->xpj, qpit->ypj,
 										  qpit->axpj, qpit->aypj,
 										  qpit->faces, &(qpit->multi_flag)
 										) !=	Q3C_DISJUNCT;
-	qpit->invocation = 1;
 	if (too_large)
 	{
 		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 	}
+	qpit->ready = 1;
 
-	PG_RETURN_BOOL((result));
+	PG_RETURN_BOOL(result);
 }
 
 
 PG_FUNCTION_INFO_V1(pgq3c_in_poly1);
 Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 {
-	extern struct q3c_prm hprm;
-
-	char too_large = 0;
-	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
+	extern struct q3c_prm hprm;
+	char too_large = 0;
 	int nvert;
 	bool result;
-	int invocation;
+	int identical;
 	q3c_poly_info_type *qpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
-			fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-			((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	invocation = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->invocation;
+	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-											ra_cen, dec_cen, &too_large, invocation,
+											ra_cen, dec_cen, &too_large, identical,
 											qpit->xpj, qpit->ypj,
 										  qpit->axpj, qpit->aypj,
 										  qpit->faces, &(qpit->multi_flag)
 										) !=	Q3C_DISJUNCT;
-	qpit->invocation = 1;
+	qpit->ready = 1;
 	if (too_large)
 	{
 		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 	}
 
-	PG_RETURN_BOOL((result));
+	PG_RETURN_BOOL(result);
 }
