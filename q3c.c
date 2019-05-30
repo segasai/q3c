@@ -899,7 +899,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	p = ARR_DATA_PTR(poly_arr);
 	poly_nitems /= 2;
 	*nvert = poly_nitems;
-	invocation = 1;
+	identical = 1;
 
 	bitmap = ARR_NULLBITMAP(poly_arr);
 	bitmask=1;
@@ -924,11 +924,13 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 				bitmask = 1;
 			}
 		}
+
 		if (in_ra[i] != ra_cur)
 		{
-			invocation = 0;
-			in_ra[i] = ra_cur;
+			identical = 0;
 		}
+		in_ra[i] = ra_cur;
+
 		if (bitmap && (*bitmap & bitmask) == 0)
 		{
 			ereport(ERROR,
@@ -950,11 +952,12 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 		}
 		if (in_dec[i] != dec_cur)
 		{
-			invocation = 0;
-			in_dec[i] = dec_cur;
+			identical = 0;
 		}
+		in_dec[i] = dec_cur;
+
 	}
-	return invocation;
+	return identical;
 }
 
 /* Convert Postgresql polygon in two c arrays */
@@ -962,7 +965,7 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 {
 	int i, npts = poly->npts;
 	q3c_coord_t newx, newy;
-	int invocation = 1;
+	int identical = 1;
 
 	*n = npts;
 	if (npts <= 2)
@@ -974,22 +977,19 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 	{
 		newx = poly->p[i].x;
 		newy = poly->p[i].y;
-		if (newx != ra[i])	{invocation=0;}
-		if (newy != dec[i])	{invocation=0;}
+		if ((newx != ra[i]) || (newy !=dec[i]))	{identical=0;}
 		ra[i] = newx;
 		dec[i] = newy;
 	}
-	return invocation;
+	return identical;
 }
 
 
 typedef struct q3c_poly_info_type{
-
-		/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-		 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
-		 * So we should have the array with the size twice bigger
-		 */
-
+	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
+	* Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
+	* So we should have the array with the size twice bigger
+	*/
 	int invocation;
 	q3c_ipix_t partials[2 * Q3C_NPARTIALS]; /* array of ipixes partially covered */
 	q3c_ipix_t fulls[2 * Q3C_NFULLS]; /* array of ipixes fully covered */
@@ -999,11 +999,60 @@ typedef struct q3c_poly_info_type{
 	q3c_coord_t xpj[3][Q3C_MAX_N_POLY_VERTEX], ypj[3][Q3C_MAX_N_POLY_VERTEX],
 			axpj[3][Q3C_MAX_N_POLY_VERTEX], aypj[3][Q3C_MAX_N_POLY_VERTEX];
 		// arrays storing the ra,dec ,projected x,y
-	 char faces[6];
-	 char multi_flag;
+	char faces[6];
+	char multi_flag;
+	/* IF YOU MAKE CHANGES MAKE SURE YOU CHANGE THE COPY() FUNCTION */
 } q3c_poly_info_type;
 
+void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
+{
+	int i,j;
+	for (i=0; i<(2* Q3C_NPARTIALS); i++)
+	{
+		b->partials[i]=a->partials[i];
+	}
+	for (i=0; i<(2* Q3C_NPARTIALS); i++)
+	{
+		b->fulls[i]=a->fulls[i];
+	}
+	for (i=0;i<Q3C_MAX_N_POLY_VERTEX;i++)
+	{
+		b->ra[i] = a->ra[i];
+		b->dec[i] = a->dec[i];
+		b->x[i] = a->x[i];
+		b->y[i] = a->y[i];
+		b->ax[i] = a->ax[i];
+		b->ay[i] = a->ay[i];
+		for (j=0;j<3;j++)
+		{
+			b->axpj[j][i]=a->axpj[j][i];
+			b->aypj[j][i]=a->aypj[j][i];
+			b->xpj[j][i]=a->xpj[j][i];
+			b->ypj[j][i]=a->ypj[j][i];
 
+		}
+
+	}
+	for (i=0;i<6;i++)
+	{
+		b->faces[i] = a->faces[i];
+	}
+	b->multi_flag = a->multi_flag;
+}
+
+
+/* Cache logic here is the following
+when the function is called for the first time with iteration =0
+I compute everything allocate memory and store computations in the static variable
+and locally allocated q3c_poly_info_table
+when the function is called for the first time and iteration  !=0
+I allocate new memory, copy stuff from static variable into locally allocated stuff
+I make no checks of the data
+If the function is called for the second time (i.e. fn_extra is not null)
+I blindly assume everything is EXACTLY the same and do not recompute anything
+as the q3c_poly_query_it() is the internal function and is ONLY supposed
+to be called with the constant polygon
+*/
 PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 {
@@ -1016,21 +1065,41 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	char too_large = 0;
 	q3c_poly_info_type *qpit;
 	q3c_poly qp;
-	q3c_ipix_t *fulls, *partials;
-	int invocation;
+	static int good_cache;
+	int first_call;
+	int identical=0;
+	static q3c_poly_info_type lqpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+		first_call=1;
+	}
+	else
+	{
+		first_call =0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
-	invocation = qpit->invocation;
 
-	fulls = qpit->fulls;
-	partials = qpit->partials;
+	/* if second call it is easy */
+	if (!first_call)
+	{
+		if (full_flag)
+		{
+			PG_RETURN_INT64(qpit->fulls[iteration]);
+		}
+		else
+		{
+			PG_RETURN_INT64(qpit->partials[iteration]);
+		}
+	}
+
+	if (iteration>0)
+	{
+		copy_q3c_poly_info_type(&lqpit, qpit);
+	}
 	qp.ra = qpit->ra;
 	qp.dec = qpit->dec;
 	qp.x = qpit->x;
@@ -1038,50 +1107,31 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	qp.ax = qpit->ax;
 	qp.ay = qpit->ay;
 
-	if (invocation == 0)
-	/* If this is the first invocation of the function */
-	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
-	}
-	else
-	{
-		/* The implementation assumes if the code is called with invocation==1, then
-		   one can use the fulls and partials array without the recomputations
-			 That assumes that the underlying array didn't change
+	identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+	/* We fill the arrays and check if it matches what we had before */
 
-		 Probably I should check that the polygon is the same ... */
-		if (iteration > 0)
+	if (!identical || !good_cache)
+	{
+		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
+		if (too_large)
 		{
-			if (full_flag)
-			{
-				PG_RETURN_INT64(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT64(partials[iteration]);
-			}
+			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 		}
 	}
-
-	invocation = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
-
-	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
-	if (too_large)
+	if (iteration==0)
 	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+		good_cache=0;
+		copy_q3c_poly_info_type(qpit, &lqpit);
+		good_cache=1;
 	}
-	qpit->invocation = 1;
 
 	if (full_flag)
 	{
-		PG_RETURN_INT64(fulls[iteration]);
+		PG_RETURN_INT64(qpit->fulls[iteration]);
 	}
 	else
 	{
-		PG_RETURN_INT64(partials[iteration]);
+		PG_RETURN_INT64(qpit->partials[iteration]);
 	}
 }
 
