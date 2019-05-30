@@ -31,6 +31,7 @@
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
  */
 #include "utils/array.h"
+#include "utils/geo_decls.h"
 #include "catalog/pg_type.h"
 #include "fmgr.h"
 #if PG_VERSION_NUM >= 90300
@@ -68,8 +69,11 @@ Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
+Datum pgq3c_in_poly1(PG_FUNCTION_ARGS);
+
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
@@ -1060,6 +1064,112 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	}
 }
 
+static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec, int *n)
+{
+	int i, npts = poly->npts;
+	q3c_coord_t newx, newy;
+	int invocation = 1;
+
+	*n = npts;
+	if (npts <= 2)
+	{
+		elog(ERROR, "Invalid polygon! Less than 3 vertexes");
+	}
+
+	for(i=0;i<npts;i++)
+	{
+		newx = poly->p[i].x;
+		newy = poly->p[i].y;
+		if (newx != ra[i])	{invocation=0;}
+		if (newy != dec[i])	{invocation=0;}
+		ra[i] = newx;
+		dec[i] = newy;
+	}
+	return invocation;
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query1_it);
+Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
+{
+	POLYGON *poly_arr = PG_GETARG_POLYGON_P(0);
+	extern struct q3c_prm hprm;
+
+	int iteration = PG_GETARG_INT32(1); /* iteration */
+	int full_flag = PG_GETARG_INT32(2); /* full_flag */
+	/* 1 means full, 0 means partial*/
+	char too_large = 0;
+	q3c_poly_info_type *qpit;
+	q3c_poly *qp;
+	q3c_ipix_t *fulls, *partials;
+	int invocation;
+
+	if (fcinfo->flinfo->fn_extra==0)
+	{
+		// allocate memory where we are going to store converted info
+		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+	}
+
+	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
+	invocation = qpit->invocation;
+
+	fulls = qpit->fulls;
+	partials = qpit->partials;
+	qp = &(qpit->qp);
+	qp->ra = qpit->ra;
+	qp->dec = qpit->dec;
+	qp->x = qpit->x;
+	qp->y = qpit->y;
+	qp->ax = qpit->ax;
+	qp->ay = qpit->ay;
+
+	if (invocation == 0)
+	/* If this is the first invocation of the function */
+	{
+	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+	 * ipix_buf. Because if the program will be canceled or crashed
+	 * for some reason the invocation should be == 0
+	 */
+	}
+	else
+	{
+		/* The implementation assumes if the code is called with invocation==1, then
+		   one can use the fulls and partials array without the recomputations
+			 That assumes that the underlying array didn't change
+
+		 Probably I should check that the polygon is the same ... */
+		if (iteration > 0)
+		{
+			if (full_flag)
+			{
+				PG_RETURN_INT64(fulls[iteration]);
+			}
+			else
+			{
+				PG_RETURN_INT64(partials[iteration]);
+			}
+		}
+	}
+
+  invocation = convert_pgpoly2poly(poly_arr, qp->ra, qp->dec, &(qp->n));
+
+	q3c_poly_query(&hprm, qp, fulls, partials, &too_large);
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+	qpit->invocation = 1;
+
+	if (full_flag)
+	{
+		PG_RETURN_INT64(fulls[iteration]);
+	}
+	else
+	{
+		PG_RETURN_INT64(partials[iteration]);
+	}
+}
+
 
 PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
@@ -1102,6 +1212,47 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
 	invocation = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert);
+
+	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
+											ra_cen, dec_cen, &too_large, invocation,
+											qpit->xpj, qpit->ypj,
+										  qpit->axpj, qpit->aypj,
+										  qpit->faces, &(qpit->multi_flag)
+										) !=	Q3C_DISJUNCT;
+	qpit->invocation = 1;
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+
+	PG_RETURN_BOOL((result));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_in_poly1);
+Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
+{
+	extern struct q3c_prm hprm;
+
+	char too_large = 0;
+	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	int nvert;
+	bool result;
+	int invocation;
+	q3c_poly_info_type *qpit;
+
+	if (fcinfo->flinfo->fn_extra==0)
+	{
+		// allocate memory where we are going to store converted info
+			fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
+			((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->invocation = 0;
+	}
+
+	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
+
+	invocation = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert);
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
 											ra_cen, dec_cen, &too_large, invocation,
