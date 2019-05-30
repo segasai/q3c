@@ -87,7 +87,7 @@ Datum pgq3c_seloper(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(true);
 }
 
-/* The actual selectivity function, it returns the ratio of the 
+/* The actual selectivity function, it returns the ratio of the
  * search circle to the whole sky area
  */
 PG_FUNCTION_INFO_V1(pgq3c_sel);
@@ -97,22 +97,22 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	List   *args = (List *) PG_GETARG_POINTER(2);
 	int varRelid = PG_GETARG_INT32(3);
 	Node   *left;
-	Node *other; 
+	Node *other;
 	VariableStatData vardata;
-	Datum radDatum; 
+	Datum radDatum;
 	bool isnull;
 	double rad;
 	double ratio;
-	
+
 	/* this needs more protections against crazy inputs */
-	if (list_length(args) != 2) { elog(ERROR, "Wrong inputs to selectivity function");} 
+	if (list_length(args) != 2) { elog(ERROR, "Wrong inputs to selectivity function");}
 	left = (Node *) linitial(args);
 
 	examine_variable(root, left, varRelid, &vardata);
 	other = estimate_expression_value(root, vardata.var);
 	radDatum = ((Const *) other)->constvalue;
 	isnull = ((Const *) other)->constisnull;
-	/* We shouldn't be really getting null inputs here */ 
+	/* We shouldn't be really getting null inputs here */
 	if (!isnull)
 	{
 		rad = DatumGetFloat8(radDatum);
@@ -127,7 +127,7 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	CLAMP_PROBABILITY(ratio);
 
 	//elog(WARNING, "HERE0.... %e", ratio);
-	
+
 	PG_RETURN_FLOAT8(ratio);
 }
 
@@ -141,22 +141,22 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	/* Because there is no varrelid in the join selectivity call
          * I just set it to zero */
 	Node   *left;
-	Node *other; 
+	Node *other;
 	VariableStatData vardata;
-	Datum radDatum; 
+	Datum radDatum;
 	bool isnull;
 	double rad;
 	double ratio;
-	
+
 	/* this needs more protections against crazy inputs */
-	if (list_length(args) != 2) { elog(ERROR, "Wrong inputs to selectivity function");} 
+	if (list_length(args) != 2) { elog(ERROR, "Wrong inputs to selectivity function");}
 	left = (Node *) linitial(args);
 
 	examine_variable(root, left, varRelid, &vardata);
 	other = estimate_expression_value(root, vardata.var);
 	radDatum = ((Const *) other)->constvalue;
 	isnull = ((Const *) other)->constisnull;
-	/* We shouldn't be really getting null inputs here */ 
+	/* We shouldn't be really getting null inputs here */
 	if (!isnull)
 	{
 		rad = DatumGetFloat8(radDatum);
@@ -169,7 +169,7 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 
 	/* clamp at 0, 1*/
 	CLAMP_PROBABILITY(ratio);
-	
+
 	PG_RETURN_FLOAT8(ratio);
 }
 
@@ -1211,7 +1211,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	invocation = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert);
+	invocation = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->invocation;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
 											ra_cen, dec_cen, &too_large, invocation,
@@ -1252,7 +1252,7 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	invocation = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert);
+	invocation = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->invocation;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
 											ra_cen, dec_cen, &too_large, invocation,
