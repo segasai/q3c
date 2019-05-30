@@ -872,7 +872,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 {
 	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
 	Oid element_type=FLOAT8OID;
-	static int invocation ;
+	int identical =1 ;
 	int16 typlen;
 	bool typbyval;
 	char typalign;
