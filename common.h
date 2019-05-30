@@ -1,6 +1,6 @@
 /*
 	   Copyright (C) 2004-2015 Sergey Koposov
-   
+
     Email: koposov@ast.cam.ac.uk
 
     This file is part of Q3C.
@@ -35,7 +35,7 @@
 #define Q3C_COMMON_H
 
 #ifndef q3c_ipix_t
-/*#define q3c_ipix_t long long 
+/*#define q3c_ipix_t long long
   typedef long long q3c_ipix_t ;*/
 typedef int64 q3c_ipix_t ;
 #endif /* q3c_ipix_t */
@@ -47,7 +47,7 @@ typedef int64 q3c_ipix_t ;
 
 
 
-/* If You have not specified the Q3C_LONG_DOUBLE macro then we will use simple 
+/* If You have not specified the Q3C_LONG_DOUBLE macro then we will use simple
    double functions */
 #ifndef Q3C_LONG_DOUBLE
 typedef double q3c_coord_t;
@@ -73,8 +73,8 @@ typedef double q3c_coord_t;
 #define Q3C_DEGRA 0.0174532925199432957692369076848861271344
 #define Q3C_RADEG 57.2957795130823208767981548141051703324122
 #define Q3C_LG2 0.6931471805599453094172321214581765680755
-/* 
-I really do not see the reason to set them as const ... 
+/*
+I really do not see the reason to set them as const ...
 const q3c_coord_t Q3C_PI=3.1415926535897932384626433832795028841968;
 const q3c_coord_t Q3C_2PI=6.2831853071795864769252867665590057683936;
 const q3c_coord_t Q3C_PI_2=1.5707963267948966192313216916397514420984;
@@ -117,7 +117,7 @@ typedef long double q3c_coord_t;
 #define Q3C_IBITS sizeof(q3c_ipix_t)
 #endif /* Q3C_IBITS */
 
-#ifndef Q3C_INTERLEAVED_NBITS 
+#ifndef Q3C_INTERLEAVED_NBITS
 #define Q3C_INTERLEAVED_NBITS 16
 #endif /* Q3C_INTERLEAVED_NBITS */
 
@@ -142,7 +142,7 @@ typedef long double q3c_coord_t;
                                                           (((y0 < b0) && \
                                                           (y1 >= b0)) || \
                                                           (y0 <= b1)))
-/* True if square(x0,x1,y0,y1) and square(a0,a1,b0,b1) have any common point*/ 
+/* True if square(x0,x1,y0,y1) and square(a0,a1,b0,b1) have any common point*/
 
 #define Q3C_INTERSECT(a, b, x, y) (((a <= y) && (a >= x)) || \
                                   ((a < x) && (b >= x)))
@@ -156,13 +156,13 @@ typedef long double q3c_coord_t;
 #define Q3C_MAX_N_POLY_VERTEX 100
 /* Maximal number of vertices in the polygon */
 
-#define Q3C_NPARTIALS 50 
+#define Q3C_NPARTIALS 50
 /*length of the list of the partially covered ipix ranges*/
 
-#define Q3C_NFULLS 50 
+#define Q3C_NFULLS 50
 /*length of the list of the fully covered ipix ranges*/
 
-#define Q3C_MAX_DEPTH 4 
+#define Q3C_MAX_DEPTH 4
 /*the maximum depth of going down the quadtree when doing spatial searches */
 
 #define Q3C_STACK_SIZE 11000
@@ -177,7 +177,7 @@ typedef long double q3c_coord_t;
 #define Q3C_MAXRAD 35
 /* maximum allowed radius for circles and ellipses */
 
-#define Q3C_MINDISCR 1e-10 
+#define Q3C_MINDISCR 1e-10
 /* minimum possible value of the discriminant of the 2nd order curves,
 	before we start assuming parabola or hyperbola
 */
@@ -185,7 +185,7 @@ typedef long double q3c_coord_t;
 #define UNWRAP_RA(ra) ( (ra < 0) ? \
                       (q3c_fmod(ra, 360) + 360) : \
                       ( (ra > 360) ? q3c_fmod(ra, 360) : ra ) \
-                      ) 
+                      )
 
 #ifdef __USE_GNU
 #define q3c_sincos(a,b,c) q3c_sincos0(a,&b,&c)
@@ -196,7 +196,7 @@ typedef long double q3c_coord_t;
 } while(0);
 #endif
 
-struct q3c_prm 
+struct q3c_prm
 {
 	q3c_ipix_t nside;
 	q3c_ipix_t *xbits;
@@ -205,7 +205,7 @@ struct q3c_prm
 	q3c_ipix_t *ybits1;
 };
 
-struct q3c_square 
+struct q3c_square
 {
 	q3c_ipix_t x0, y0; /* Integer coordinates of the center of the square for */
 	int nside0;       /* the nside0 segmentation */
@@ -231,19 +231,19 @@ typedef struct
 } q3c_poly;
 
 
-typedef struct 
+typedef struct
 {
 	q3c_coord_t ra;
 	q3c_coord_t dec;
 	q3c_coord_t rad;
 } q3c_circle_region;
 
-typedef struct 
+typedef struct
 {
 	q3c_coord_t ra;
 	q3c_coord_t dec;
 	q3c_coord_t rad; /* major axis */
-	q3c_coord_t e; /* e””entricity */
+	q3c_coord_t e; /* eccentricity */
 	q3c_coord_t PA;
 } q3c_ellipse_region;
 
@@ -261,7 +261,7 @@ void q3c_ipix2ang(struct q3c_prm *, q3c_ipix_t , q3c_coord_t *, q3c_coord_t *);
 
 q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth);
 
-void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t, 
+void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
 						  q3c_coord_t, q3c_ipix_t *, int);
 
 void q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
@@ -309,8 +309,8 @@ char q3c_get_facenum_poly(q3c_poly *qp);
 
 int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0, q3c_coord_t y0);
 
-int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, 
-						 q3c_coord_t yc_cur, q3c_coord_t cur_size);                         
+int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
+						 q3c_coord_t yc_cur, q3c_coord_t cur_size);
 
 void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax,
 						 q3c_coord_t *ymin, q3c_coord_t *ymax);
@@ -324,7 +324,12 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 								   q3c_coord_t in_ra[], q3c_coord_t in_dec[],
 								   q3c_coord_t ra0, q3c_coord_t dec0,
 								   char *too_large,
-								   int invocation);
+								   int invocation,
+                  q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
+                  q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
+                  q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
+                  q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
+                  char *, char *);
 
 char q3c_get_region_facenum(q3c_region region, void *data);
 

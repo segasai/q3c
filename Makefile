@@ -76,6 +76,8 @@ test: gen_data all
 	diff results/join_pm2.out expected/join_pm2.expected
 	cat sql/poly.sql | psql q3c_test > results/poly.out
 	diff results/poly.out expected/poly.expected
+	cat sql/poly1.sql | psql q3c_test > results/poly1.out
+	diff results/poly1.out expected/poly.expected
 	cat sql/version.sql | psql q3c_test > results/version.out
 	diff results/version.out expected/version.expected
 	cat sql/area.sql | psql q3c_test > results/area.out
