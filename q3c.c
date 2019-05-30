@@ -875,10 +875,8 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	int i;
 	q3c_coord_t ra_cur, dec_cur;
 	char *p;
-	#if PG_VERSION_NUM >= 80300
-		bits8 *bitmap;
-		int bitmask;
-	#endif
+	bits8 *bitmap;
+	int bitmask;
 	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
 
 	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
@@ -899,16 +897,11 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	*nvert = poly_nitems;
 	invocation = 1;
 
-#if PG_VERSION_NUM >= 80300
-
 	bitmap = ARR_NULLBITMAP(poly_arr);
 	bitmask=1;
-#endif
-
 
 	for (i = 0; i < poly_nitems; i++)
 	{
-#if PG_VERSION_NUM >= 80300
 		if (bitmap && (*bitmap & bitmask) == 0)
 		{
 			ereport(ERROR,
@@ -957,25 +950,6 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 			in_dec[i] = dec_cur;
 		}
 
-#else
-		ra_cur  = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		if (in_ra[i] != ra_cur)
-		{
-			invocation = 0;
-			in_ra[i] = ra_cur;
-		}
-		p = att_addlength(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align(p, typalign);
-		dec_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		if (in_dec[i] != dec_cur)
-		{
-			invocation = 0;
-			in_dec[i] = dec_cur;
-		}
-
-		p = att_addlength(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align(p, typalign);
-#endif
 	}
 
 return invocation;
