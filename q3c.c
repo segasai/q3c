@@ -867,12 +867,40 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 }
 
+static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool typbyval,
+	char typalign, int16 typlen)
+{
+	q3c_coord_t val;
+
+	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
+	 * function deconstruct_array
+	*/
+	if (bitmap && (*bitmap & *bitmask) == 0)
+	{
+		ereport(ERROR,
+		(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+		errmsg("null array element not allowed in this context")));
+	}
+	val = DatumGetFloat8(fetch_att(*p, typbyval, typlen));
+	*p = att_addlength_pointer(*p, typlen, PointerGetDatum(p));
+	*p = (char *) att_align_nominal(*p, typalign);
+	if (bitmap)
+	{
+		*bitmask <<= 1;
+		if (*bitmask == 0x100)
+		{
+			bitmap++;
+			*bitmask = 1;
+		}
+	}
+	return val;
+}
 /* Convert the PG array in two c arrays of ra,dec */
 static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert)
 {
 	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
 	Oid element_type=FLOAT8OID;
-	int identical =1 ;
+	int identical = 1;
 	int16 typlen;
 	bool typbyval;
 	char typalign;
@@ -887,13 +915,13 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	 * function deconstruct_array
 	 */
 
-	 if (poly_nitems % 2 != 0)
-	 {
-	 	elog(ERROR, "Invalid array argument! \n The array should contain even number of arguments");
+	if (poly_nitems % 2 != 0)
+	{
+		 elog(ERROR, "Invalid array argument!\nThe array should contain even number of elements");
 	}
 	else if (poly_nitems <= 4)
 	{
-		elog(ERROR, "Invalid polygon! Less than 3 vertexes");
+		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
 	}
 
 	p = ARR_DATA_PTR(poly_arr);
@@ -906,56 +934,15 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 
 	for (i = 0; i < poly_nitems; i++)
 	{
-		if (bitmap && (*bitmap & bitmask) == 0)
-		{
-			ereport(ERROR,
-					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("null array element not allowed in this context")));
-		}
-		ra_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align_nominal(p, typalign);
-		if (bitmap)
-		{
-			bitmask <<= 1;
-			if (bitmask == 0x100)
-			{
-				bitmap++;
-				bitmask = 1;
-			}
-		}
+		ra_cur = read_from_array(&p, bitmap, &bitmask, typbyval, typalign, typlen);
+		dec_cur = read_from_array(&p, bitmap, &bitmask, typbyval, typalign, typlen);
 
-		if (in_ra[i] != ra_cur)
+		if ((in_ra[i] != ra_cur) || (in_dec[i] != dec_cur))
 		{
 			identical = 0;
 		}
 		in_ra[i] = ra_cur;
-
-		if (bitmap && (*bitmap & bitmask) == 0)
-		{
-			ereport(ERROR,
-					(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-					errmsg("null array element not allowed in this context")));
-		}
-
-		dec_cur = DatumGetFloat8(fetch_att(p, typbyval, typlen));
-		p = att_addlength_pointer(p, typlen, PointerGetDatum(p));
-		p = (char *) att_align_nominal(p, typalign);
-		if (bitmap)
-		{
-			bitmask <<= 1;
-			if (bitmask == 0x100)
-			{
-				bitmap++;
-				bitmask = 1;
-			}
-		}
-		if (in_dec[i] != dec_cur)
-		{
-			identical = 0;
-		}
 		in_dec[i] = dec_cur;
-
 	}
 	return identical;
 }
@@ -968,9 +955,9 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 	int identical = 1;
 
 	*n = npts;
-	if (npts <= 2)
+	if (npts < 3)
 	{
-		elog(ERROR, "Invalid polygon! Less than 3 vertexes");
+		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
 	}
 
 	for(i=0;i<npts;i++)
@@ -1096,7 +1083,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	if (iteration>0)
+	if (iteration > 0)
 	{
 		copy_q3c_poly_info_type(&lqpit, qpit);
 	}
