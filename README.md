@@ -11,23 +11,24 @@ Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
 
 Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
-To read more about the Q3C indexing, check out the Q3C paper published in ADASS conference proceedings 
+To read more about the Q3C indexing, you can check out the paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
-If you use Q3C you are kindly asked to cite this paper. I would be also happy to hear about any usage of Q3C.
+Q3C is also registered in the ASCL library https://ascl.net/1905.008
+If you use Q3C you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
-To use Q3C you need to have a PostgreSQL database installed (version 9.1
-or later). If you have PostgreSQL version lower than 9.1 your will need an older version 
-of Q3C (1.4.x). 
+In order to use Q3C you need to have a PostgreSQL database installed (version 9.1
+or later). If you have PostgreSQL version lower than 9.1 your will need to use 
+an older version of Q3C (1.4.x). 
 
 To successfully compile Q3C you must have pg_config in your PATH (that means that you may need to install the -devel versions of PostgreSQL packages)
 
 ## Installation
 
 - make 
-- make install
+- make install  
 - Execute "create extension q3c" in the PostgreSQL client(psql) for the database where you plan to use q3c
 
 After the installation you will have several new functions in PostgreSQL.
@@ -36,7 +37,7 @@ All names of these functions start with the "q3c_" prefix.
 ## Table preparation for Q3C
 
 To begin use Q3C for searches and cross-matches you should create the indexes
-on the tables.
+on your tables.
 
 In this demonstration we'll assume that you have the table called "mytable" with "ra" and "dec" columns (right ascension and declination in degrees).
 
@@ -44,9 +45,12 @@ First, you will need to create the spatial index, using the following command:
 
 `my_db# CREATE INDEX ON mytable (q3c_ang2ipix(ra, dec)); `
 
-The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries. If the data have been ingested in the database in an ordered by some spherical zones fashion, the clustering step can be ommited (although still recommended). The clustering step may take a while (hours) if your dataset is large.
+The next procedure is optional but strongly recommended: cluster the table using newly created index. The clustering procedure is the procedure of ordering the data on the disk according to the Q3C spatial index values, which will ensure faster queries if your table is very large. If the data have been ingested in the database in ordered fashion (i.e. along some spherical zones), the clustering step can be omitted (although still recommended). The clustering step may take a while (hours) if your dataset is large.
 
 `my_db# CLUSTER mytable_q3c_ang2ipix_idx ON mytable;`
+
+Alternatively, instead of CLUSTER, you can also just reorder your table yourself before indexing (can be faster)  
+`my_db# create table mytable1 as select * from mytable order by q3c_ang2ipix(ra,dec);`
 
 The last step is analyzing your table:
 
@@ -97,8 +101,10 @@ into account the proper motion
   The ellipse is specified by major axis, axis ratio and positional angle.
   This function should be used if when the index on q3c_ang2ipix(ra,dec) is created.
 
-- q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within
-  the postgresql polygon poly specified as an array of right ascensions and declinations.
+- q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the spherical polygon 
+  poly specified as an array of right ascensions and declinations. Alternatively poly can be 
+  an actual PostgreSQL Polygon type. This is the function that needs to be used for index 
+  accelerated polygon queries. 
 
 - q3c_ipix2ang(ipix) -- returns a two-element array of (ra,dec) corresponding to a given ipix.
 
@@ -107,6 +113,9 @@ into account the proper motion
 
 - q3c_ipixcenter(ra, dec, bits) -- returns the ipix value of the
 	pixel center at certain pixel depth covering the specified (ra,dec)
+
+- q3c_in_poly(ra, dec, poly) -- returns true/false if point is inside a polygon. This function
+  will not use the index.
 
 - q3c_version() -- returns the version of Q3C that is installed
 
@@ -150,7 +159,6 @@ my_db# SELECT * FROM mytable WHERE
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '((0, 0), (2, 0), (2, 1), (0, 1))'::polygon);
 ```
-
 
 - The positional cross-match of the tables: 
 In this example we will assume that we have a huge table "table2" with ra and dec columns and
@@ -223,7 +231,8 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t
                     ASC LIMIT 1
                ) as ss ON true;
 ```
-The idea is very simple for every row of your table mytable LATERAL() executes the "subquery" orders them by distance and limit by 1.
+The idea behind the query is that for every row of your table LATERAL() executes the subquery, that retuns all the neihhbours 
+within the aperture and then orders them by distance takes the top one.
   
 If you want only the objects which do have the neighbors then the query will look like that
   
