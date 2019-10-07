@@ -28,10 +28,10 @@ dump.c: prepare
 	./prepare
 
 prepare: prepare.o q3cube.o q3c_poly.o
-	$(CC) $(LDFLAGS) prepare.o q3cube.o q3c_poly.o $(MYBINLIBS) -o $@
+	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(MYBINLIBS) -o $@
 
 gen_data: gen_data.c
-	$(CC) $< $(CPPFLAGS) $(MYBINLIBS) -o $@
+	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(MYBINLIBS) -o $@
 
 test: gen_data all
 	createdb q3c_test
