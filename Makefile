@@ -1,6 +1,8 @@
 EXTENSION = q3c
 EXTVERSION := $(shell grep default_version $(EXTENSION).control | \
 		 sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
+
+
 DOCS = README.md
 OBJS = dump.o q3c.o q3c_poly.o q3cube.o
 MODULE_big = q3c
@@ -17,21 +19,26 @@ OPT_LOW = -O2
 #DEBUG = -g3 -ggdb -DQ3C_DEBUG
 PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -DQ3C_VERSION='"'$(EXTVERSION)'"'
 CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
-MYBINLIBS = -lm
-# I have to use this instead of PG_LIBS, because PG_LIBS brings a
-# bunch of libraries which are often not installed
 
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
+PGVER := $(shell echo $(VERSION) | sed "s/^\([^\.]\+\)\..*/\1/" )
+PGVERNEW := $(shell if [ $(PGVER) -ge 12 ] ; then echo N ; else echo O ; fi )
+
+ifeq ($(PGVERNEW), N)
+	MYBINLIBS := $(LIBS) $(PG_LIBS) -lm
+else
+	MYBINLIBS := $(PG_LIBS) -lm
+endif
 
 dump.c: prepare
 	./prepare
 
 prepare: prepare.o q3cube.o q3c_poly.o
-	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(LDFLAGS) $(LIBS) $(PG_LIBS) $(MYBINLIBS) -o $@
+	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 gen_data: gen_data.c
-	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(LIBS) $(PG_LIBS) $(MYBINLIBS) -o $@
+	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 test: gen_data all
 	createdb q3c_test
