@@ -27,7 +27,7 @@ PGVERNEW := $(shell if [ $(PGVER) -ge 12 ] ; then echo N ; else echo O ; fi )
 
 ifeq ($(PGVERNEW), N)
 	PG_LIBS += -L$(shell $(PG_CONFIG) --pkglibdir)
-	LIBS := $(filter-out -lpam -lxml2 -lxslt, $(LIBS))
+	LIBS := $(filter-out -lpam -lxml2 -lxslt -lselinux -ledit, $(LIBS))
 	MYBINLIBS := $(LIBS) $(PG_LIBS) -lm
 else
 	MYBINLIBS := $(PG_LIBS) -lm
