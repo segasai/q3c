@@ -7,8 +7,6 @@ Copyright (c) 2004-2019 Sergey Koposov
 
 Email: skoposov _AT_ cmu _DOT_ edu
 
-Idea and implementation by Sergey Koposov with help from Oleg Bartunov.
-
 Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
 To read more about the Q3C indexing, you can check out the paper published in ADASS conference proceedings 
