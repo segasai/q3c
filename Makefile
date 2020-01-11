@@ -23,9 +23,11 @@ CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 PGVER := $(shell echo $(VERSION) | sed "s/^\([^\.]\+\)\..*/\1/" )
-PGVERNEW := $(shell if [ $(PGVER) -ge 12 ] ; then echo N ; else echo O ; fi )
+# bash can only compare integer numeric values; use bc for floats (e.g. "12.1")
+PGVERNEW := $(shell if [[ `echo "$(PGVER) >= 12" | bc` == "1" ]] ; then echo N ; else echo O ; fi )
+UNAME := $(shell uname -s )
 
-ifeq ($(PGVERNEW), N)
+ifeq ($(PGVERNEW),N)
 	PG_LIBS += -L$(shell $(PG_CONFIG) --pkglibdir)
 	LIBS := $(filter-out -lpam -lxml2 -lxslt -lselinux -ledit, $(LIBS))
 	MYBINLIBS := $(LIBS) $(PG_LIBS) -lm
@@ -37,7 +39,11 @@ dump.c: prepare
 	./prepare
 
 prepare: prepare.o q3cube.o q3c_poly.o
+ifeq ($(shell [[ $(PGVERNEW) == "N" ]] && [[ $(UNAME) == "Darwin" ]] && echo true ),true)
+	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(LDFLAGS) $(LIBS) $(MYBINLIBS) -o $@
+else
 	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
+endif
 
 gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
