@@ -22,8 +22,7 @@ CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
 
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
-PGVER := $(shell echo $(VERSION) | sed "s/^\([^\.]\+\)\..*/\1/" )
-PGVERNEW := $(shell if [ $(PGVER) -ge 12 ] ; then echo N ; else echo O ; fi )
+PGVERNEW := $(shell if [ $(MAJORVERSION) -ge 12 ] ; then echo N ; else echo O ; fi )
 
 ifeq ($(PGVERNEW), N)
 	PG_LIBS += -L$(shell $(PG_CONFIG) --pkglibdir)
