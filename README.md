@@ -3,7 +3,7 @@
 
 Author: Sergey Koposov, Carnegie Mellon University 
 
-Copyright (c) 2004-2019 Sergey Koposov
+Copyright (c) 2004-2020 Sergey Koposov
 
 Email: skoposov _AT_ cmu _DOT_ edu
 
@@ -11,9 +11,8 @@ Fresh versions of the software could be obtained here: https://github.com/segasa
 
 To read more about the Q3C indexing, you can check out the paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
-The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735"
-Q3C is also registered in the ASCL library https://ascl.net/1905.008
-If you use Q3C you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
+The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735".
+Q3C is also registered in the ASCL library https://ascl.net/1905.008 . If you use Q3C you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
