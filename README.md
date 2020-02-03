@@ -63,24 +63,26 @@ The functions installed by Q3C are:
 
 - q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec
 
-- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two points (ra1,dec1) and (ra2,dec2)
+- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two  points (ra1,dec1) and (ra2,dec2)
 
-- q3c_dist_pm(ra1, dec1, pmra1, pmdec1, epoch1, ra2, dec2, epoch2) -- returns the distance in degrees between  two points (ra1,dec1) and (ra2,dec2) at
-the epoch epoch2 while taking the proper motion into account
-into account the proper motion. 
+- q3c_dist_pm(ra1, dec1, pmra1, pmdec1, epoch1, ra2, dec2, epoch2) -- returns 
+  the distance in degrees between two points (ra1,dec1) and (ra2,dec2) at
+  the epoch epoch2 while taking the proper motion into account. 
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It should be used when 
   the index on q3c_ang2ipix(ra2, dec2) is created. See below for examples.
 
 - q3c_join_pm(ra1, dec1, pmra1, pmdec1, epoch1, 
-  		   ra2, dec2, epoch2, max_delta_epoch, radius)  -- returns true if (ra1, dec1)
+  		   ra2, dec2, epoch2, max_delta_epoch, radius)  -- returns true   if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It takes into account 
-  the proper motion of the source pmra1, pmdec1 (in mas/yr). 
-  epoch1, and epoch2 are the epochs of source coordinates in years.
+  the proper motion of the source pmra1, pmdec1 (in mas/yr) 
+  and epochs of the source coordinates epoch1, and epoch2 (in years).
   max_delta_epoch is the maximum epoch difference possible between two
-  tables. You should use this function if the index on q3c_ang2ipix(ra2,dec2)
-  was created.
+  tables (i.e. if the oldest epoch in catalog1 is 1970 and the newest epoch 
+  in catalog2 is 2015, then the max_delta_epoch should be 45). 
+  You should use this function if the index on q3c_ang2ipix(ra2,dec2)
+  was created. 
 
 - q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec1) have to be within an ellipse with
@@ -98,10 +100,11 @@ into account the proper motion.
   The ellipse is specified by major axis, axis ratio and positional angle.
   This function should be used if when the index on q3c_ang2ipix(ra,dec) is created.
 
-- q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the spherical polygon 
-  poly specified as an array of right ascensions and declinations. Alternatively poly can be 
-  an actual PostgreSQL Polygon type. This is the function that needs to be used for index 
-  accelerated polygon queries. 
+- q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the 
+  spherical polygon specified as an array of right ascensions and declinations
+  Alternatively poly can be an PostgreSQL polygon type. This function
+  uses the index for faster queries, assuming the index on q3c_ang2ipix(ra,dec)
+  was created.
 
 - q3c_ipix2ang(ipix) -- returns a two-element array of (ra,dec) corresponding to a given ipix.
 
@@ -111,8 +114,8 @@ into account the proper motion.
 - q3c_ipixcenter(ra, dec, bits) -- returns the ipix value of the
 	pixel center at certain pixel depth covering the specified (ra,dec)
 
-- q3c_in_poly(ra, dec, poly) -- returns true/false if point is inside a polygon. This function
-  will not use the index.
+- q3c_in_poly(ra, dec, poly) -- returns true/false if point is inside a 
+  polygon. This function will not use the index.
 
 - q3c_version() -- returns the version of Q3C that is installed
 
@@ -127,7 +130,10 @@ my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 The order of arguments is important, so that the column names of the table should come first, and the 
 location where you search after, otherwise the index won't be used.
 
-There is also an alternative way of doing cone searches which could be a bit faster if the table that you are working with is small. In that case q3c_radial_query may be too CPU heavy. So you may want to query the table:
+There is also an alternative way of doing cone searches which could be a bit 
+faster if the table that you are working with that table that is small. In 
+that case q3c_radial_query may be too CPU heavy. So you may want to query the
+table:
  
 ```
   my_db# SELECT * FROM mytable WHERE q3c_join(11, 12, ra, dec, 0.1);
@@ -141,28 +147,30 @@ my_db=# select * from mytable WHERE
 returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
 major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
 
-- The polygonal query, i.e. the query of the objects which lie inside the region 
-bounded by the polygon on the sphere. 
-To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) ) 
-(this is the spherical polygon with following vertices:
-(ra=0, dec=0) ; (ra=2, dec=0); (ra=2, dec=1); (ra=0, dec=1)):
+- The polygonal query, i.e. the query of the objects which lie inside the 
+  region  bounded by the polygon on the sphere. 
+  To query the objects in the polygon ((0,0),(2,0),(2,1),(0,1)) ) 
+  (this is the spherical polygon with following vertices:
+  (ra=0, dec=0) ; (ra=2, dec=0); (ra=2, dec=1); (ra=0, dec=1)):
 
 ```
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
 ```
-- The polygonal query using postgresql polygon type
+- The polygonal query using PostgreSQL polygon type
 ```
 my_db# SELECT * FROM mytable WHERE
 		q3c_poly_query(ra, dec, '((0, 0), (2, 0), (2, 1), (0, 1))'::polygon);
 ```
 
 - The positional cross-match of the tables: 
-In this example we will assume that we have a huge table "table2" with ra and dec columns and
-an already created Q3C index on them and a smaller table "table1" with ra and dec columns.
+  In this example we will assume that we have a huge table "table2" with ra 
+  and dec columns and an already created index on q3c_ang2ipix(ra,dec) and 
+  a smaller table "table1" with ra and dec columns.
 
-Now, if we want to cross-match the tables "table1" and "table2" by position 
-with the crossmatch radius of say 0.001 degrees, we would do it with the following query:
+  Now, if we want to cross-match the tables "table1" and "table2" by position
+  with the crossmatch radius of 0.001 degrees, we would do it with the 
+  following query:
   
 ```
 my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
@@ -173,11 +181,10 @@ The order of arguments is important again, because it determines whether an
 index is going to be used or not. The ra,dec columns from the table with the 
 index should go after the ra,dec columns from the table without the index.
 
-It is important that the query will return *ALL* the pairs within the matching distance, rather than 
-say nearest neighbors. For nearest neighbors see below.
+It is important that the query will return *ALL* the pairs within the matching distance, rather than just nearest neighbors. See the nearest neighbors queries below.
   
-If every object in the table1 have his own error circle, here we'll assume 
-that the radius of that circle in degrees is stored in the column "err",
+If every object in table1 have his own error circle ( we'll assume 
+that the radius of that circle in degrees is stored in the column "err"),
 then you should run the query:
   
 ```
@@ -231,7 +238,7 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t
 The idea behind the query is that for every row of your table LATERAL() executes the subquery, that retuns all the neihhbours 
 within the aperture and then orders them by distance takes the top one.
   
-If you want only the objects which do have the neighbors then the query will look like that
+If you want only the objects that have the neighbors then the query will look like that
   
 ```
 my_db# SELECT  t.*, ss.* FROM mytable AS t,
@@ -258,4 +265,21 @@ my_db# WITH x AS (
     SELECT * FROM x, sdssdr9.phototag AS s WHERE x.match_objid=s.objid;
 ```
 
+## Perfomance issues/Slow queries
 
+If you experience slow q3c queries, the following list may suggest possible 
+solutions. 
+
+- Check that you are using the correct order of arguments in the q3c functions.
+  I.e. q3c_radial_query(120,3,ra,dec,1) instead of q3c_radial_query(ra,dec,120,3,1)
+- Verify the plan of the query using 'EXPLAIN ...' command. That will tell you
+  how PG tries to execute it. If you see something involving merge_join, or 
+  just seq scans (instead of bitmap scans using the q3c index), likely the plan is wrong and you have to fix it
+- Force postgresql to use the q3c_index by disabling seq scans or merge and hash joins by setting 'set enable_mergejoin to off; set enable_seqscan to off; set enable hashjoin to off;'
+- Cluster your table using q3c index to sort your table by position.
+- Check if you are using q3c_join() query together with additional clauses. I.e. the query select * from t1, t2 where q3c_join(t1.ra,t1.dec,t2.ra,t2.dec,1./3600) and t1.mag<1 and t2.mag>33  likely will NOT execute properly, you will likely need to rewrite it as 
+```
+with x as (select * from t1 where t1.mag<1) 
+   y as (select *, t2.mag as t2mag from x, t2 where q3c_join(t1.ra,t1.dec,t2.ra,t2.dec,1./3600) )
+   select * from y where t2mag>33
+```  
