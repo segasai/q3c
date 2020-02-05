@@ -196,7 +196,7 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 					/* ra in degrees, dec in degrees       */
 					/* strictly 0<=ra<360 and -90<=dec<=90 */
 {
-	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0;
+	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0, td1;
 	q3c_coord_t ra,dec;
 	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
 		*ybits = hprm->ybits, xi, yi;
@@ -224,14 +224,15 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 	ra1 = Q3C_DEGRA * (ra - 90 * (q3c_coord_t)face_num);
 	dec1 = Q3C_DEGRA * dec;
 	x0 = q3c_tan (ra1);
-	y0 = q3c_tan (dec1) / q3c_cos (ra1);
+	td1 = q3c_tan(dec1);
+	y0 = td1 / q3c_cos (ra1);
 	face_num++;
 	
 	if (y0 > 1)
 	{
 		face_num = 0;
 		ra1 = Q3C_DEGRA * ra;
-		tmp0 = 1 / q3c_tan (dec1);
+		tmp0 = 1 / td1;
 		q3c_sincos (ra1, x0, y0);
 
 		x0 *= tmp0;
@@ -247,7 +248,7 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 	{
 		face_num = 5;
 		ra1 = Q3C_DEGRA * ra;
-		tmp0 = 1 / q3c_tan (dec1);
+		tmp0 = 1 / td1;
 		q3c_sincos (ra1, x0, y0);
 
 		x0 *= (-tmp0);
