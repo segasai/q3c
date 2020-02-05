@@ -555,7 +555,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_circle_region circle;
 	q3c_coord_t new_radius;
 	q3c_coord_t ra_cen, dec_cen, pmra=0, pmdec=0;
-	q3c_coord_t max_epoch_delta=0, radius=0, cdec=1;
+	q3c_coord_t max_epoch_delta=0, radius=0;
 	bool pm_enabled = true;
 	int iteration;
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(6))
@@ -628,7 +628,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	new_radius = q3c_sqrt(pmra * pmra/cdec/cdec + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
+	new_radius = q3c_sqrt(pmra * pmra + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
 
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
