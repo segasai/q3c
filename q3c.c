@@ -346,7 +346,7 @@ PG_FUNCTION_INFO_V1(pgq3c_sindist_pm);
 Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 {
 	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
-	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec=1;
 	bool pm_enabled = true;
 	q3c_coord_t res;
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
@@ -399,7 +399,8 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 
     if (pm_enabled)
 	{
-		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / 3600000;
+		cdec = cos(dec1*Q3C_DEGRA);
+		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
 	else
@@ -416,7 +417,7 @@ PG_FUNCTION_INFO_V1(pgq3c_dist_pm);
 Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 {
 	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
-	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec=1;
 	bool pm_enabled = true;
 	q3c_coord_t res;
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
@@ -469,7 +470,8 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 
     if (pm_enabled)
 	{
-		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / 3600000;
+		cdec = cos(dec1 * Q3C_DEGRA);
+		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
 	else
@@ -553,7 +555,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_circle_region circle;
 	q3c_coord_t new_radius;
 	q3c_coord_t ra_cen, dec_cen, pmra=0, pmdec=0;
-	q3c_coord_t max_epoch_delta=0, radius=0 ;
+	q3c_coord_t max_epoch_delta=0, radius=0, cdec=1;
 	bool pm_enabled = true;
 	int iteration;
 	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(6))
@@ -599,11 +601,11 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	}
 	if ((!pm_enabled) ||  (!isfinite(pmra)) || (!isfinite(pmdec)) ||
 		(!isfinite(max_epoch_delta)) )
-	  {
-	    pmra =  0;
-	    pmdec = 0;
-	    max_epoch_delta = 0;
-	  }
+	{
+		pmra =  0;
+		pmdec = 0;
+		max_epoch_delta = 0;
+	}
 	if (max_epoch_delta<0)
 	{
 		elog(ERROR, "The maximum epoch difference must be >=0 ");
@@ -626,7 +628,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	new_radius = q3c_sqrt(pmra * pmra + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
+	new_radius = q3c_sqrt(pmra * pmra/cdec/cdec + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
 
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
