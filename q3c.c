@@ -345,61 +345,54 @@ Datum pgq3c_sindist(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_sindist_pm);
 Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 {
-	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
-	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec=1;
-	bool pm_enabled = true;
+	q3c_coord_t pmra1, pmdec1, epoch1, epoch2;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec;
+	bool pm_enabled = true, cosdec;
 	q3c_coord_t res;
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
-		PG_ARGISNULL(5) || PG_ARGISNULL(6))
+	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
+	  cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
+	  epoch2_arg_pos=8;
+
+	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
+		PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
 	}
+	
+	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
+	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
-	ra1 = PG_GETARG_FLOAT8(0);
-	dec1 = PG_GETARG_FLOAT8(1);
-
-	if (!PG_ARGISNULL(2))
+	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
+	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
 	{
-	    pmra1 = PG_GETARG_FLOAT8(2);
+	    pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
+	    pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
+	    epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
+	    epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
 	}
 	else
 	{
 		pm_enabled = false;
+		pmra1 = 0;
+		pmdec1 = 0;
+		epoch1 = 0;
+		epoch2 = 0;
 	}
-
-	if (!PG_ARGISNULL(3))
-	{
-	    pmdec1 = PG_GETARG_FLOAT8(3);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
-
-   	if (!PG_ARGISNULL(4))
-	{
-		epoch1 = PG_GETARG_FLOAT8(4);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
-
-	ra2 = PG_GETARG_FLOAT8(5);
-	dec2 = PG_GETARG_FLOAT8(6);
-   	if (!PG_ARGISNULL(7))
-	{
-		epoch2 = PG_GETARG_FLOAT8(7);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
+	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
+	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
 
     if (pm_enabled)
 	{
-		cdec = cos(dec1*Q3C_DEGRA);
+	  if (cosdec)
+	    {
+	      cdec = cos(dec1*Q3C_DEGRA);
+	    }
+	  else
+	    {
+	      cdec = 1;
+	    }
 		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
@@ -416,61 +409,55 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_dist_pm);
 Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 {
-	q3c_coord_t pmra1 = 0, pmdec1 = 0, epoch1 =0 , epoch2 =0;
+	q3c_coord_t pmra1, pmdec1, epoch1, epoch2;
 	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec=1;
-	bool pm_enabled = true;
+	bool pm_enabled = true, cosdec;
 	q3c_coord_t res;
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) ||
-		PG_ARGISNULL(5) || PG_ARGISNULL(6))
+
+	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
+	  cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
+	  epoch2_arg_pos=8;
+
+	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
+		PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
 	}
+	
+	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
+	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
-	ra1 = PG_GETARG_FLOAT8(0);
-	dec1 = PG_GETARG_FLOAT8(1);
-
-	if (!PG_ARGISNULL(2))
+	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
+	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
 	{
-	    pmra1 = PG_GETARG_FLOAT8(2);
+	    pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
+	    pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
+	    epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
+	    epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
 	}
 	else
 	{
 		pm_enabled = false;
+		pmra1 = 0;
+		pmdec1 = 0;
+		epoch1 = 0;
+		epoch2 = 0;
 	}
-
-	if (!PG_ARGISNULL(3))
-	{
-	    pmdec1 = PG_GETARG_FLOAT8(3);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
-
-   	if (!PG_ARGISNULL(4))
-	{
-		epoch1 = PG_GETARG_FLOAT8(4);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
-
-	ra2 = PG_GETARG_FLOAT8(5);
-	dec2 = PG_GETARG_FLOAT8(6);
-   	if (!PG_ARGISNULL(7))
-	{
-		epoch2 = PG_GETARG_FLOAT8(7);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
+	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
+	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
 
     if (pm_enabled)
 	{
-		cdec = cos(dec1 * Q3C_DEGRA);
+	  if (cosdec)
+	    {
+	      cdec = cos(dec1*Q3C_DEGRA);
+	    }
+	  else
+	    {
+	      cdec = 1;
+	    }
 		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
@@ -554,52 +541,46 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	extern struct q3c_prm hprm;
 	q3c_circle_region circle;
 	q3c_coord_t new_radius;
-	q3c_coord_t ra_cen, dec_cen, pmra=0, pmdec=0;
+	q3c_coord_t ra_cen, dec_cen, pmra, pmdec;
 	q3c_coord_t max_epoch_delta=0, radius=0;
-	bool pm_enabled = true;
+	bool pm_enabled = true, cosdec;
 	int iteration;
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(6))
+	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
+	  cosdec_arg_pos=4, maxepochdelta_arg_pos=5, radius_arg_pos=6, iteration_arg_pos=7;
+
+	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(radius_arg_pos))
 	  {
 	    elog(ERROR, "Right Ascensions and raddii must be not null");
 	  }
 
-	ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-	dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
-	if (!PG_ARGISNULL(2))
+	ra_cen = PG_GETARG_FLOAT8(ra_arg_pos); // ra_cen
+	dec_cen = PG_GETARG_FLOAT8(dec_arg_pos); // dec_cen
+
+	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
+	    (!PG_ARGISNULL(maxepochdelta_arg_pos)))
 	{
-		pmra = PG_GETARG_FLOAT8(2); // pmra
+	    pmra = PG_GETARG_FLOAT8(pmra_arg_pos);
+	    pmdec = PG_GETARG_FLOAT8(pmdec_arg_pos);
+	    max_epoch_delta = PG_GETARG_FLOAT8(maxepochdelta_arg_pos);
 	}
 	else
 	{
 		pm_enabled = false;
-	}
-	if (!PG_ARGISNULL(3))
-	{
-		pmdec = PG_GETARG_FLOAT8(3); // pmdec
-	}
-	else
-	{
-		pm_enabled = false;
+		pmra = 0;
+		pmdec = 0;
+		max_epoch_delta = 0;
 	}
 
-	if (!PG_ARGISNULL(4))
-	{
-		max_epoch_delta = PG_GETARG_FLOAT8(4);
-	}
-	else
-	{
-		pm_enabled = false;
-	}
+	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	radius = PG_GETARG_FLOAT8(radius_arg_pos); // error radius
 
-	radius = PG_GETARG_FLOAT8(5); // error radius
-
-	iteration = PG_GETARG_INT32(6); // iteration
+	iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
 
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
 	{
 		elog(ERROR, "The values of ra,dec are infinites or NaNs");
 	}
-	if ((!pm_enabled) ||  (!isfinite(pmra)) || (!isfinite(pmdec)) ||
+	if ( (!isfinite(pmra)) || (!isfinite(pmdec)) ||
 		(!isfinite(max_epoch_delta)) )
 	{
 		pmra =  0;
@@ -628,8 +609,16 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	new_radius = q3c_sqrt(pmra * pmra + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
-
+	if (pm_enabled)
+	  {
+	    q3c_coord_t pmra1;
+	    if (cosdec) { pmra1 = pmra ; } else { pmra1 = pmra * cos(Q3C_DEGRA*dec_cen);}
+	    new_radius = q3c_sqrt(pmra1 * pmra1 + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
+	  }
+	else
+	  {
+	    new_radius = radius;
+	  }
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;

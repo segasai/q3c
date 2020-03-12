@@ -65,15 +65,18 @@ The functions installed by Q3C are:
 
 - q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two  points (ra1,dec1) and (ra2,dec2)
 
-- q3c_dist_pm(ra1, dec1, pmra1, pmdec1, epoch1, ra2, dec2, epoch2) -- returns 
+- q3c_dist_pm(ra1, dec1, pmra1, pmdec1, cosdec_flag, epoch1, ra2, dec2, epoch2) -- returns 
   the distance in degrees between two points (ra1,dec1) and (ra2,dec2) at
-  the epoch epoch2 while taking the proper motion into account. 
+  the epoch epoch2 while taking the proper motion into account.
+  *IMPORTANT* The cosdec flag (0 or 1) is telling whether the proper motion
+  is computed with the cos(dec) term or without it. The previous versions
+  (q3c 1.8) did not have that parameter and assumed pmra without cos(dec))
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It should be used when 
   the index on q3c_ang2ipix(ra2, dec2) is created. See below for examples.
 
-- q3c_join_pm(ra1, dec1, pmra1, pmdec1, epoch1, 
+- q3c_join_pm(ra1, dec1, pmra1, pmdec1, cosdec_flag, epoch1, 
   		   ra2, dec2, epoch2, max_delta_epoch, radius)  -- returns true   if (ra1, dec1)
   is within radius spherical distance of (ra2, dec2). It takes into account 
   the proper motion of the source pmra1, pmdec1 (in mas/yr) 
@@ -83,6 +86,10 @@ The functions installed by Q3C are:
   in catalog2 is 2015, then the max_delta_epoch should be 45). 
   You should use this function if the index on q3c_ang2ipix(ra2,dec2)
   was created. 
+  *IMPORTANT* The cosdec flag (0 or 1) is telling whether the proper motion
+  is computed with the cos(dec) term or without it. The previous versions
+  (q3c 1.8) did not have that parameter and assumed pmra without cos(dec))
+
 
 - q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec1) have to be within an ellipse with
@@ -206,7 +213,32 @@ my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 where axis_ratio is the column with axis ratio of the ellipses and PA is the 
 column with the positional angles of them, and maj_ax is the column with major
 axises of those ellipses.
+
+- The positional cross-match of the tables with proper motions taken into
+  account
+  In this example we will assume that we have a huge table "table2" with ra 
+  and dec columns and an already created index on q3c_ang2ipix(ra,dec) and 
+  a smaller table "table1" with ra and dec columns. We will also assume that
+  this table1 has an epoch column (in year units) as well as pmra, pmdec
+  columns (in units of mas/yr), while the table2 only has the epoch column.
+  We will also assume that the pmra columns has the cos(dec) factor. 
+  and that we know the upper bound on the epoch difference
+  between the two catalogs is say 30 years. (it doesn't have to be precise,
+  but it is important that the true largest epoch difference is not larger
+  than the specified number).
+
+  Now, if we want to cross-match the tables "table1" and "table2" by position
+  with the crossmatch radius of 0.001 degrees, we would do it with the 
+  following query:
   
+```
+my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
+		q3c_join_pm (a.ra, a.dec, a.pmra, a.pmdec, 1,
+		a.epoch, b.ra, b.dec, b.epoch, 30, 0.001);
+```
+  
+
+
 - The density estimation of your objects using pixelation depth of 25:
 ```
 my_db# SELECT (q3c_ipix2ang(i))[1] as ra ,(q3c_ipix2ang(i))[2] as dec ,c,
