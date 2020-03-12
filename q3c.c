@@ -378,7 +378,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 		epoch1 = 0;
 		epoch2 = 0;
 	}
-	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
 	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
@@ -443,7 +443,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 		epoch1 = 0;
 		epoch2 = 0;
 	}
-	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
 	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
@@ -571,7 +571,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		max_epoch_delta = 0;
 	}
 
-	cosdec = PG_GETARG_BOOL(cosdec_arg_pos);
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
 	radius = PG_GETARG_FLOAT8(radius_arg_pos); // error radius
 
 	iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
