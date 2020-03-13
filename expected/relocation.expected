@@ -1,0 +1,21 @@
+SET
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
+ count 
+-------
+     1
+(1 row)
+
+ count 
+-------
+     2
+(1 row)
+
