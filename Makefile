@@ -96,3 +96,18 @@ test: gen_data all
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.7.0"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.8.0"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.0"'
+	dropdb q3c_test
+	createdb q3c_test
+	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
+	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
+	./gen_data 1 1000000 | psql q3c_test -c "COPY test FROM STDIN WITH DELIMITER ' '"
+	./gen_data 2 1000000 | psql q3c_test -c "COPY test1 FROM STDIN WITH DELIMITER ' '"
+
+	psql q3c_test -c 'CREATE schema tests'
+	psql q3c_test -c 'CREATE EXTENSION q3c schema tests'
+	psql q3c_test -c 'set search_path to public,tests; CREATE INDEX q3c_idx1 ON test1 (q3c_ang2ipix(ra,dec))'
+	psql q3c_test -c 'ANALYZE test'
+	psql q3c_test -c 'ANALYZE test1'
+	cat sql/relocation.sql | psql q3c_test > results/relocation.out
+	diff results/relocation.out expected/relocation.expected
+	dropdb q3c_test
