@@ -55,7 +55,7 @@ test: gen_data all
 	./gen_data 4 1000000 --withpm --pmscale=0 --randomepoch | psql q3c_test -c "COPY test_pm0 FROM STDIN WITH DELIMITER ' '"
 	./gen_data 5 1000000 --withpm --pmscale=1000 --epoch=2015 | psql q3c_test -c "COPY test_pm1 FROM STDIN WITH DELIMITER ' '"
 
-	psql q3c_test -c 'create extension q3c'
+	psql q3c_test -c 'CREATE EXTENSION q3c'
 	psql q3c_test -c 'CREATE INDEX q3c_idx1 ON test1 (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'CREATE INdex ON test_pm0 (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'CREATE INDEX on test_pm1 (q3c_ang2ipix(ra,dec))'
@@ -91,3 +91,8 @@ test: gen_data all
 	cat sql/area.sql | psql q3c_test > results/area.out
 	diff results/area.out expected/area.expected
 	dropdb q3c_test
+	createdb q3c_test
+	psql q3c_test -c 'CREATE EXTENSION q3c VERSION "1.6.0"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.7.0"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.8.0"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.0"'
