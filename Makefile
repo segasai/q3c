@@ -20,7 +20,15 @@ OPT_LOW = -O2
 PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -DQ3C_VERSION='"'$(EXTVERSION)'"'
 CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
 
+ifeq (, $(shell which $(PG_CONFIG)))
+$(error "No pg_config in $(PATH)! Exiting...")
+endif
+
 PGXS := $(shell $(PG_CONFIG) --pgxs)
+ifeq (, $(wildcard $(PGXS)))
+$(error "The $(PGXS) file not found. Check your PG installation. Exiting...")
+endif
+
 include $(PGXS)
 PGVERNEW := $(shell if [ $(MAJORVERSION) -ge 12 ] ; then echo N ; else echo O ; fi )
 
