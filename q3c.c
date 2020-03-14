@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2020 Sergey Koposov
 
     Email: skoposov@cmu.edu
 
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with Q3C; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 
 
 #include <string.h>
@@ -121,7 +121,7 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad/41252. ; /* pi*r^2/whole_sky_area */
+	ratio = 3.14 * rad * rad/41252.;  /* pi*r^2/whole_sky_area */
 
 	/* clamp at 0, 1*/
 	CLAMP_PROBABILITY(ratio);
@@ -139,7 +139,7 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	List   *args = (List *) PG_GETARG_POINTER(2);
 	int varRelid = 0;
 	/* Because there is no varrelid in the join selectivity call
-         * I just set it to zero */
+	 * I just set it to zero */
 	Node   *left;
 	Node *other;
 	VariableStatData vardata;
@@ -165,7 +165,7 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad/41252. ; /* pi*r^2/whole_sky_area */
+	ratio = 3.14 * rad * rad/41252.;  /* pi*r^2/whole_sky_area */
 
 	/* clamp at 0, 1*/
 	CLAMP_PROBABILITY(ratio);
@@ -269,9 +269,9 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	q3c_coord_t ra, dec;
 
 	Datum       *data;
-	int16       typlen;
-	bool        typbyval;
-	char        typalign;
+	int16 typlen;
+	bool typbyval;
+	char typalign;
 	ArrayType  *result;
 	ipix = PG_GETARG_INT64(0);
 
@@ -281,13 +281,13 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	data[0] = Float8GetDatum (ra);
 	data[1] = Float8GetDatum (dec);
 
-    /* get required info about the element type */
-    get_typlenbyvalalign(FLOAT8OID, &typlen, &typbyval, &typalign);
+	/* get required info about the element type */
+	get_typlenbyvalalign(FLOAT8OID, &typlen, &typbyval, &typalign);
 
-    /* now build the array */
-    result = construct_array(data, 2, FLOAT8OID, typlen, typbyval, typalign);
+	/* now build the array */
+	result = construct_array(data, 2, FLOAT8OID, typlen, typbyval, typalign);
 
-    PG_RETURN_ARRAYTYPE_P(result);
+	PG_RETURN_ARRAYTYPE_P(result);
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_pixarea);
@@ -350,25 +350,25 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	bool pm_enabled = true, cosdec;
 	q3c_coord_t res;
 	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	  cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
-	  epoch2_arg_pos=8;
+	          cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
+	          epoch2_arg_pos=8;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
-		PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
+	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
 	}
-	
+
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
 	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
 	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
 	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
 	{
-	    pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
-	    pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
-	    epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
-	    epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
+		pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
+		pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
+		epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
+		epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
 	}
 	else
 	{
@@ -383,16 +383,16 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
 
-    if (pm_enabled)
+	if (pm_enabled)
 	{
-	  if (cosdec)
-	    {
-	      cdec = cos(dec1*Q3C_DEGRA);
-	    }
-	  else
-	    {
-	      cdec = 1;
-	    }
+		if (cosdec)
+		{
+			cdec = cos(dec1*Q3C_DEGRA);
+		}
+		else
+		{
+			cdec = 1;
+		}
 		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
@@ -415,25 +415,25 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	q3c_coord_t res;
 
 	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	  cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
-	  epoch2_arg_pos=8;
+	          cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
+	          epoch2_arg_pos=8;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
-		PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
+	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
 		elog(ERROR, "The RA, DEC columns are not allowed to be null");
 	}
-	
+
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
 	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
 	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
 	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
 	{
-	    pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
-	    pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
-	    epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
-	    epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
+		pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
+		pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
+		epoch1 = PG_GETARG_FLOAT8(epoch_arg_pos);
+		epoch2 = PG_GETARG_FLOAT8(epoch2_arg_pos);
 	}
 	else
 	{
@@ -448,16 +448,16 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
 
-    if (pm_enabled)
+	if (pm_enabled)
 	{
-	  if (cosdec)
-	    {
-	      cdec = cos(dec1*Q3C_DEGRA);
-	    }
-	  else
-	    {
-	      cdec = 1;
-	    }
+		if (cosdec)
+		{
+			cdec = cos(dec1*Q3C_DEGRA);
+		}
+		else
+		{
+			cdec = 1;
+		}
 		ra1_shift = ra1 + pmra1 * (epoch2 - epoch1) / cdec / 3600000;
 		dec1_shift = dec1 + pmdec1 * (epoch2 - epoch1) / 3600000;
 	}
@@ -495,10 +495,10 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-   	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
- 	 */
+		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+		 * ipix_buf. Because if the program will be canceled or crashed
+		 * for some reason the invocation should be == 0
+		 */
 	}
 	else
 	{
@@ -546,12 +546,12 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	bool pm_enabled = true, cosdec;
 	int iteration;
 	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	  cosdec_arg_pos=4, maxepochdelta_arg_pos=5, radius_arg_pos=6, iteration_arg_pos=7;
+	          cosdec_arg_pos=4, maxepochdelta_arg_pos=5, radius_arg_pos=6, iteration_arg_pos=7;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(radius_arg_pos))
-	  {
-	    elog(ERROR, "Right Ascensions and raddii must be not null");
-	  }
+	{
+		elog(ERROR, "Right Ascensions and raddii must be not null");
+	}
 
 	ra_cen = PG_GETARG_FLOAT8(ra_arg_pos); // ra_cen
 	dec_cen = PG_GETARG_FLOAT8(dec_arg_pos); // dec_cen
@@ -559,9 +559,9 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
 	    (!PG_ARGISNULL(maxepochdelta_arg_pos)))
 	{
-	    pmra = PG_GETARG_FLOAT8(pmra_arg_pos);
-	    pmdec = PG_GETARG_FLOAT8(pmdec_arg_pos);
-	    max_epoch_delta = PG_GETARG_FLOAT8(maxepochdelta_arg_pos);
+		pmra = PG_GETARG_FLOAT8(pmra_arg_pos);
+		pmdec = PG_GETARG_FLOAT8(pmdec_arg_pos);
+		max_epoch_delta = PG_GETARG_FLOAT8(maxepochdelta_arg_pos);
 	}
 	else
 	{
@@ -581,7 +581,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		elog(ERROR, "The values of ra,dec are infinites or NaNs");
 	}
 	if ( (!isfinite(pmra)) || (!isfinite(pmdec)) ||
-		(!isfinite(max_epoch_delta)) )
+	     (!isfinite(max_epoch_delta)) )
 	{
 		pmra =  0;
 		pmdec = 0;
@@ -594,31 +594,31 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-   	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
- 	 */
+		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+		 * ipix_buf. Because if the program will be canceled or crashed
+		 * for some reason the invocation should be == 0
+		 */
 	}
 	else
 	{
-	  if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
-	  	(radius == radius_buf) && (pmra == pmra_buf) &&
-		(pmdec == pmdec_buf) && (max_epoch_delta == max_epoch_delta_buf))
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
+		    (radius == radius_buf) && (pmra == pmra_buf) &&
+		    (pmdec == pmdec_buf) && (max_epoch_delta == max_epoch_delta_buf))
 		{
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 		}
 	}
 
 	if (pm_enabled)
-	  {
-	    q3c_coord_t pmra1;
-	    if (cosdec) { pmra1 = pmra ; } else { pmra1 = pmra * cos(Q3C_DEGRA*dec_cen);}
-	    new_radius = q3c_sqrt(pmra1 * pmra1 + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
-	  }
+	{
+		q3c_coord_t pmra1;
+		if (cosdec) { pmra1 = pmra; } else { pmra1 = pmra * cos(Q3C_DEGRA*dec_cen);}
+		new_radius = q3c_sqrt(pmra1 * pmra1 + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
+	}
 	else
-	  {
-	    new_radius = radius;
-	  }
+	{
+		new_radius = radius;
+	}
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
@@ -670,16 +670,16 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
+		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+		 * ipix_buf. Because if the program will be canceled or crashed
+		 * for some reason the invocation should be == 0
+		 */
 	}
 	else
 	{
 		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
-			(radius == radius_buf) && (PA == PA_buf) &&
-			(axis_ratio == axis_ratio_buf))
+		    (radius == radius_buf) && (PA == PA_buf) &&
+		    (axis_ratio == axis_ratio_buf))
 		{
 			PG_RETURN_INT64(ipix_array_buf[iteration]);
 		}
@@ -748,10 +748,10 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
+		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+		 * ipix_buf. Because if the program will be canceled or crashed
+		 * for some reason the invocation should be == 0
+		 */
 	}
 	else
 	{
@@ -820,10 +820,10 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	if (invocation == 0)
 	/* If this is the first invocation of the function */
 	{
-	/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-	 * ipix_buf. Because if the program will be canceled or crashed
-	 * for some reason the invocation should be == 0
-	 */
+		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
+		 * ipix_buf. Because if the program will be canceled or crashed
+		 * for some reason the invocation should be == 0
+		 */
 	}
 	else
 	{
@@ -841,7 +841,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 
 	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
-		partials);
+	                  partials);
 
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
@@ -859,18 +859,18 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 }
 
 static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool typbyval,
-	char typalign, int16 typlen)
+                                   char typalign, int16 typlen)
 {
 	q3c_coord_t val;
 
 	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
 	 * function deconstruct_array
-	*/
+	 */
 	if (bitmap && (*bitmap & *bitmask) == 0)
 	{
 		ereport(ERROR,
-		(errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
-		errmsg("null array element not allowed in this context")));
+		        (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
+		         errmsg("null array element not allowed in this context")));
 	}
 	val = DatumGetFloat8(fetch_att(*p, typbyval, typlen));
 	*p = att_addlength_pointer(*p, typlen, PointerGetDatum(p));
@@ -908,7 +908,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 
 	if (poly_nitems % 2 != 0)
 	{
-		 elog(ERROR, "Invalid array argument!\nThe array should contain even number of elements");
+		elog(ERROR, "Invalid array argument!\nThe array should contain even number of elements");
 	}
 	else if (poly_nitems <= 4)
 	{
@@ -951,11 +951,11 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
 	}
 
-	for(i=0;i<npts;i++)
+	for(i=0; i<npts; i++)
 	{
 		newx = poly->p[i].x;
 		newy = poly->p[i].y;
-		if ((newx != ra[i]) || (newy !=dec[i]))	{identical=0;}
+		if ((newx != ra[i]) || (newy !=dec[i])) {identical=0;}
 		ra[i] = newx;
 		dec[i] = newy;
 	}
@@ -963,20 +963,20 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 }
 
 
-typedef struct q3c_poly_info_type{
+typedef struct q3c_poly_info_type {
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	* Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
-	* So we should have the array with the size twice bigger
-	*/
+	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
+	 * So we should have the array with the size twice bigger
+	 */
 	int ready;
 	q3c_ipix_t partials[2 * Q3C_NPARTIALS]; /* array of ipixes partially covered */
 	q3c_ipix_t fulls[2 * Q3C_NFULLS]; /* array of ipixes fully covered */
 	q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX],
-		dec[Q3C_MAX_N_POLY_VERTEX], x[Q3C_MAX_N_POLY_VERTEX],y[Q3C_MAX_N_POLY_VERTEX],
-		ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
+	            dec[Q3C_MAX_N_POLY_VERTEX], x[Q3C_MAX_N_POLY_VERTEX],y[Q3C_MAX_N_POLY_VERTEX],
+	            ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
 	q3c_coord_t xpj[3][Q3C_MAX_N_POLY_VERTEX], ypj[3][Q3C_MAX_N_POLY_VERTEX],
-			axpj[3][Q3C_MAX_N_POLY_VERTEX], aypj[3][Q3C_MAX_N_POLY_VERTEX];
-		// arrays storing the ra,dec ,projected x,y
+	            axpj[3][Q3C_MAX_N_POLY_VERTEX], aypj[3][Q3C_MAX_N_POLY_VERTEX];
+	// arrays storing the ra,dec ,projected x,y
 	char faces[6];
 	char multi_flag;
 	/* IF YOU MAKE CHANGES MAKE SURE YOU CHANGE THE COPY() FUNCTION */
@@ -993,7 +993,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 	{
 		b->fulls[i]=a->fulls[i];
 	}
-	for (i=0;i<Q3C_MAX_N_POLY_VERTEX;i++)
+	for (i=0; i<Q3C_MAX_N_POLY_VERTEX; i++)
 	{
 		b->ra[i] = a->ra[i];
 		b->dec[i] = a->dec[i];
@@ -1001,7 +1001,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 		b->y[i] = a->y[i];
 		b->ax[i] = a->ax[i];
 		b->ay[i] = a->ay[i];
-		for (j=0;j<3;j++)
+		for (j=0; j<3; j++)
 		{
 			b->axpj[j][i]=a->axpj[j][i];
 			b->aypj[j][i]=a->aypj[j][i];
@@ -1011,7 +1011,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 		}
 
 	}
-	for (i=0;i<6;i++)
+	for (i=0; i<6; i++)
 	{
 		b->faces[i] = a->faces[i];
 	}
@@ -1020,17 +1020,17 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 
 
 /* Cache logic here is the following
-when the function is called for the first time with iteration =0
-I compute everything allocate memory and store computations in the static variable
-and locally allocated q3c_poly_info_table
-when the function is called for the first time and iteration  !=0
-I allocate new memory, copy stuff from static variable into locally allocated stuff
-I make no checks of the data
-If the function is called for the second time (i.e. fn_extra is not null)
-I blindly assume everything is EXACTLY the same and do not recompute anything
-as the q3c_poly_query_it() is the internal function and is ONLY supposed
-to be called with the constant polygon
-*/
+   when the function is called for the first time with iteration =0
+   I compute everything allocate memory and store computations in the static variable
+   and locally allocated q3c_poly_info_table
+   when the function is called for the first time and iteration  !=0
+   I allocate new memory, copy stuff from static variable into locally allocated stuff
+   I make no checks of the data
+   If the function is called for the second time (i.e. fn_extra is not null)
+   I blindly assume everything is EXACTLY the same and do not recompute anything
+   as the q3c_poly_query_it() is the internal function and is ONLY supposed
+   to be called with the constant polygon
+ */
 PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 {
@@ -1241,11 +1241,11 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-											ra_cen, dec_cen, &too_large, identical,
-											qpit->xpj, qpit->ypj,
-										  qpit->axpj, qpit->aypj,
-										  qpit->faces, &(qpit->multi_flag)
-										) !=	Q3C_DISJUNCT;
+	                                        ra_cen, dec_cen, &too_large, identical,
+	                                        qpit->xpj, qpit->ypj,
+	                                        qpit->axpj, qpit->aypj,
+	                                        qpit->faces, &(qpit->multi_flag)
+	                                        ) !=    Q3C_DISJUNCT;
 	if (too_large)
 	{
 		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
@@ -1281,11 +1281,11 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
 
 	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-											ra_cen, dec_cen, &too_large, identical,
-											qpit->xpj, qpit->ypj,
-										  qpit->axpj, qpit->aypj,
-										  qpit->faces, &(qpit->multi_flag)
-										) !=	Q3C_DISJUNCT;
+	                                        ra_cen, dec_cen, &too_large, identical,
+	                                        qpit->xpj, qpit->ypj,
+	                                        qpit->axpj, qpit->aypj,
+	                                        qpit->faces, &(qpit->multi_flag)
+	                                        ) !=    Q3C_DISJUNCT;
 	qpit->ready = 1;
 	if (too_large)
 	{

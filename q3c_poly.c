@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2020 Sergey Koposov
 
     Email: skoposov@cmu.edu
 
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with Q3C; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 
 
 #include "common.h"
@@ -38,14 +38,14 @@ void q3c_init_poly(q3c_poly *qp, int n)
 
 void q3c_prepare_poly(q3c_poly *qp)
 {
-	int n = qp->n - 1 ;
+	int n = qp->n - 1;
 	int i;
 	q3c_coord_t *ax = qp->ax;
 	q3c_coord_t *ay = qp->ay;
 	q3c_coord_t *x = qp->x;
 	q3c_coord_t *y = qp->y;
 
-	for(i = 0 ; i < n; i++)
+	for(i = 0; i < n; i++)
 	{
 		ax[i] = x[i + 1] - x[i];
 		ay[i] = y[i + 1] - y[i];
@@ -65,10 +65,10 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 	q3c_coord_t *ax = qp->ax;
 	q3c_coord_t *ay = qp->ay;
 	int result = !Q3C_DISJUNCT;
-	for(i=0;i<n;i++)
+	for(i=0; i<n; i++)
 	{
 		if (((y0<=y[i])==(y0>y[(i+1)%n])) &&
-				((x0-x[i])<(y0-y[i])*ax[i]/ay[i]))
+		    ((x0-x[i])<(y0-y[i])*ax[i]/ay[i]))
 		{
 			result=!result;
 		}
@@ -131,7 +131,7 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 	q3c_coord_t ra1, dec1, tmp0;
 	q3c_coord_t *ra = qp->ra, *dec = qp->dec;
 	q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
-	q3c_coord_t tmpval ;
+	q3c_coord_t tmpval;
 	int i, n = qp->n;
 	if ((face_num > 0) && (face_num < 5))
 	{
@@ -195,9 +195,9 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 
 
 static char q3c_poly_intersection_check(q3c_poly *qp,
-	q3c_coord_t xl, q3c_coord_t xr,
-	q3c_coord_t yb, q3c_coord_t yt,
-	q3c_coord_t cur_size)
+                                        q3c_coord_t xl, q3c_coord_t xr,
+                                        q3c_coord_t yb, q3c_coord_t yt,
+                                        q3c_coord_t cur_size)
 {
 	int i, n = qp->n;
 	q3c_coord_t *ax = qp->ax;
@@ -206,7 +206,7 @@ static char q3c_poly_intersection_check(q3c_poly *qp,
 	q3c_coord_t *y = qp->y;
 	q3c_coord_t txl, txr, tyb, tyt, axi, ayi, xi, yi, tmp, tmp1;
 	char ret = 0;
-	for( i = 0; i <n ; i++)
+	for( i = 0; i <n; i++)
 	{
 		xi = x[i];
 		yi = y[i];
@@ -256,7 +256,7 @@ static char q3c_poly_intersection_check(q3c_poly *qp,
 
 
 int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
-						q3c_coord_t yc_cur, q3c_coord_t cur_size)
+                         q3c_coord_t yc_cur, q3c_coord_t cur_size)
 {
 	q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;
 	int val;
@@ -301,8 +301,8 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
 	else
 	{
 		if (q3c_poly_intersection_check(qp, xl_cur, xr_cur, yb_cur, yt_cur, cur_size)||
-			((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) &&
-			(qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
+		    ((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) &&
+		     (qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
 		{
 			return Q3C_PARTIAL;
 		}
@@ -313,7 +313,7 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
 	}
 
 
-	PARTUNDEF_CHECK01:
+PARTUNDEF_CHECK01:
 	val = q3c_check_point_in_poly(qp, xr_cur, yb_cur);
 	if (val == Q3C_DISJUNCT)
 	{
@@ -346,11 +346,11 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
                                    q3c_coord_t ra0, q3c_coord_t dec0,
                                    char *too_large,
                                    int invocation,
-																 	 q3c_coord_t (*xpj)[Q3C_MAX_N_POLY_VERTEX],
-																	 q3c_coord_t (*ypj)[Q3C_MAX_N_POLY_VERTEX],
-																 	 q3c_coord_t (*axpj)[Q3C_MAX_N_POLY_VERTEX],
-																	 q3c_coord_t (*aypj)[Q3C_MAX_N_POLY_VERTEX],
-																   char *faces, char *multi_flag)
+                                   q3c_coord_t (*xpj)[Q3C_MAX_N_POLY_VERTEX],
+                                   q3c_coord_t (*ypj)[Q3C_MAX_N_POLY_VERTEX],
+                                   q3c_coord_t (*axpj)[Q3C_MAX_N_POLY_VERTEX],
+                                   q3c_coord_t (*aypj)[Q3C_MAX_N_POLY_VERTEX],
+                                   char *faces, char *multi_flag)
 {
 	q3c_coord_t xmin,xmax,ymin, ymax;
 	q3c_ipix_t ipix;
@@ -392,20 +392,20 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 		 * multi_face loop.
 		 */
 
-		 q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, multi_flag);
+		q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, multi_flag);
 
 
 		face_num0 = face_num;
 
 		for(face_count = 0; face_count <= *multi_flag; face_count++)
 		{
-		/* This the beginning of the mega-loop over multiple faces */
+			/* This the beginning of the mega-loop over multiple faces */
 
 			if (face_count > 0)
 			/* This "if" works when we pass through the secondary faces */
 			{
 				face_num = q3c_xy2facenum(2 * points[2 * face_count - 2],
-					2 * points[2 * face_count - 1], face_num0);
+				                          2 * points[2 * face_count - 1], face_num0);
 
 				faces[face_count] = face_num;
 

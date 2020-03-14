@@ -1,6 +1,6 @@
 /*
-	   Copyright (C) 2004-2020 Sergey Koposov
-   
+       Copyright (C) 2004-2020 Sergey Koposov
+
     Email: skoposov@cmu.edu
 
     This file is part of Q3C.
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with Q3C; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 
 
 #include <stdio.h>
@@ -30,7 +30,7 @@
 
 static int64 rand_state = 1;
 static const int64 c = 12345;
-static const int64 m = ((int64)1)<<31;	
+static const int64 m = ((int64)1)<<31;
 static const int64 a = 1103515245;
 
 int64 get_rand()
@@ -39,28 +39,28 @@ int64 get_rand()
 	return rand_state;
 }
 
-/* Run as 
+/* Run as
  * $ ./gen_data 1 100
  * The first argument of the program is the random seed for the pseudorandom
  * sequence.
  * The second number is the number of objects outputted
- * Additional flags 
+ * Additional flags
  * --withpm  output pms as well
  * --pmscale= maximum allowed pm in mas/yr
  * --epoch= epoch of coordinates
  * --randomepoch assign random epoch
- * 
- */ 
-/* The random number sequence was based on Knuth's theorem A (from 
+ *
+ */
+/* The random number sequence was based on Knuth's theorem A (from
  * his second book)
  */
 int main(int argc, char *argv[])
 {
-	const int nrabins = 36000; 
+	const int nrabins = 36000;
 	const int ndecbins = 18000;
 	const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
 	double corrections[ndecbins], total = 0, pmra, pmdec, pmscale=1;
-	int npoints; 
+	int npoints;
 	bool random_epoch=false;
 	double epoch, cur_epoch;
 	int i, extraarg;
@@ -73,18 +73,18 @@ int main(int argc, char *argv[])
 		get_rand(); // advance one step
 		npoints = atoi(argv[2]);
 		parsing_error = 0;
-		for (extraarg=0; extraarg<(argc-3);extraarg++)
+		for (extraarg=0; extraarg<(argc-3); extraarg++)
 		{
-  			char *curarg = argv[3+extraarg];
+			char *curarg = argv[3+extraarg];
 			if (strncmp(curarg,"--randomepoch", 13)==0) {random_epoch=true;}
 			if (strncmp(curarg,"--withpm", 9)==0) {withpm=true;}
 			if (strncmp(curarg,"--pmscale=", 10)==0)
 			{
 				if (sscanf(curarg, "--pmscale=%lf", &pmscale)==0)
 				{
-				    fprintf(stderr, "Formatting error of pmscale\n");
-				    exit(1);
-                }
+					fprintf(stderr, "Formatting error of pmscale\n");
+					exit(1);
+				}
 			}
 
 			if (strncmp(curarg,"--epoch=",8)==0)
@@ -97,18 +97,18 @@ int main(int argc, char *argv[])
 	if (parsing_error)
 	{
 		fprintf(stderr, "Wrong arguments!\n"
-						"MUST be ./gen_data [RANDOM SEED] [NPOINTS] [PROPERMOTIONSCALE(optional)]");
+		        "MUST be ./gen_data [RANDOM SEED] [NPOINTS] [PROPERMOTIONSCALE(optional)]");
 		exit(1);
 	}
 
 	for (i = 0; i < ndecbins; i++)
-	/* weights in order to have cosine distribution of declinations 
+	/* weights in order to have cosine distribution of declinations
 	 * corresponding to uniform distribution on the sky */
 	{
 		corrections[i] = cos((-90. + (180. / ndecbins) * (i + 0.5)) *
-			M_PI / 180.);
+		                     M_PI / 180.);
 	}
-	
+
 	int npointsleft = npoints;
 	while (npointsleft)
 	{
@@ -117,32 +117,32 @@ int main(int argc, char *argv[])
 		if (withpm )
 		{
 			pmra = ((get_rand() * 1./m)*2 -1) * pmscale;
- 			pmdec = ((get_rand() * 1./m)*2 -1) * pmscale;		
+			pmdec = ((get_rand() * 1./m)*2 -1) * pmscale;
 			if (random_epoch)
 			{
- 				cur_epoch = ((get_rand() * 1./m) ) * 20 + 1980;					
+				cur_epoch = ((get_rand() * 1./m) ) * 20 + 1980;
 			}
 			else
 			{
 				cur_epoch = epoch;
 			}
 		}
-		
+
 		if (get_rand() < (corrections[dec]*m))
 		{
-			if (withpm) 
+			if (withpm)
 			{
 				printf("%f %f %f %f %f\n", ra * (360. / nrabins),
-				-90 + dec * (180. / ndecbins), pmra, pmdec, cur_epoch);
+				       -90 + dec * (180. / ndecbins), pmra, pmdec, cur_epoch);
 
 			}
-			else 
+			else
 			{
 				printf("%f %f\n", ra * (360. / nrabins),
-				-90 + dec * (180. / ndecbins));
+				       -90 + dec * (180. / ndecbins));
 			}
 			npointsleft--;
 		}
 	}
-	
+
 }

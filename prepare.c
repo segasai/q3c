@@ -1,5 +1,5 @@
 /*
-	   Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2020 Sergey Koposov
 
     Email: skoposov@cmu.edu
 
@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with Q3C; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,11 +26,11 @@
 int main()
 {
 	struct q3c_prm hprm1;
-	
+
 	init_q3c1(&hprm1,1073741824);
-	
+
 	q3c_dump_prm(&hprm1,"dump.c");
-	
+
 	return 0;
-	
+
 }
