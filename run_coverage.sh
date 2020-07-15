@@ -13,4 +13,3 @@ make clean
 sleep 2
 make install
 make test
-kill $!
