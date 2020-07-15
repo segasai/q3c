@@ -44,7 +44,7 @@ dump.c: prepare
 	./prepare
 
 prepare: prepare.o q3cube.o q3c_poly.o
-	$(CC) prepare.o q3cube.o q3c_poly.o $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
+	$(CC) $? $(CFLAGS) $(PG_LIBS) $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
