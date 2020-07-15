@@ -19,6 +19,7 @@ before_install:
   - sudo echo "host    all         all         127.0.0.1/32          trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo /etc/init.d/postgresql restart
+  - if [[ ${COVERAGE} == 1 ]] ; then sudo /etc/init.d/postgresql stop ; fi
   - sudo pip install cpp-coveralls
   
 before_script:
@@ -27,29 +28,42 @@ before_script:
 install: make && sudo make install
 
 script:
-  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
-  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then sudo /etc/init.d/postgresql stop ; fi
-  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then ./run_coverage.sh ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERAGE} != 1 ]; then make test ; fi
+  - if [[ ${COVERAGE} == 1 ]] ; then ./run_coverage.sh ; fi
 
 after_success:
-  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' ; fi
+  - if [[ ${COVERAGE} == 1 ]] ; then cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' ; fi
 
-
-compiler:
-  - gcc
-  - clang
+jobs:
+  include:
+  - compiler: gcc
+    env: COVERAGE=1
+  - compiler: gcc
+    env: PGVERSION=12
+  - compiler: clang
+    env: PGVERSION=12
+  - compiler: gcc
+    env: PGVERSION=11
+  - compiler: clang
+    env: PGVERSION=11
+  - compiler: gcc
+    env: PGVERSION=10
+  - compiler: clang
+    env: PGVERSION=10
+  - compiler: gcc
+    env: PGVERSION=9.6
+  - compiler: clang
+    env: PGVERSION=9.6
+  - compiler: gcc
+    env: PGVERSION=9.5
+  - compiler: clang
+    env: PGVERSION=9.5
 
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "E3KdO0b04kO/0j6Kf87d+mHerK/9ZOBevibds1/wlm8T9F7PAKclTGgh6rxJZUWwTAbgbGxBv7GddIHbWTkrOjvIj7WP2/5sSg34P8q8aEeWvx/E99q8auVQge0/2MkNLcTIxfncqRnzbVbJjGpIvN0jkZ/A3t7DKlQquhvuMxw="
-  matrix:
-    - PGVERSION=12
-    - PGVERSION=11
-    - PGVERSION=10
-    - PGVERSION=9.6
-    - PGVERSION=9.5
 
 addons:
   coverity_scan:
