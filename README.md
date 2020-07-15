@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/segasai/q3c.svg?branch=master)](https://travis-ci.org/segasai/q3c)
-[![Coverage Status](https://coveralls.io/repos/github/segasai/q3c/badge.svg?branch=coverage_test)](https://coveralls.io/github/segasai/q3c?branch=coverage_test)
+[![Coverage Status](https://coveralls.io/repos/github/segasai/q3c/badge.svg?branch=master)](https://coveralls.io/github/segasai/q3c?branch=coverage_test)
 # Q3C
 
 Author: Sergey Koposov, Carnegie Mellon University 
