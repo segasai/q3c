@@ -37,6 +37,8 @@ after_success:
 jobs:
   include:
   - compiler: gcc
+    env: PGVERSION=12
+    # this is just a dummy PGVERSION (unused)
     env: COVERAGE=1
   - compiler: gcc
     env: PGVERSION=12
