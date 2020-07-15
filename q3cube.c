@@ -150,7 +150,7 @@ q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
 	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * Q3C_RADEG;
 }
 
-/* sin(Distance) calculation routine, inputs and outputs are in degrees */
+/* sin(Distance/2)^2 calculation routine, inputs and outputs are in degrees */
 q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
                         q3c_coord_t ra2, q3c_coord_t dec2)
 {

@@ -92,6 +92,9 @@ CREATE OR REPLACE FUNCTION q3c_sindist(double precision, double precision,
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_sindist'
         LANGUAGE C IMMUTABLE STRICT COST 100;
+COMMENT ON FUNCTION q3c_sindist(double precision, double precision,
+				double precision, double precision)
+	IS 'Function q3c_sindist(ra1, dec1, ra2, dec2) computing the sin(distance/2)^2 between points (ra1, dec1) and (ra2, dec2)';
 
 CREATE OR REPLACE FUNCTION q3c_sindist_pm(
        ra1 double precision, dec1 double precision,
