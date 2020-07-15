@@ -28,24 +28,84 @@
              
 (1 row)
 
- q3c_dist 
+ ?column? 
 ----------
-        1
+ t
 (1 row)
 
- q3c_dist 
+ ?column? 
 ----------
-        1
+ t
 (1 row)
 
- q3c_dist 
+ ?column? 
 ----------
-       90
+ t
 (1 row)
 
- q3c_dist 
+ ?column? 
 ----------
-       90
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
 (1 row)
 
    sum   
