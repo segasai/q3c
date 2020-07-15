@@ -5,7 +5,8 @@ language: c
 before_install:
   - psql --version
   - sudo /etc/init.d/postgresql stop
-  - sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common python3 python3-pip lcov
+  - sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
+  - sudo apt-get -y install python3 python3-pip lcov
   - sudo rm -rf /var/lib/postgresql
   - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo sh -c "echo deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main $PGVERSION >> /etc/apt/sources.list.d/postgresql.list"
@@ -27,6 +28,7 @@ install: make && sudo make install
 
 script:
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
+  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then sudo /etc/init.d/postgresql stop ; fi
   - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then ./run_coverage.sh ; fi
 
 after_success:
