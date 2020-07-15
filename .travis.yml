@@ -28,7 +28,7 @@ before_script:
 install: make && sudo make install
 
 script:
-  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERAGE} != 1 ]; then make test ; fi
+  - if [[ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERAGE} != 1 ]]; then make test ; fi
   - if [[ ${COVERAGE} == 1 ]] ; then ./run_coverage.sh ; fi
 
 after_success:
