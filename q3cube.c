@@ -1025,8 +1025,8 @@ void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
 	   BIT_PRINT8iy(y0);
 	 */
 
-	x = (((q3c_coord_t)x0) / nside) * 2 - 1;
-	y = (((q3c_coord_t)y0) / nside) * 2 - 1;
+	x = (((q3c_coord_t)x0 + .5) / nside) * 2 - 1;
+	y = (((q3c_coord_t)y0 + .5) / nside) * 2 - 1;
 	/* Now -1<x<1 and -1<y<1 */
 
 	/*fprintf(stdout,"%Lf %Lf %Lf %Lf\n",(x+1)/2,(y+1)/2,x,y);*/
