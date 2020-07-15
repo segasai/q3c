@@ -18,13 +18,27 @@ before_install:
   - sudo echo "host    all         all         127.0.0.1/32          trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo /etc/init.d/postgresql restart
-
+  - brew update
+  - brew install pyenv
+  - eval "$(pyenv init -)"
+  - pyenv install 2.7.6
+  - pyenv global 2.7.6
+  - pyenv rehash
+  - pip install cpp-coveralls
+  - pyenv rehash
+  
 before_script:
   - createuser -U postgres -s travis
 
 install: make && sudo make install
 
-script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
+script:
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
+  - if [ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ] ; then ./run_coverage.sh ; fi
+
+after_success:
+  - if [ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ] ; then coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' ; fi
+
 
 compiler:
   - clang
