@@ -5,7 +5,7 @@ language: c
 before_install:
   - psql --version
   - sudo /etc/init.d/postgresql stop
-  - sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
+  - sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common python3 python3-pip
   - sudo rm -rf /var/lib/postgresql
   - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo sh -c "echo deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main $PGVERSION >> /etc/apt/sources.list.d/postgresql.list"
@@ -18,14 +18,7 @@ before_install:
   - sudo echo "host    all         all         127.0.0.1/32          trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo /etc/init.d/postgresql restart
-  - brew update
-  - brew install pyenv
-  - eval "$(pyenv init -)"
-  - pyenv install 2.7.6
-  - pyenv global 2.7.6
-  - pyenv rehash
   - pip install cpp-coveralls
-  - pyenv rehash
   
 before_script:
   - createuser -U postgres -s travis
