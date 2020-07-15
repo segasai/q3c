@@ -741,3 +741,7 @@ select count(*) from test where q3c_join(154.84,-15.90,ra,dec,40);
 select count(*) from test where q3c_join(33.90,-84.53,ra,dec,40);
 select count(*) from test where q3c_join(286.89,-25.39,ra,dec,40);
 select count(*) from test where q3c_join(-45,-6,ra,dec,1);
+select count(*) from test where  q3c_radial_query(ra,dec,0,90,90);
+select count(*) from test where dec>0;
+select count(*) from test where  q3c_radial_query(ra,dec,0,-90,90);
+select count(*) from test where dec<0;

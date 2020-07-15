@@ -741,5 +741,9 @@ select count(*) from test where q3c_radial_query(ra,dec,154.84,-15.90,40);
 select count(*) from test where q3c_radial_query(ra,dec,33.90,-84.53,40);
 select count(*) from test where q3c_radial_query(ra,dec,286.89,-25.39,40);
 select count(*) from test where  q3c_radial_query(ra,dec,-45,-6,1);
+select count(*) from test where  q3c_radial_query(ra,dec,0,90,90);
+select count(*) from test where dec>0;
+select count(*) from test where  q3c_radial_query(ra,dec,0,-90,90);
+select count(*) from test where dec<0;
 -- select count(*) from test where  q3c_radial_query(ra,dec,45,96,1);
 -- this will wait till i run stuff via pg_regress
