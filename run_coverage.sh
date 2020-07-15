@@ -1,3 +1,4 @@
+#!/bin/bash
 wget https://ftp.postgresql.org/pub/source/v11.8/postgresql-11.8.tar.bz2
 tar xfj postgresql-11.8.tar.bz2
 mv postgresql-11.8 ../

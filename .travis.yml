@@ -27,15 +27,15 @@ install: make && sudo make install
 
 script:
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
-  - if [ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ] ; then ./run_coverage.sh ; fi
+  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then ./run_coverage.sh ; fi
 
 after_success:
-  - if [ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ] ; then coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' ; fi
+  - if [[ ${PGVERSION} == 12 && ${TRAVIS_COMPILER} == gcc ]] ; then coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' ; fi
 
 
 compiler:
-  - clang
   - gcc
+  - clang
 
 env:
   global:
