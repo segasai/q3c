@@ -43,7 +43,6 @@ env:
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "E3KdO0b04kO/0j6Kf87d+mHerK/9ZOBevibds1/wlm8T9F7PAKclTGgh6rxJZUWwTAbgbGxBv7GddIHbWTkrOjvIj7WP2/5sSg34P8q8aEeWvx/E99q8auVQge0/2MkNLcTIxfncqRnzbVbJjGpIvN0jkZ/A3t7DKlQquhvuMxw="
   matrix:
-    - PGVERSION=13
     - PGVERSION=12
     - PGVERSION=11
     - PGVERSION=10
