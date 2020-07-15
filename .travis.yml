@@ -23,7 +23,7 @@ before_install:
   - sudo pip install cpp-coveralls
   
 before_script:
-  - createuser -U postgres -s travis
+  - if [[ ${COVERAGE} != 1 ]] ; then createuser -U postgres -s travis ; fi
 
 install: make && sudo make install
 
