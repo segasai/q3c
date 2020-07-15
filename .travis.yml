@@ -18,7 +18,7 @@ before_install:
   - sudo echo "host    all         all         127.0.0.1/32          trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   - sudo /etc/init.d/postgresql restart
-  - pip install cpp-coveralls
+  - sudo pip install cpp-coveralls
   
 before_script:
   - createuser -U postgres -s travis
