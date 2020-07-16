@@ -86,6 +86,8 @@ test: gen_data all
 	diff results/ellipse.out expected/ellipse.expected
 	cat sql/join.sql | psql q3c_test > results/join.out
 	diff results/join.out expected/join.expected
+	cat sql/join_ellipse.sql | psql q3c_test > results/join_ellipse.out
+	diff results/join_ellipse.out expected/join.expected
 	cat sql/join_pm1.sql | psql q3c_test > results/join_pm1.out
 	diff results/join_pm1.out expected/join_pm1.expected
 	cat sql/join_pm2.sql | psql q3c_test > results/join_pm2.out
