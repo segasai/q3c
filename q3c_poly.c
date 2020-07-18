@@ -23,18 +23,6 @@
 
 #include "common.h"
 
-void q3c_init_poly(q3c_poly *qp, int n)
-{
-	qp->ra = malloc(n * sizeof(q3c_coord_t));
-	qp->dec = malloc(n * sizeof(q3c_coord_t));
-
-	qp->ax = malloc(n * sizeof(q3c_coord_t));
-	qp->ay = malloc(n * sizeof(q3c_coord_t));
-
-	qp->x = malloc(n * sizeof(q3c_coord_t));
-	qp->y = malloc(n * sizeof(q3c_coord_t));
-	qp->n = n;
-}
 
 void q3c_prepare_poly(q3c_poly *qp)
 {
