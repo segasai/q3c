@@ -333,18 +333,17 @@ char q3c_get_region_facenum(q3c_region region, void *data)
 	{
 	case Q3C_CIRCLE:
 	{
-		q3c_circle_region circle = *(q3c_circle_region*)data;
-		return q3c_get_facenum(circle.ra, circle.dec);
+		return q3c_get_facenum(((q3c_circle_region*)data)->ra,
+				       ((q3c_circle_region*)data)->dec);
 	}
 	case Q3C_ELLIPSE:
 	{
-		q3c_ellipse_region ellipse = *(q3c_ellipse_region*) data;
-		return q3c_get_facenum(ellipse.ra, ellipse.dec);
+		return q3c_get_facenum(((q3c_ellipse_region*)data)->ra,
+				       ((q3c_ellipse_region*)data)->dec);
 	}
 	case Q3C_POLYGON:
 	{
-		q3c_poly poly = *(q3c_poly *) data;
-		return q3c_get_facenum_poly(&poly);
+		return q3c_get_facenum_poly((q3c_poly *)data);
 	}
 	default:
 		return 1;
@@ -2098,10 +2097,6 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 	yb_cur = yc_cur - cur_size / 2; /* bottom */
 	yt_cur = yc_cur + cur_size / 2; /* top    */
 
-	/* Undef labels -- the labels when the current computed values dont allow
-	 * to make the final decision about the intersection
-	 */
-
 	#define EVAL_POLY(x,y) ( x * (axx * x + axy * y + ax) + y * (ayy * y + ay) + a )
 
 	/* the idea of the code is following:
@@ -2688,7 +2683,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 
 	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
-	face_num = q3c_get_facenum_poly(qp);
+	face_num = q3c_get_region_facenum(Q3C_POLYGON, qp);
 
 	q3c_project_poly(qp, face_num, &large_flag);
 	if (large_flag)
