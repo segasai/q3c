@@ -133,21 +133,7 @@ void q3c_get_version(char *out, int maxchar)
 q3c_coord_t q3c_dist(q3c_coord_t ra1, q3c_coord_t dec1,
                      q3c_coord_t ra2, q3c_coord_t dec2)
 {
-	/* Fast and precise way to compute the distance on the sphere
-	 * it uses just 3 evaluations of trigonometric functions
-	 */
-
-	q3c_coord_t x, y, z;
-	x = q3c_sin ((ra1 - ra2) / 2 * Q3C_DEGRA );
-	x *= x;
-	y = q3c_sin ((dec1 - dec2) / 2 * Q3C_DEGRA);
-	y *= y;
-
-	/* Seem to be more precise :) */
-	z = q3c_cos ((dec1 + dec2)/2 * Q3C_DEGRA);
-	z*=z;
-
-	return 2 * q3c_asin (q3c_sqrt (x * (z - y) + y)) * Q3C_RADEG;
+	return 2 * q3c_asin (q3c_sqrt (q3c_sindist(ra1, dec1, ra2, dec2))) * Q3C_RADEG;
 }
 
 /* sin(Distance/2)^2 calculation routine, inputs and outputs are in degrees */
