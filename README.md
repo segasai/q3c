@@ -2,11 +2,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/segasai/q3c/badge.svg?branch=master)](https://coveralls.io/github/segasai/q3c?branch=master)
 # Q3C
 
-Author: Sergey Koposov, Carnegie Mellon University 
+Author: Sergey Koposov, University of Edinburgh
 
 Copyright (c) 2004-2020 Sergey Koposov
 
-Email: skoposov _AT_ cmu _DOT_ edu
+Email:  skoposov AT ed DOT ac DOT uk
 
 Fresh versions of the software could be obtained here: https://github.com/segasai/q3c 
 
