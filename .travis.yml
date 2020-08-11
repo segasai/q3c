@@ -42,6 +42,10 @@ jobs:
       - COVERAGE=1
 # this is just a dummy PGVERSION (unused)
   - compiler: gcc
+    env: PGVERSION=13
+  - compiler: clang
+    env: PGVERSION=13
+  - compiler: gcc
     env: PGVERSION=12
   - compiler: clang
     env: PGVERSION=12
