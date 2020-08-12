@@ -26,7 +26,7 @@
 #include <string.h>
 #include "my_bits.h"
 
-static char __q3c_version[]=Q3C_VERSION;
+static char __q3c_version[] = Q3C_VERSION;
 
 static int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
                                   q3c_coord_t ymin, q3c_coord_t xmax, q3c_coord_t ymax,
@@ -150,8 +150,8 @@ q3c_coord_t q3c_sindist(q3c_coord_t ra1, q3c_coord_t dec1,
 	y *= y;
 
 	/* Seem to be more precise :) */
-	z = q3c_cos ((dec1 + dec2)/2 * Q3C_DEGRA);
-	z*=z;
+	z = q3c_cos ((dec1 + dec2) / 2 * Q3C_DEGRA);
+	z *= z;
 
 	return x * (z - y) + y;
 }
@@ -334,12 +334,12 @@ char q3c_get_region_facenum(q3c_region region, void *data)
 	case Q3C_CIRCLE:
 	{
 		return q3c_get_facenum(((q3c_circle_region*)data)->ra,
-				       ((q3c_circle_region*)data)->dec);
+		                       ((q3c_circle_region*)data)->dec);
 	}
 	case Q3C_ELLIPSE:
 	{
 		return q3c_get_facenum(((q3c_ellipse_region*)data)->ra,
-				       ((q3c_ellipse_region*)data)->dec);
+		                       ((q3c_ellipse_region*)data)->dec);
 	}
 	case Q3C_POLYGON:
 	{
@@ -404,36 +404,36 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 		return 0;
 	}
 
-	t2 = t1*t1;
+	t2 = t1 * t1;
 
-	t4 = t3*t3;
-	t5 = t2*t4;
+	t4 = t3 * t3;
+	t5 = t2 * t4;
 
-	t7 = t6*t6;
-	t8 = t5*t7;
+	t7 = t6 * t6;
+	t8 = t5 * t7;
 
-	t10 = t9*t9;
-	t11 = t7*t10;
+	t10 = t9 * t9;
+	t11 = t7 * t10;
 	t13 = q3c_cos(PA);
-	t14 = t13*t13;
-	t15 = t14*t10;
-	t18 = t7*t14;
-	t19 = t18*t10;
+	t14 = t13 * t13;
+	t15 = t14 * t10;
+	t18 = t7 * t14;
+	t19 = t18 * t10;
 
 	t24 = q3c_sin(PA);
 
-	t31 = t1*t3;
+	t31 = t1 * t3;
 
-	t36 = 2.0*t31*t32*t26*t6;
-	t37 = t31*t32;
-	t38 = t26*t6;
-	t45 = t4*t10;
+	t36 = 2.0 * t31 * t32 * t26 * t6;
+	t37 = t31 * t32;
+	t38 = t26 * t6;
+	t45 = t4 * t10;
 
-	t56 = t55*t55;
-	t57 = t4*t7;
-	t60 = -t8+t5*t11+2.0*t5*t15-t5*t19-2.0*t1*t4*t22*t10*t24*t13*t26-t36+2.0*t37*t38*t10-2.0*t37*t38*t15-t45*t14-t45*t2+2.0*t22*t3*t32*t6*t24*t10*t13-t56+t7-t11+t4-t57+t57*t10+t19-t18*t45;
-	t61 = e*e;
-	t63 = t60*t61+t8+t57-t4-t7+t56+t36;
+	t56 = t55 * t55;
+	t57 = t4 * t7;
+	t60 = -t8 + t5 * t11 + 2.0 * t5 * t15 - t5 * t19 - 2.0 * t1 * t4 * t22 * t10 * t24 * t13 * t26 - t36 + 2.0 * t37 * t38 * t10 - 2.0 * t37 * t38 * t15 - t45 * t14 - t45 * t2 + 2.0 * t22 * t3 * t32 * t6 * t24 * t10 * t13 - t56 + t7 - t11 + t4 - t57 + t57 * t10 + t19 - t18 * t45;
+	t61 = e * e;
+	t63 = t60 * t61 + t8 + t57 - t4 - t7 + t56 + t36;
 	return t63 > 0;
 }
 
@@ -572,7 +572,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	if (q3c_too_big_check(region, region_data))
 	{
 		/* the whole sky */
-		q3c_ipix_t maxval = 6*(nside*nside);
+		q3c_ipix_t maxval = 6 * (nside * nside);
 		*(ipix_cur++) = -1;
 		*(ipix_cur++) = maxval;
 		for(i = 1; i < 4; i++ )
@@ -822,7 +822,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			if (xesize * nside < 1)
 			/* If the region is too small */
 			{
-				xesize=1 / (q3c_coord_t)nside;
+				xesize = 1 / (q3c_coord_t)nside;
 			}
 
 			n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
@@ -861,7 +861,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			if (xesize * nside < 1)
 			/* If the region is too small */
 			{
-				xesize=1 / (q3c_coord_t)nside;
+				xesize = 1 / (q3c_coord_t)nside;
 			}
 
 			n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
@@ -914,8 +914,8 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			iymin = (Q3C_HALF + ymin) * n0;
 			iymax = (Q3C_HALF + ymax) * n0;
 
-			ixmax = (ixmax == n0 ? n0-1 : ixmax);
-			iymax = (iymax == n0 ? n0-1 : iymax);
+			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
+			iymax = (iymax == n0 ? n0 - 1 : iymax);
 
 			n1 = nside / n0;
 
@@ -980,7 +980,7 @@ q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
                   q3c_coord_t *ra, q3c_coord_t *dec)
 {
-	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1=hprm->xbits1,
+	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1 = hprm->xbits1,
 	           *ybits1 = hprm->ybits1, i2, i3, x0, y0;
 
 	q3c_coord_t x, y, ra0;
@@ -1058,7 +1058,7 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
  * In the future I should split the ipix2xy and xy2ang codepaths
  * and put them in the separate functions
  */
-	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1=hprm->xbits1,
+	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1 = hprm->xbits1,
 	           *ybits1 = hprm->ybits1, i2, i3, x0, y0, idx,
 	           ix1, iy1, ix2, iy2;
 	q3c_coord_t x1, y1, x2, y2, result;
@@ -1090,7 +1090,7 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 
 	ix1 = (x0 >> depth) << depth;
 	iy1 = (y0 >> depth) << depth;
-	idx = ((q3c_ipix_t)1)<<depth;
+	idx = ((q3c_ipix_t)1) << depth;
 	ix2 = ix1 + idx;
 	iy2 = iy1 + idx;
 
@@ -1105,15 +1105,15 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 	x2 = x2 / sqrt(1 + x2 * x2);
 	y2 = y2 / sqrt(1 + y2 * y2);
 
-	if (q3c_fabs(x1-x2)>1e-4)
+	if (q3c_fabs(x1 - x2)>1e-4)
 	{
 		result = ( q3c_acos(x1 * y2) - q3c_acos(x1 * y1) ) +
 		         ( q3c_acos(x2 * y1) - q3c_acos(x2 * y2) );
 	}
 	else
 	{
-		result = q3c_asin(  x1*(y1-y2)*(y1+y2)/(y2*sqrt(1-x1*x1*y1*y1)+y1*sqrt(1-x1*x1*y2*y2)))+
-		         q3c_asin(  x2*(y2-y1)*(y1+y2)/(y1*sqrt(1-x2*x2*y2*y2)+y2*sqrt(1-x2*x2*y1*y1)));
+		result = q3c_asin(  x1 * (y1 - y2) * (y1 + y2) / (y2 * sqrt(1 - x1 * x1 * y1 * y1) + y1 * sqrt(1 - x1 * x1 * y2 * y2))) +
+		         q3c_asin(  x2 * (y2 - y1) * (y1 + y2) / (y1 * sqrt(1 - x2 * x2 * y2 * y2) + y2 * sqrt(1 - x2 * x2 * y1 * y1)));
 
 	}
 	result = q3c_fabs(result);
@@ -1375,7 +1375,7 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 
 	if ((face_num >= 1) && (face_num <= 4))
 	{
-		ra1 = (ra0 - (face_num  - 1 ) * 90) * Q3C_DEGRA;
+		ra1 = (ra0 - (face_num - 1 ) * 90) * Q3C_DEGRA;
 		sr = q3c_sin(ra1);
 		cr = q3c_cos(ra1);
 		*axx = (crad * crad - sr * sr * cd * cd);
@@ -1398,7 +1398,7 @@ void q3c_get_poly_coefs(char face_num, q3c_coord_t ra0, q3c_coord_t dec0,
 		*axy = (2 * p * sr * cr * cd * cd);
 		*ax = -(2 * p * sr * sd * cd);
 		*ay = (2 * cr * sd * cd);
-		*a = crad * crad  - sd * sd;
+		*a = crad * crad - sd * sd;
 	}
 
 	/* By this step I convert the coefficient of the polynom to the
@@ -1441,10 +1441,10 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 	 */
 	if (tmp2< Q3C_MINDISCR)
 	{
-		*xmax = 2*Q3C_HALF;
-		*ymax = 2*Q3C_HALF;
-		*xmin = -2*Q3C_HALF;
-		*ymin = -2*Q3C_HALF;
+		*xmax = 2 * Q3C_HALF;
+		*ymax = 2 * Q3C_HALF;
+		*xmin = -2 * Q3C_HALF;
+		*ymin = -2 * Q3C_HALF;
 		*full_flag = 1;
 		return;
 	}
@@ -1575,7 +1575,7 @@ void q3c_fast_get_circle_xy_minmax(char face_num, q3c_coord_t ra0, q3c_coord_t d
 			*ymax = Q3C_HALF;
 			return;
 		}
-		tmp0 = sr * cr *cd2;
+		tmp0 = sr * cr * cd2;
 		tmp1 = srad * q3c_sqrt(cd2 - srad * srad);
 		*xmin = (tmp0 - tmp1) / tmp2;
 		*xmax = (tmp0 + tmp1) / tmp2;
@@ -1638,42 +1638,42 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
 	q3c_coord_t t51 = q3c_sin(d);
 	q3c_coord_t t8 = q3c_cos(d);
 
-	q3c_coord_t t3 = t1*t2;
-	q3c_coord_t t5 = t4*t4;
-	q3c_coord_t t7 = 2.0*t3*t5;
-	q3c_coord_t t9 = t8*t8;
-	q3c_coord_t t12 = t1*t5;
-	q3c_coord_t t14 = t13*t13;
-	q3c_coord_t t15 = t2*t14;
-	q3c_coord_t t22 = t21*t13;
-	q3c_coord_t t23 = t2*t2;
-	q3c_coord_t t34 = t5*t9;
-	q3c_coord_t t39 = t24*t9;
-	q3c_coord_t t47 = -t7-2.0*t3*t9+2.0*t12*t15-2.0*t12*t15*t9+4.0*t22*t23*t24-4.0*t15*t1+4.0*t1*t9*t15+2.0*t3+2.0*t3*t34-2.0*t22*t24+2.0*t22*t39-4.0*t21*t9*t13*t23*t24;
-	q3c_coord_t t48 = e*e;
-	q3c_coord_t t52 = t51*t51;
-	q3c_coord_t t54 = t5*t14*t9;
-	q3c_coord_t t61 = t23*t5;
-	q3c_coord_t t62 = 2.0*t61;
-	q3c_coord_t t63 = t23*t14;
-	q3c_coord_t t67 = t23*t9;
-	q3c_coord_t t69 = t61*t9;
-	q3c_coord_t t71 = t14*t9;
-	q3c_coord_t t73 = t1*t21;
-	q3c_coord_t t77 = t73*t13*t2*t24*t9;
-	q3c_coord_t t79 = t71*t23;
-	q3c_coord_t t85 = t63*t34;
-	q3c_coord_t t89 = -t62-4.0*t63+2.0*t63*t5-2.0*t67+2.0*t69-2.0*t71+4.0*t77+4.0*t79-4.0*t73*t13*t2*t24-2.0*t85+2.0*t14+2.0*t23;
-	q3c_coord_t t92 = t89*t48-2.0+2.0*t9+t62;
-	q3c_coord_t t93 = t1*t13;
-	q3c_coord_t t96 = t21*t2;
+	q3c_coord_t t3 = t1 * t2;
+	q3c_coord_t t5 = t4 * t4;
+	q3c_coord_t t7 = 2.0 * t3 * t5;
+	q3c_coord_t t9 = t8 * t8;
+	q3c_coord_t t12 = t1 * t5;
+	q3c_coord_t t14 = t13 * t13;
+	q3c_coord_t t15 = t2 * t14;
+	q3c_coord_t t22 = t21 * t13;
+	q3c_coord_t t23 = t2 * t2;
+	q3c_coord_t t34 = t5 * t9;
+	q3c_coord_t t39 = t24 * t9;
+	q3c_coord_t t47 = -t7 - 2.0 * t3 * t9 + 2.0 * t12 * t15 - 2.0 * t12 * t15 * t9 + 4.0 * t22 * t23 * t24 - 4.0 * t15 * t1 + 4.0 * t1 * t9 * t15 + 2.0 * t3 + 2.0 * t3 * t34 - 2.0 * t22 * t24 + 2.0 * t22 * t39 - 4.0 * t21 * t9 * t13 * t23 * t24;
+	q3c_coord_t t48 = e * e;
+	q3c_coord_t t52 = t51 * t51;
+	q3c_coord_t t54 = t5 * t14 * t9;
+	q3c_coord_t t61 = t23 * t5;
+	q3c_coord_t t62 = 2.0 * t61;
+	q3c_coord_t t63 = t23 * t14;
+	q3c_coord_t t67 = t23 * t9;
+	q3c_coord_t t69 = t61 * t9;
+	q3c_coord_t t71 = t14 * t9;
+	q3c_coord_t t73 = t1 * t21;
+	q3c_coord_t t77 = t73 * t13 * t2 * t24 * t9;
+	q3c_coord_t t79 = t71 * t23;
+	q3c_coord_t t85 = t63 * t34;
+	q3c_coord_t t89 = -t62 - 4.0 * t63 + 2.0 * t63 * t5 - 2.0 * t67 + 2.0 * t69 - 2.0 * t71 + 4.0 * t77 + 4.0 * t79 - 4.0 * t73 * t13 * t2 * t24 - 2.0 * t85 + 2.0 * t14 + 2.0 * t23;
+	q3c_coord_t t92 = t89 * t48 - 2.0 + 2.0 * t9 + t62;
+	q3c_coord_t t93 = t1 * t13;
+	q3c_coord_t t96 = t21 * t2;
 
-	q3c_coord_t tmpy0 = t47*t48+t7;
-	q3c_coord_t tmpy1 = -4.0*t52*(t9-1.0+t54+t5-t34)*t48+4.0*t52*(-1.0+t9+t5);
+	q3c_coord_t tmpy0 = t47 * t48 + t7;
+	q3c_coord_t tmpy1 = -4.0 * t52 * (t9 - 1.0 + t54 + t5 - t34) * t48 + 4.0 * t52 * (-1.0 + t9 + t5);
 	q3c_coord_t tmpy2 = t92;
 
-	q3c_coord_t tmpz0 = -2.0*(-t93*t24+t93*t39+t96+t96*t71-t96*t14-t96*t9)*t4*t48+2.0*t96*t4;
-	q3c_coord_t tmpz1 = -4.0*t52*(t61-2.0*t79-t54+t67-2.0*t77-t5-t69+t71+t85+t34)*t48+4.0*t52*(t9+t61-t5);
+	q3c_coord_t tmpz0 = -2.0 * (-t93 * t24 + t93 * t39 + t96 + t96 * t71 - t96 * t14 - t96 * t9) * t4 * t48 + 2.0 * t96 * t4;
+	q3c_coord_t tmpz1 = -4.0 * t52 * (t61 - 2.0 * t79 - t54 + t67 - 2.0 * t77 - t5 - t69 + t71 + t85 + t34) * t48 + 4.0 * t52 * (t9 + t61 - t5);
 	q3c_coord_t tmpz2 = t92;
 
 	tmpy1 = q3c_sqrt(tmpy1);
@@ -1718,34 +1718,34 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	q3c_coord_t t25 = q3c_sin(d);
 	q3c_coord_t t4 = q3c_cos(d);
 
-	q3c_coord_t t3 = t1*t2;
-	q3c_coord_t t5 = t4*t4;
-	q3c_coord_t t6 = t3*t5;
-	q3c_coord_t t8 = t7*t7;
-	q3c_coord_t t10 = t8*t5;
-	q3c_coord_t t13 = t7*t12;
-	q3c_coord_t t15 = t13*t14;
-	q3c_coord_t t21 = e*e;
-	q3c_coord_t t26 = t25*t25;
-	q3c_coord_t t28 = 2.0*t6*t15;
-	q3c_coord_t t29 = t19*t19;
-	q3c_coord_t t30 = t14*t14;
-	q3c_coord_t t31 = t29*t30;
-	q3c_coord_t t32 = t31*t5;
-	q3c_coord_t t34 = 2.0*t10*t30;
-	q3c_coord_t t35 = t30*t5;
-	q3c_coord_t t36 = t31*t10;
-	q3c_coord_t t46 = t29*(1.0-t5-t8+t10)*t21+t5-t29;
-	q3c_coord_t t47 = t7*t1;
-	q3c_coord_t t51 = t14*t2;
+	q3c_coord_t t3 = t1 * t2;
+	q3c_coord_t t5 = t4 * t4;
+	q3c_coord_t t6 = t3 * t5;
+	q3c_coord_t t8 = t7 * t7;
+	q3c_coord_t t10 = t8 * t5;
+	q3c_coord_t t13 = t7 * t12;
+	q3c_coord_t t15 = t13 * t14;
+	q3c_coord_t t21 = e * e;
+	q3c_coord_t t26 = t25 * t25;
+	q3c_coord_t t28 = 2.0 * t6 * t15;
+	q3c_coord_t t29 = t19 * t19;
+	q3c_coord_t t30 = t14 * t14;
+	q3c_coord_t t31 = t29 * t30;
+	q3c_coord_t t32 = t31 * t5;
+	q3c_coord_t t34 = 2.0 * t10 * t30;
+	q3c_coord_t t35 = t30 * t5;
+	q3c_coord_t t36 = t31 * t10;
+	q3c_coord_t t46 = t29 * (1.0 - t5 - t8 + t10) * t21 + t5 - t29;
+	q3c_coord_t t47 = t7 * t1;
+	q3c_coord_t t51 = t14 * t2;
 
-	q3c_coord_t tmpy0 = 2.0*(t6+t3*t8-t3*t10-t15+t13*t14*t5-t3)*t19*t21+2.0*t3*t19;
-	q3c_coord_t tmpy1 = 4.0*t26*(-t5-t28-t32-t34+t35+t36+t31+t10)*t21-4.0*t26*(-t5+t31);
-	q3c_coord_t tmpy2 = 2.0*t46;
+	q3c_coord_t tmpy0 = 2.0 * (t6 + t3 * t8 - t3 * t10 - t15 + t13 * t14 * t5 - t3) * t19 * t21 + 2.0 * t3 * t19;
+	q3c_coord_t tmpy1 = 4.0 * t26 * (-t5 - t28 - t32 - t34 + t35 + t36 + t31 + t10) * t21 - 4.0 * t26 * (-t5 + t31);
+	q3c_coord_t tmpy2 = 2.0 * t46;
 
-	q3c_coord_t tmpz0 = 2.0*(-t47*t12+t47*t12*t5+t51*t10-t51*t5-t51*t8+t51)*t19*t21-2.0*t51*t19;
-	q3c_coord_t tmpz1 = -4.0*t26*(-t28-t29*t8*t5-t29-t32-t34+t35+t36+t31+t29*t5+t10)*t21+4.0*t26*(t5-t29+t31);
-	q3c_coord_t tmpz2 = 2.0*t46;
+	q3c_coord_t tmpz0 = 2.0 * (-t47 * t12 + t47 * t12 * t5 + t51 * t10 - t51 * t5 - t51 * t8 + t51) * t19 * t21 - 2.0 * t51 * t19;
+	q3c_coord_t tmpz1 = -4.0 * t26 * (-t28 - t29 * t8 * t5 - t29 - t32 - t34 + t35 + t36 + t31 + t29 * t5 + t10) * t21 + 4.0 * t26 * (t5 - t29 + t31);
+	q3c_coord_t tmpz2 = 2.0 * t46;
 
 	tmpy1 = q3c_sqrt(tmpy1);
 	tmpy2 = (2 * tmpy2);
@@ -1791,82 +1791,82 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	/* Thank you, Maple! */
 	q3c_coord_t t1 = q3c_sin(delta);
 	q3c_coord_t t2 = q3c_cos(d);
-	q3c_coord_t t3 = t2*t2;
-	q3c_coord_t t4 = t1*t3;
+	q3c_coord_t t3 = t2 * t2;
+	q3c_coord_t t4 = t1 * t3;
 	q3c_coord_t t5 = q3c_cos(PA);
 	q3c_coord_t t6 = q3c_cos(alpha);
-	q3c_coord_t t7 = t6*t6;
+	q3c_coord_t t7 = t6 * t6;
 	q3c_coord_t t9 = q3c_sin(PA);
-	q3c_coord_t t13 = t5*t5;
-	q3c_coord_t t14 = t6*t13;
+	q3c_coord_t t13 = t5 * t5;
+	q3c_coord_t t14 = t6 * t13;
 	q3c_coord_t t15 = q3c_sin(alpha);
-	q3c_coord_t t18 = t15*t3;
-	q3c_coord_t t19 = t18*t14;
+	q3c_coord_t t18 = t15 * t3;
+	q3c_coord_t t19 = t18 * t14;
 	q3c_coord_t t21 = q3c_cos(delta);
-	q3c_coord_t t22 = t21*t21;
-	q3c_coord_t t23 = t15*t22;
-	q3c_coord_t t29 = t15*t6;
-	q3c_coord_t t31 = t22*t3;
-	q3c_coord_t t34 = t1*t5;
-	q3c_coord_t t37 = t9*t3;
-	q3c_coord_t t43 = 2.0*t29*t22;
-	q3c_coord_t t44 = t7*t9;
-	q3c_coord_t t47 = -4.0*t4*t5*t7*t9-4.0*t14*t15+4.0*t19+2.0*t14*t23-2.0*t14*t23*t3+2.0*t29+2.0*t29*t31-2.0*t34*t9+2.0*t34*t37-2.0*t29*t3-t43+4.0*t34*t44;
-	q3c_coord_t t48 = e*e;
+	q3c_coord_t t22 = t21 * t21;
+	q3c_coord_t t23 = t15 * t22;
+	q3c_coord_t t29 = t15 * t6;
+	q3c_coord_t t31 = t22 * t3;
+	q3c_coord_t t34 = t1 * t5;
+	q3c_coord_t t37 = t9 * t3;
+	q3c_coord_t t43 = 2.0 * t29 * t22;
+	q3c_coord_t t44 = t7 * t9;
+	q3c_coord_t t47 = -4.0 * t4 * t5 * t7 * t9 - 4.0 * t14 * t15 + 4.0 * t19 + 2.0 * t14 * t23 - 2.0 * t14 * t23 * t3 + 2.0 * t29 + 2.0 * t29 * t31 - 2.0 * t34 * t9 + 2.0 * t34 * t37 - 2.0 * t29 * t3 - t43 + 4.0 * t34 * t44;
+	q3c_coord_t t48 = e * e;
 	q3c_coord_t t51 = q3c_sin(d);
-	q3c_coord_t t52 = t51*t51;
-	q3c_coord_t t53 = t22*t13;
-	q3c_coord_t t54 = t53*t3;
-	q3c_coord_t t61 = t15*t1;
-	q3c_coord_t t62 = t61*t3;
-	q3c_coord_t t63 = t5*t6;
-	q3c_coord_t t64 = t63*t9;
-	q3c_coord_t t65 = t62*t64;
-	q3c_coord_t t67 = t13*t3;
-	q3c_coord_t t70 = t7*t3;
-	q3c_coord_t t71 = t53*t70;
-	q3c_coord_t t74 = t22*t7;
-	q3c_coord_t t75 = 2.0*t74;
-	q3c_coord_t t78 = t74*t3;
-	q3c_coord_t t80 = t67*t7;
-	q3c_coord_t t87 = 4.0*t65-2.0*t67+2.0*t13-2.0*t71-2.0*t70-t75-4.0*t7*t13+2.0*t78+4.0*t80+2.0*t74*t13+2.0*t7-4.0*t61*t64;
-	q3c_coord_t t90 = t87*t48-2.0+t75+2.0*t3;
-	q3c_coord_t t91 = t1*t6;
-	q3c_coord_t t94 = t15*t5;
-	q3c_coord_t t101 = t91*t21;
-	q3c_coord_t t111 = t9*t9;
-	q3c_coord_t t112 = t3*t111;
-	q3c_coord_t t113 = t15*t15;
-	q3c_coord_t t117 = t52*t48;
-	q3c_coord_t t124 = 2.0*t62*t63*t9*t48;
-	q3c_coord_t t125 = t1*t1;
-	q3c_coord_t t126 = t7*t125;
-	q3c_coord_t t132 = t4*t5;
-	q3c_coord_t t138 = t6*t3;
-	q3c_coord_t t143 = t22*t52;
-	q3c_coord_t t145 = t111*t6;
-	q3c_coord_t t159 = t21*t9*t3;
-	q3c_coord_t t160 = t5*t48;
-	q3c_coord_t t163 = t67*t48;
-	q3c_coord_t t165 = t52*t21;
-	q3c_coord_t t167 = t165*t48;
-	q3c_coord_t t170 = t21*t13*t3;
-	q3c_coord_t t173 = t21*t111*t3;
-	q3c_coord_t t186 = t113*t22;
-	q3c_coord_t t190 = t113*t125;
-	q3c_coord_t t197 = t125*t52;
-	q3c_coord_t tmpy0 = t47*t48+t43;
-	q3c_coord_t tmpy1 = -4.0*t52*(-1.0+t54+t3+t22-t31)*t48+4.0*t52*(-1.0+t22+t3);
+	q3c_coord_t t52 = t51 * t51;
+	q3c_coord_t t53 = t22 * t13;
+	q3c_coord_t t54 = t53 * t3;
+	q3c_coord_t t61 = t15 * t1;
+	q3c_coord_t t62 = t61 * t3;
+	q3c_coord_t t63 = t5 * t6;
+	q3c_coord_t t64 = t63 * t9;
+	q3c_coord_t t65 = t62 * t64;
+	q3c_coord_t t67 = t13 * t3;
+	q3c_coord_t t70 = t7 * t3;
+	q3c_coord_t t71 = t53 * t70;
+	q3c_coord_t t74 = t22 * t7;
+	q3c_coord_t t75 = 2.0 * t74;
+	q3c_coord_t t78 = t74 * t3;
+	q3c_coord_t t80 = t67 * t7;
+	q3c_coord_t t87 = 4.0 * t65 - 2.0 * t67 + 2.0 * t13 - 2.0 * t71 - 2.0 * t70 - t75 - 4.0 * t7 * t13 + 2.0 * t78 + 4.0 * t80 + 2.0 * t74 * t13 + 2.0 * t7 - 4.0 * t61 * t64;
+	q3c_coord_t t90 = t87 * t48 - 2.0 + t75 + 2.0 * t3;
+	q3c_coord_t t91 = t1 * t6;
+	q3c_coord_t t94 = t15 * t5;
+	q3c_coord_t t101 = t91 * t21;
+	q3c_coord_t t111 = t9 * t9;
+	q3c_coord_t t112 = t3 * t111;
+	q3c_coord_t t113 = t15 * t15;
+	q3c_coord_t t117 = t52 * t48;
+	q3c_coord_t t124 = 2.0 * t62 * t63 * t9 * t48;
+	q3c_coord_t t125 = t1 * t1;
+	q3c_coord_t t126 = t7 * t125;
+	q3c_coord_t t132 = t4 * t5;
+	q3c_coord_t t138 = t6 * t3;
+	q3c_coord_t t143 = t22 * t52;
+	q3c_coord_t t145 = t111 * t6;
+	q3c_coord_t t159 = t21 * t9 * t3;
+	q3c_coord_t t160 = t5 * t48;
+	q3c_coord_t t163 = t67 * t48;
+	q3c_coord_t t165 = t52 * t21;
+	q3c_coord_t t167 = t165 * t48;
+	q3c_coord_t t170 = t21 * t13 * t3;
+	q3c_coord_t t173 = t21 * t111 * t3;
+	q3c_coord_t t186 = t113 * t22;
+	q3c_coord_t t190 = t113 * t125;
+	q3c_coord_t t197 = t125 * t52;
+	q3c_coord_t tmpy0 = t47 * t48 + t43;
+	q3c_coord_t tmpy1 = -4.0 * t52 * (-1.0 + t54 + t3 + t22 - t31) * t48 + 4.0 * t52 * (-1.0 + t22 + t3);
 	q3c_coord_t tmpy2 = t90;
-	q3c_coord_t tmpz0 = -2.0*(-t91*t13-t91*t3+t94*t37+t91+t91*t67-t94*t9)*t21*t48+2.0*t101;
-	q3c_coord_t tmpz1 = 4.0*t52*(-t67-t74-t70+t54+2.0*t80+t78-t71+t22-t31+2.0*t65)*t48+4.0*t52*(t3+t74-t22);
+	q3c_coord_t tmpz0 = -2.0 * (-t91 * t13 - t91 * t3 + t94 * t37 + t91 + t91 * t67 - t94 * t9) * t21 * t48 + 2.0 * t101;
+	q3c_coord_t tmpz1 = 4.0 * t52 * (-t67 - t74 - t70 + t54 + 2.0 * t80 + t78 - t71 + t22 - t31 + 2.0 * t65) * t48 + 4.0 * t52 * (t3 + t74 - t22);
 	q3c_coord_t tmpz2 = t90;
-	*a = -t112*t113-t67*t113+t74*t52-t74*t117+t112*t113*t48+t124+t67*t126*t48-t67*t126-t112*t126;
-	*ay = -2.0*t132*t44*t48+2.0*t132*t113*t9*t48+2.0*t138*t13*t15*t125*t48+2.0*t29*t143+2.0*t18*t145+2.0*t19-2.0*t18*t145*t48-2.0*t138*t13*t15*t125-2.0*t29*t143*t48-2.0*t138*t111*t15*t125;
-	*az = -2.0*t159*t160*t15-2.0*t101*t163+2.0*t91*t165-2.0*t91*t167+2.0*t91*t170+2.0*t91*t173;
-	*ayz = 2.0*t159*t160*t6-2.0*t61*t21*t163+2.0*t61*t165+2.0*t61*t173-2.0*t61*t167+2.0*t61*t170;
-	*ayy = -t112*t7-t80+t186*t52+t112*t7*t48-t67*t190-t112*t190-t186*t117+t67*t190*t48-t124;
-	*azz = t197+t53*t3*t48-t54-t197*t48-t22*t111*t3;
+	*a = -t112 * t113 - t67 * t113 + t74 * t52 - t74 * t117 + t112 * t113 * t48 + t124 + t67 * t126 * t48 - t67 * t126 - t112 * t126;
+	*ay = -2.0 * t132 * t44 * t48 + 2.0 * t132 * t113 * t9 * t48 + 2.0 * t138 * t13 * t15 * t125 * t48 + 2.0 * t29 * t143 + 2.0 * t18 * t145 + 2.0 * t19 - 2.0 * t18 * t145 * t48 - 2.0 * t138 * t13 * t15 * t125 - 2.0 * t29 * t143 * t48 - 2.0 * t138 * t111 * t15 * t125;
+	*az = -2.0 * t159 * t160 * t15 - 2.0 * t101 * t163 + 2.0 * t91 * t165 - 2.0 * t91 * t167 + 2.0 * t91 * t170 + 2.0 * t91 * t173;
+	*ayz = 2.0 * t159 * t160 * t6 - 2.0 * t61 * t21 * t163 + 2.0 * t61 * t165 + 2.0 * t61 * t173 - 2.0 * t61 * t167 + 2.0 * t61 * t170;
+	*ayy = -t112 * t7 - t80 + t186 * t52 + t112 * t7 * t48 - t67 * t190 - t112 * t190 - t186 * t117 + t67 * t190 * t48 - t124;
+	*azz = t197 + t53 * t3 * t48 - t54 - t197 * t48 - t22 * t111 * t3;
 	tmpy1 = q3c_sqrt(tmpy1);
 	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
@@ -1878,12 +1878,12 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
 
 	/* reduce the values to the cube with edge length of 1 (instead of 2) */
-	*ayy*=-4;
-	*azz*=-4;
-	*ayz*=-4;
-	*ay*=-2;
-	*az*=-2;
-	*a*=-1;
+	*ayy *= -4;
+	*azz *= -4;
+	*ayz *= -4;
+	*ay *= -2;
+	*az *= -2;
+	*a *= -1;
 }
 
 /* get the xmin,xmax,ymin,ymax and polynomial coefficients for the ellipse query
@@ -1907,73 +1907,73 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	/* Thank you, Maple! */
 	q3c_coord_t t1 = q3c_sin(alpha);
 	q3c_coord_t t2 = q3c_sin(delta);
-	q3c_coord_t t3 = t1*t2;
+	q3c_coord_t t3 = t1 * t2;
 	q3c_coord_t t4 = q3c_cos(d);
-	q3c_coord_t t5 = t4*t4;
-	q3c_coord_t t6 = t3*t5;
+	q3c_coord_t t5 = t4 * t4;
+	q3c_coord_t t6 = t3 * t5;
 	q3c_coord_t t7 = q3c_cos(PA);
-	q3c_coord_t t8 = t7*t7;
-	q3c_coord_t t9 = t8*t5;
+	q3c_coord_t t8 = t7 * t7;
+	q3c_coord_t t9 = t8 * t5;
 	q3c_coord_t t11 = q3c_sin(PA);
-	q3c_coord_t t12 = t7*t11;
+	q3c_coord_t t12 = t7 * t11;
 	q3c_coord_t t13 = q3c_cos(alpha);
-	q3c_coord_t t14 = t12*t13;
-	q3c_coord_t t15 = t13*t5;
+	q3c_coord_t t14 = t12 * t13;
+	q3c_coord_t t15 = t13 * t5;
 	q3c_coord_t t19 = q3c_cos(delta);
-	q3c_coord_t t21 = e*e;
-	q3c_coord_t t23 = t3*t19;
+	q3c_coord_t t21 = e * e;
+	q3c_coord_t t23 = t3 * t19;
 	q3c_coord_t t25 = q3c_sin(d);
-	q3c_coord_t t26 = t25*t25;
-	q3c_coord_t t28 = 2.0*t6*t14;
-	q3c_coord_t t29 = t19*t19;
-	q3c_coord_t t30 = t13*t13;
-	q3c_coord_t t31 = t29*t30;
-	q3c_coord_t t32 = t31*t5;
-	q3c_coord_t t33 = t29*t8;
-	q3c_coord_t t34 = t30*t5;
-	q3c_coord_t t35 = t33*t34;
-	q3c_coord_t t36 = t9*t30;
-	q3c_coord_t t37 = 2.0*t36;
-	q3c_coord_t t47 = t29*(1.0-t5-t8+t9)*t21-t29+t5;
-	q3c_coord_t t48 = t7*t1;
-	q3c_coord_t t52 = t13*t2;
-	q3c_coord_t t59 = t52*t19;
-	q3c_coord_t t61 = t33*t5;
-	q3c_coord_t t71 = t11*t11;
-	q3c_coord_t t74 = t2*t2;
-	q3c_coord_t t75 = t74*t26;
-	q3c_coord_t t79 = t19*t71*t5;
-	q3c_coord_t t82 = t19*t8*t5;
-	q3c_coord_t t84 = t26*t19;
-	q3c_coord_t t85 = t84*t21;
-	q3c_coord_t t87 = t9*t21;
-	q3c_coord_t t90 = t19*t11*t5;
-	q3c_coord_t t91 = t7*t21;
-	q3c_coord_t t112 = t2*t5*t7;
-	q3c_coord_t t113 = t1*t1;
-	q3c_coord_t t120 = t13*t1;
-	q3c_coord_t t121 = t29*t26;
-	q3c_coord_t t123 = t1*t5;
-	q3c_coord_t t126 = t71*t13;
-	q3c_coord_t t136 = t113*t29;
-	q3c_coord_t t138 = t5*t71;
-	q3c_coord_t t144 = 2.0*t6*t7*t13*t11*t21;
-	q3c_coord_t t147 = t113*t74;
-	q3c_coord_t t150 = t26*t21;
-	q3c_coord_t t157 = t30*t74;
+	q3c_coord_t t26 = t25 * t25;
+	q3c_coord_t t28 = 2.0 * t6 * t14;
+	q3c_coord_t t29 = t19 * t19;
+	q3c_coord_t t30 = t13 * t13;
+	q3c_coord_t t31 = t29 * t30;
+	q3c_coord_t t32 = t31 * t5;
+	q3c_coord_t t33 = t29 * t8;
+	q3c_coord_t t34 = t30 * t5;
+	q3c_coord_t t35 = t33 * t34;
+	q3c_coord_t t36 = t9 * t30;
+	q3c_coord_t t37 = 2.0 * t36;
+	q3c_coord_t t47 = t29 * (1.0 - t5 - t8 + t9) * t21 - t29 + t5;
+	q3c_coord_t t48 = t7 * t1;
+	q3c_coord_t t52 = t13 * t2;
+	q3c_coord_t t59 = t52 * t19;
+	q3c_coord_t t61 = t33 * t5;
+	q3c_coord_t t71 = t11 * t11;
+	q3c_coord_t t74 = t2 * t2;
+	q3c_coord_t t75 = t74 * t26;
+	q3c_coord_t t79 = t19 * t71 * t5;
+	q3c_coord_t t82 = t19 * t8 * t5;
+	q3c_coord_t t84 = t26 * t19;
+	q3c_coord_t t85 = t84 * t21;
+	q3c_coord_t t87 = t9 * t21;
+	q3c_coord_t t90 = t19 * t11 * t5;
+	q3c_coord_t t91 = t7 * t21;
+	q3c_coord_t t112 = t2 * t5 * t7;
+	q3c_coord_t t113 = t1 * t1;
+	q3c_coord_t t120 = t13 * t1;
+	q3c_coord_t t121 = t29 * t26;
+	q3c_coord_t t123 = t1 * t5;
+	q3c_coord_t t126 = t71 * t13;
+	q3c_coord_t t136 = t113 * t29;
+	q3c_coord_t t138 = t5 * t71;
+	q3c_coord_t t144 = 2.0 * t6 * t7 * t13 * t11 * t21;
+	q3c_coord_t t147 = t113 * t74;
+	q3c_coord_t t150 = t26 * t21;
+	q3c_coord_t t157 = t30 * t74;
 
-	q3c_coord_t tmpy0 = 2.0*(-t3+t6-t3*t9-t14+t12*t15+t3*t8)*t19*t21+2.0*t23;
-	q3c_coord_t tmpy1 = 4.0*t26*(-t5-t28+t31-t32+t35-t37+t34+t9)*t21-4.0*t26*(t31-t5);
-	q3c_coord_t tmpy2 = 2.0*t47;
-	q3c_coord_t tmpz0 = 2.0*(-t48*t11+t48*t11*t5+t52-t52*t5+t52*t9-t52*t8)*t19*t21-2.0*t59;
-	q3c_coord_t tmpz1 = -4.0*t26*(-t29-t61-t28+t31-t32+t35-t37+t34+t29*t5+t9)*t21+4.0*t26*(-t29+t31+t5);
-	q3c_coord_t tmpz2 = 2.0*t47;
-	*a = t33*t5*t21-t29*t71*t5-t61-t75*t21+t75;
-	*ay = 2.0*t3*t79+2.0*t3*t82-2.0*t3*t85-2.0*t23*t87+2.0*t90*t91*t13+2.0*t3*t84;
-	*az = -2.0*t52*t84+2.0*t52*t85-2.0*t52*t82-2.0*t52*t79+2.0*t90*t91*t1+2.0*t59*t87;
-	*ayz = 2.0*t15*t8*t1*t74-2.0*t15*t8*t1*t74*t21-2.0*t112*t113*t11*t21+2.0*t112*t30*t11*t21-2.0*t120*t121-2.0*t123*t8*t13-2.0*t123*t126+2.0*t15*t71*t1*t74+2.0*t120*t121*t21+2.0*t123*t126*t21;
-	*ayy = -t36+t136*t26-t138*t30-t144+t138*t30*t21-t9*t147-t138*t147-t136*t150+t9*t147*t21;
-	*azz = t138*t113*t21-t9*t157-t138*t157-t31*t150+t9*t157*t21+t144-t138*t113-t9*t113+t31*t26;
+	q3c_coord_t tmpy0 = 2.0 * (-t3 + t6 - t3 * t9 - t14 + t12 * t15 + t3 * t8) * t19 * t21 + 2.0 * t23;
+	q3c_coord_t tmpy1 = 4.0 * t26 * (-t5 - t28 + t31 - t32 + t35 - t37 + t34 + t9) * t21 - 4.0 * t26 * (t31 - t5);
+	q3c_coord_t tmpy2 = 2.0 * t47;
+	q3c_coord_t tmpz0 = 2.0 * (-t48 * t11 + t48 * t11 * t5 + t52 - t52 * t5 + t52 * t9 - t52 * t8) * t19 * t21 - 2.0 * t59;
+	q3c_coord_t tmpz1 = -4.0 * t26 * (-t29 - t61 - t28 + t31 - t32 + t35 - t37 + t34 + t29 * t5 + t9) * t21 + 4.0 * t26 * (-t29 + t31 + t5);
+	q3c_coord_t tmpz2 = 2.0 * t47;
+	*a = t33 * t5 * t21 - t29 * t71 * t5 - t61 - t75 * t21 + t75;
+	*ay = 2.0 * t3 * t79 + 2.0 * t3 * t82 - 2.0 * t3 * t85 - 2.0 * t23 * t87 + 2.0 * t90 * t91 * t13 + 2.0 * t3 * t84;
+	*az = -2.0 * t52 * t84 + 2.0 * t52 * t85 - 2.0 * t52 * t82 - 2.0 * t52 * t79 + 2.0 * t90 * t91 * t1 + 2.0 * t59 * t87;
+	*ayz = 2.0 * t15 * t8 * t1 * t74 - 2.0 * t15 * t8 * t1 * t74 * t21 - 2.0 * t112 * t113 * t11 * t21 + 2.0 * t112 * t30 * t11 * t21 - 2.0 * t120 * t121 - 2.0 * t123 * t8 * t13 - 2.0 * t123 * t126 + 2.0 * t15 * t71 * t1 * t74 + 2.0 * t120 * t121 * t21 + 2.0 * t123 * t126 * t21;
+	*ayy = -t36 + t136 * t26 - t138 * t30 - t144 + t138 * t30 * t21 - t9 * t147 - t138 * t147 - t136 * t150 + t9 * t147 * t21;
+	*azz = t138 * t113 * t21 - t9 * t157 - t138 * t157 - t31 * t150 + t9 * t157 * t21 + t144 - t138 * t113 - t9 * t113 + t31 * t26;
 
 	tmpy1 = q3c_sqrt(tmpy1);
 	tmpy2 = (2 * tmpy2);
@@ -1985,12 +1985,12 @@ void q3c_fast_get_polar_ellipse_xy_minmax_and_poly_coefs(q3c_coord_t alpha,
 	*zmin = (tmpz0 - tmpz1) / tmpz2;
 	*zmax = (tmpz0 + tmpz1) / tmpz2;
 	/* reduce the values to the cube with edge length of 1 (instead of 2) */
-	*ayy*=-4;
-	*azz*=-4;
-	*ayz*=-4;
-	*ay*=-2;
-	*az*=-2;
-	*a*=-1;
+	*ayy *= -4;
+	*azz *= -4;
+	*ayz *= -4;
+	*ay *= -2;
+	*az *= -2;
+	*a *= -1;
 }
 
 
@@ -2034,8 +2034,8 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 			tmpx = *ymin;
 			*ymin = -(*ymax);
 			*ymax = -tmpx;
-			*ay=-*ay;
-			*ayz=-*ayz;
+			*ay = -*ay;
+			*ayz = -*ayz;
 
 		}
 	}
@@ -2108,7 +2108,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 	 */
 
 	/* Bottom left vertex */
-	inside  = EVAL_POLY(xl_cur, yb_cur) < 0;
+	inside = EVAL_POLY(xl_cur, yb_cur) < 0;
 	status += inside;
 
 	/* Bottom right vertex */
@@ -2329,7 +2329,7 @@ void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
 	}
 	else
 	{
-		if ((tmp_stack2-*work_nstack) > tmp_stack1)
+		if ((tmp_stack2 - *work_nstack) > tmp_stack1)
 		{
 			memcpy(work_stack + (*work_nstack - tmp_stack1),
 			       work_stack + (tmp_stack2 - tmp_stack1),
@@ -2376,7 +2376,7 @@ void q3c_output_stack( struct q3c_prm *hprm,
 
 		ipix_tmp1 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
 
-		ipix_tmp2=ipix_tmp1+(ntmp1*ntmp1);
+		ipix_tmp2 = ipix_tmp1 + (ntmp1 * ntmp1);
 
 		/* Now we have in ipix_tmp1 and ipix_tmp2 -- the pixel range for the
 		 * query of current square
@@ -2404,7 +2404,7 @@ void q3c_output_stack( struct q3c_prm *hprm,
 		if (cur_square->status != Q3C_PARTIAL)
 			continue;
 		else
-			j+=1;
+			j += 1;
 		ntmp1 = (nside / cur_square->nside0);
 		//fprintf(stdout, "XX%lld\n", ntmp1);
 		xi = cur_square->x0 * ntmp1;
@@ -2436,14 +2436,14 @@ static void array_filler(q3c_ipix_t *fulls, int fullpos,
 	 */
 
 	int i;
-	for(i = fullpos; i < (2*Q3C_NFULLS);)
+	for(i = fullpos; i < (2 * Q3C_NFULLS);)
 	{
 		fulls[i++] = 1;
 		fulls[i++] = -1;
 	}
 
 
-	for(i = partpos; i < (2*Q3C_NPARTIALS);)
+	for(i = partpos; i < (2 * Q3C_NPARTIALS);)
 	{
 		parts[i++] = 1;
 		parts[i++] = -1;
@@ -2463,7 +2463,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	q3c_ipix_t n0, nside = hprm->nside;
 
-	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3]={0,0,0};
+	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3] = {0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 
@@ -2483,8 +2483,8 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 */
 	if (rad>=Q3C_MAXRAD)
 	{
-		q3c_ipix_t maxval = 6*(nside*nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
+		q3c_ipix_t maxval = 6 * (nside * nside);
+		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
 		{
 			/* don't have any fully covered squares*/
 			out_ipix_arr_fulls[i++] = 1;
@@ -2495,7 +2495,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		out_ipix_arr_partials[i++] = -1;
 		out_ipix_arr_partials[i++] = maxval;
 		/* everything is partially covered */
-		for(; i < (2*Q3C_NPARTIALS);)
+		for(; i < (2 * Q3C_NPARTIALS);)
 		{
 			/* fill with dummy ranges the rest*/
 			out_ipix_arr_partials[i++] = 1;
@@ -2530,7 +2530,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			q3c_get_poly_coefs(face_num, ra0, dec0, rad, &axx, &ayy, &axy,
 			                   &ax, &ay, &a);
 			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin,
-			                  &ymax, full_flags+face_count);
+			                  &ymax, full_flags + face_count);
 		}
 		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
 		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
@@ -2554,13 +2554,13 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		/* Take the whole face */
 		{
 
-			q3c_ipix_t tmpmin = face_num*nside*nside;
-			q3c_ipix_t tmpmax = (face_num+1)*nside*nside;
+			q3c_ipix_t tmpmin = face_num * nside * nside;
+			q3c_ipix_t tmpmax = (face_num + 1) * nside * nside;
 #ifdef Q3C_DEBUG
 			fprintf(stdout, "FULL_FLAG\n");
 #endif
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++]=tmpmin;
-			out_ipix_arr_partials[out_ipix_arr_partials_pos++]=tmpmax;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmin;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmax;
 			continue;
 		}
 
@@ -2603,7 +2603,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			for(j = 0; j < work_nstack; j++)
 			{
 				cur_square = work_stack + j;
-				cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
+				cur_size = ((q3c_coord_t) 1) / (cur_square->nside0);
 				xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				/* xc_cur and yc_cur -- center of the square (in the coordinate system
@@ -2632,14 +2632,14 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
 			if (cur_square->status == Q3C_PARTIAL)
-				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 #endif
 
@@ -2739,7 +2739,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		if (xesize * nside < 1)
 		/* If the region is too small */
 		{
-			xesize=1 / (q3c_coord_t)nside;
+			xesize = 1 / (q3c_coord_t)nside;
 		}
 
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
@@ -2780,7 +2780,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			for(j = 0; j < work_nstack; j++)
 			{
 				cur_square = work_stack + j;
-				cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
+				cur_size = ((q3c_coord_t) 1) / (cur_square->nside0);
 				xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				/* xc_cur and yc_cur -- center of the square (in the coordinate system
@@ -2788,7 +2788,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 				 */
 				//fprintf(stdout,"%Lf %Lf %Lf %d\n",xc_cur,yc_cur,cur_size, status);
 #ifdef Q3C_DEBUG
-				fprintf(stderr,"Trying (%f %f %f)(%f %f %f %f) --- ",xc_cur,yc_cur,cur_size,xc_cur-cur_size/2,xc_cur+cur_size/2,yc_cur-cur_size/2,yc_cur+cur_size/2);
+				fprintf(stderr,"Trying (%f %f %f)(%f %f %f %f) --- ",xc_cur,yc_cur,cur_size,xc_cur - cur_size / 2,xc_cur + cur_size / 2,yc_cur - cur_size / 2,yc_cur + cur_size / 2);
 #endif
 
 				cur_square->status = q3c_poly_cover_check(qp, xc_cur, yc_cur,
@@ -2813,14 +2813,14 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
 			if (cur_square->status == Q3C_PARTIAL)
-				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 #endif
 
@@ -2876,8 +2876,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 */
 	if (majax>= Q3C_MAXRAD)
 	{
-		q3c_ipix_t maxval = 6*(nside*nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2*Q3C_NFULLS);)
+		q3c_ipix_t maxval = 6 * (nside * nside);
+		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
 		{
 			/* don't have any fully covered squares*/
 			out_ipix_arr_fulls[i++] = 1;
@@ -2888,7 +2888,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		out_ipix_arr_partials[i++] = -1;
 		out_ipix_arr_partials[i++] = maxval;
 		/* everything is partially covered */
-		for(; i < (2*Q3C_NPARTIALS);)
+		for(; i < (2 * Q3C_NPARTIALS);)
 		{
 			/* fill with dummy ranges the rest*/
 			out_ipix_arr_partials[i++] = 1;
@@ -2934,7 +2934,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		if (xesize * nside < 1)
 		/* If the region is too small */
 		{
-			xesize=1 / (q3c_coord_t)nside;
+			xesize = 1 / (q3c_coord_t)nside;
 		}
 
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
@@ -2974,7 +2974,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			for(j = 0; j < work_nstack; j++)
 			{
 				cur_square = work_stack + j;
-				cur_size=((q3c_coord_t) 1) / (cur_square->nside0);
+				cur_size = ((q3c_coord_t) 1) / (cur_square->nside0);
 				xc_cur = (( (q3c_coord_t) cur_square->x0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				yc_cur = (( (q3c_coord_t) cur_square->y0) + Q3C_HALF) / cur_square->nside0 - Q3C_HALF;
 				/* xc_cur and yc_cur -- center of the square (in the coordinate system
@@ -2985,7 +2985,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 				                                            cur_size, xmin, xmax, ymin, ymax, axx, axy, ayy, ax, ay, a);
 #ifdef Q3C_DEBUG
 				fprintf(stderr,"Trying (%f %f %f)(%f %f %f %f) --- ",xc_cur,
-				        yc_cur,cur_size,xc_cur-cur_size/2,xc_cur+cur_size/2,yc_cur-cur_size/2,yc_cur+cur_size/2);
+				        yc_cur,cur_size,xc_cur - cur_size / 2,xc_cur + cur_size / 2,yc_cur - cur_size / 2,yc_cur + cur_size / 2);
 				fprintf(stderr,"%d\n",cur_square->status);
 #endif
 			}
@@ -3006,14 +3006,14 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		for(i = 0; i < out_nstack; i++)
 		{
 			cur_square = out_stack + i;
-			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+			fprintf(stdout, "OUT: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 
 		for(i = 0; i < work_nstack; i++)
 		{
 			cur_square = work_stack + i;
 			if (cur_square->status == Q3C_PARTIAL)
-				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0+0.5,cur_square->y0+0.5,cur_square->nside0,cur_square->status);
+				fprintf(stdout, "OUT1: %f %f %d %d\n", cur_square->x0 + 0.5,cur_square->y0 + 0.5,cur_square->nside0,cur_square->status);
 		}
 #endif
 

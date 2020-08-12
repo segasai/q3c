@@ -121,7 +121,7 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad/41252.;  /* pi*r^2/whole_sky_area */
+	ratio = 3.14 * rad * rad / 41252.;  /* pi*r^2/whole_sky_area */
 
 	/* clamp at 0, 1*/
 	CLAMP_PROBABILITY(ratio);
@@ -165,7 +165,7 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad/41252.;  /* pi*r^2/whole_sky_area */
+	ratio = 3.14 * rad * rad / 41252.;  /* pi*r^2/whole_sky_area */
 
 	/* clamp at 0, 1*/
 	CLAMP_PROBABILITY(ratio);
@@ -218,7 +218,7 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	ra_buf = ra;
 	dec_buf = dec;
 	ipix_buf = ipix;
-	invocation=1;
+	invocation = 1;
 
 	PG_RETURN_INT64(ipix);
 }
@@ -256,7 +256,7 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	ra_buf = ra;
 	dec_buf = dec;
 	ipix_buf = ipix;
-	invocation=1;
+	invocation = 1;
 
 	PG_RETURN_INT64(ipix);
 }
@@ -277,7 +277,7 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 
 	q3c_ipix2ang(&hprm, ipix, &ra, &dec);
 
-	data = ( Datum *) palloc(sizeof(Datum)*2);
+	data = ( Datum *) palloc(sizeof(Datum) * 2);
 	data[0] = Float8GetDatum (ra);
 	data[1] = Float8GetDatum (dec);
 
@@ -349,9 +349,9 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec;
 	bool pm_enabled = true, cosdec;
 	q3c_coord_t res;
-	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	          cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
-	          epoch2_arg_pos=8;
+	const int ra_arg_pos = 0, dec_arg_pos = 1, pmra_arg_pos = 2, pmdec_arg_pos = 3,
+	          cosdec_arg_pos = 4, epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7,
+	          epoch2_arg_pos = 8;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
 	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
@@ -387,7 +387,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	{
 		if (cosdec)
 		{
-			cdec = cos(dec1*Q3C_DEGRA);
+			cdec = cos(dec1 * Q3C_DEGRA);
 		}
 		else
 		{
@@ -410,13 +410,13 @@ PG_FUNCTION_INFO_V1(pgq3c_dist_pm);
 Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 {
 	q3c_coord_t pmra1, pmdec1, epoch1, epoch2;
-	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec=1;
+	q3c_coord_t ra1, dec1, ra2, dec2, ra1_shift, dec1_shift, cdec = 1;
 	bool pm_enabled = true, cosdec;
 	q3c_coord_t res;
 
-	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	          cosdec_arg_pos=4, epoch_arg_pos=5, ra2_arg_pos=6, dec2_arg_pos=7,
-	          epoch2_arg_pos=8;
+	const int ra_arg_pos = 0, dec_arg_pos = 1, pmra_arg_pos = 2, pmdec_arg_pos = 3,
+	          cosdec_arg_pos = 4, epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7,
+	          epoch2_arg_pos = 8;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
 	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
@@ -452,7 +452,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	{
 		if (cosdec)
 		{
-			cdec = cos(dec1*Q3C_DEGRA);
+			cdec = cos(dec1 * Q3C_DEGRA);
 		}
 		else
 		{
@@ -524,7 +524,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
 
-	invocation=1;
+	invocation = 1;
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
 }
 
@@ -542,11 +542,11 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	q3c_circle_region circle;
 	q3c_coord_t new_radius;
 	q3c_coord_t ra_cen, dec_cen, pmra, pmdec;
-	q3c_coord_t max_epoch_delta=0, radius=0;
+	q3c_coord_t max_epoch_delta = 0, radius = 0;
 	bool pm_enabled = true, cosdec;
 	int iteration;
-	const int ra_arg_pos=0, dec_arg_pos=1, pmra_arg_pos=2, pmdec_arg_pos=3,
-	          cosdec_arg_pos=4, maxepochdelta_arg_pos=5, radius_arg_pos=6, iteration_arg_pos=7;
+	const int ra_arg_pos = 0, dec_arg_pos = 1, pmra_arg_pos = 2, pmdec_arg_pos = 3,
+	          cosdec_arg_pos = 4, maxepochdelta_arg_pos = 5, radius_arg_pos = 6, iteration_arg_pos = 7;
 
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(radius_arg_pos))
 	{
@@ -583,7 +583,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	if ( (!isfinite(pmra)) || (!isfinite(pmdec)) ||
 	     (!isfinite(max_epoch_delta)) )
 	{
-		pmra =  0;
+		pmra = 0;
 		pmdec = 0;
 		max_epoch_delta = 0;
 	}
@@ -612,8 +612,8 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	if (pm_enabled)
 	{
 		q3c_coord_t pmra1;
-		if (cosdec) { pmra1 = pmra; } else { pmra1 = pmra * cos(Q3C_DEGRA*dec_cen);}
-		new_radius = q3c_sqrt(pmra1 * pmra1 + pmdec * pmdec)/ 3600000 * max_epoch_delta + radius;
+		if (cosdec) { pmra1 = pmra; } else { pmra1 = pmra * cos(Q3C_DEGRA * dec_cen);}
+		new_radius = q3c_sqrt(pmra1 * pmra1 + pmdec * pmdec) / 3600000 * max_epoch_delta + radius;
 	}
 	else
 	{
@@ -638,7 +638,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	max_epoch_delta_buf = max_epoch_delta;
 	pmra_buf = pmra;
 	pmdec_buf = pmdec;
-	invocation=1;
+	invocation = 1;
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
 }
 
@@ -707,7 +707,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	axis_ratio_buf = axis_ratio;
 	PA_buf = PA;
 
-	invocation=1;
+	invocation = 1;
 	PG_RETURN_INT64(ipix_array_buf[iteration]);
 }
 
@@ -890,7 +890,7 @@ static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool t
 static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert)
 {
 	int poly_nitems = ArrayGetNItems(ARR_NDIM(poly_arr), ARR_DIMS(poly_arr));
-	Oid element_type=FLOAT8OID;
+	Oid element_type = FLOAT8OID;
 	int identical = 1;
 	int16 typlen;
 	bool typbyval;
@@ -921,7 +921,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	identical = 1;
 
 	bitmap = ARR_NULLBITMAP(poly_arr);
-	bitmask=1;
+	bitmask = 1;
 
 	for (i = 0; i < poly_nitems; i++)
 	{
@@ -951,11 +951,11 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
 	}
 
-	for(i=0; i<npts; i++)
+	for(i = 0; i<npts; i++)
 	{
 		newx = poly->p[i].x;
 		newy = poly->p[i].y;
-		if ((newx != ra[i]) || (newy !=dec[i])) {identical=0;}
+		if ((newx != ra[i]) || (newy !=dec[i])) {identical = 0;}
 		ra[i] = newx;
 		dec[i] = newy;
 	}
@@ -985,15 +985,15 @@ typedef struct q3c_poly_info_type {
 static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
 {
 	int i,j;
-	for (i=0; i<(2* Q3C_NPARTIALS); i++)
+	for (i = 0; i<(2 * Q3C_NPARTIALS); i++)
 	{
-		b->partials[i]=a->partials[i];
+		b->partials[i] = a->partials[i];
 	}
-	for (i=0; i<(2* Q3C_NPARTIALS); i++)
+	for (i = 0; i<(2 * Q3C_NPARTIALS); i++)
 	{
-		b->fulls[i]=a->fulls[i];
+		b->fulls[i] = a->fulls[i];
 	}
-	for (i=0; i<Q3C_MAX_N_POLY_VERTEX; i++)
+	for (i = 0; i<Q3C_MAX_N_POLY_VERTEX; i++)
 	{
 		b->ra[i] = a->ra[i];
 		b->dec[i] = a->dec[i];
@@ -1001,17 +1001,17 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 		b->y[i] = a->y[i];
 		b->ax[i] = a->ax[i];
 		b->ay[i] = a->ay[i];
-		for (j=0; j<3; j++)
+		for (j = 0; j<3; j++)
 		{
-			b->axpj[j][i]=a->axpj[j][i];
-			b->aypj[j][i]=a->aypj[j][i];
-			b->xpj[j][i]=a->xpj[j][i];
-			b->ypj[j][i]=a->ypj[j][i];
+			b->axpj[j][i] = a->axpj[j][i];
+			b->aypj[j][i] = a->aypj[j][i];
+			b->xpj[j][i] = a->xpj[j][i];
+			b->ypj[j][i] = a->ypj[j][i];
 
 		}
 
 	}
-	for (i=0; i<6; i++)
+	for (i = 0; i<6; i++)
 	{
 		b->faces[i] = a->faces[i];
 	}
@@ -1045,18 +1045,18 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	q3c_poly qp;
 	static int good_cache;
 	int first_call;
-	int identical=0;
+	int identical = 0;
 	static q3c_poly_info_type lqpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		first_call=1;
+		first_call = 1;
 	}
 	else
 	{
-		first_call =0;
+		first_call = 0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
@@ -1098,9 +1098,9 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	}
 	if (iteration==0)
 	{
-		good_cache=0;
+		good_cache = 0;
 		copy_q3c_poly_info_type(qpit, &lqpit);
-		good_cache=1;
+		good_cache = 1;
 	}
 
 	if (full_flag)
@@ -1127,18 +1127,18 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 	q3c_poly qp;
 	static int good_cache;
 	int first_call;
-	int identical=0;
+	int identical = 0;
 	static q3c_poly_info_type lqpit;
 
 	if (fcinfo->flinfo->fn_extra==0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		first_call=1;
+		first_call = 1;
 	}
 	else
 	{
-		first_call =0;
+		first_call = 0;
 	}
 
 	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
@@ -1180,9 +1180,9 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 	}
 	if (iteration==0)
 	{
-		good_cache=0;
+		good_cache = 0;
 		copy_q3c_poly_info_type(qpit, &lqpit);
-		good_cache=1;
+		good_cache = 1;
 	}
 
 	if (full_flag)
