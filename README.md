@@ -163,7 +163,7 @@ major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
 
 ```
 my_db# SELECT * FROM mytable WHERE
-		q3c_poly_query(ra, dec, '{0, 0, 2, 0, 2, 1, 0, 1}');
+		q3c_poly_query(ra, dec, ARRAY[0, 0, 2, 0, 2, 1, 0, 1]);
 ```
 - The polygonal query using PostgreSQL polygon type
 ```
