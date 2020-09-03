@@ -50,6 +50,7 @@ gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 test: gen_data all
+	dropdb --if-exists q3c_test
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
 	psql q3c_test -c "CREATE TABLE test1 (ra double precision, dec double precision)"
