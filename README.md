@@ -13,12 +13,12 @@ Fresh versions of the software could be obtained here: https://github.com/segasa
 To read more about the Q3C indexing, you can check out the paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735".
-Q3C is also registered in the ASCL library https://ascl.net/1905.008 . If you use Q3C you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
+Q3C is also registered in the ASCL library https://ascl.net/1905.008 . If you use Q3C, you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
 In order to use Q3C you need to have a PostgreSQL database installed (version 9.1
-or later). If you have PostgreSQL version lower than 9.1 your will need to use 
+or later). If you have PostgreSQL version lower than 9.1, you will need to use 
 an older version of Q3C (1.4.x). 
 
 To successfully compile Q3C you must have pg_config in your PATH (that means that you may need to install the -devel versions of PostgreSQL packages)
