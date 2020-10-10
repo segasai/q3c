@@ -47,9 +47,9 @@ prepare: prepare.o q3cube.o q3c_poly.o
 	$(CC) $? $(CFLAGS) $(PG_LIBS) $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 gen_data: gen_data.c
-	$(CC) $< $(CPPFLAGS) $(PG_LFGLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
+	$(CC) $< $(CPPFLAGS) $(LDFLAGS) -lm -o $@
 
-test: gen_data all
+test: gen_data
 	dropdb --if-exists q3c_test
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
