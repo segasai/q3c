@@ -24,16 +24,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "postgres.h"
+#include <stdbool.h>
+#include <string.h>
 
+static int64_t rand_state = 1;
+static const int64_t c = 12345;
+static const int64_t m = ((int64_t)1)<<31;
+static const int64_t a = 1103515245;
 
-
-static int64 rand_state = 1;
-static const int64 c = 12345;
-static const int64 m = ((int64)1)<<31;
-static const int64 a = 1103515245;
-
-int64 get_rand()
+int64_t get_rand()
 {
 	rand_state =  ( a * rand_state + c ) % m;
 	return rand_state;
@@ -112,8 +111,8 @@ int main(int argc, char *argv[])
 	int npointsleft = npoints;
 	while (npointsleft)
 	{
-		int64 ra = (int64)(get_rand() * 1./m * nrabins);
-		int64 dec = (int64)(get_rand() * 1./m * ndecbins);
+		int64_t ra = (int64_t)(get_rand() * 1./m * nrabins);
+		int64_t dec = (int64_t)(get_rand() * 1./m * ndecbins);
 		if (withpm )
 		{
 			pmra = ((get_rand() * 1./m)*2 -1) * pmscale;
