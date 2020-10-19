@@ -13,7 +13,8 @@ Fresh versions of the software could be obtained here: https://github.com/segasa
 To read more about the Q3C indexing, you can check out the paper published in ADASS conference proceedings 
 http://adsabs.harvard.edu/abs/2006ASPC..351..735K
 The citation is "Koposov, S., & Bartunov, O. 2006, Astronomical Society of the Pacific Conference Series, 351, 735".
-Q3C is also registered in the ASCL library https://ascl.net/1905.008 . If you use Q3C, you are kindly asked to cite the 2006 paper. I would be also happy to hear about any usage of Q3C.
+Q3C is also registered in the ASCL library https://ascl.net/1905.008 . If you use Q3C, you are kindly asked to cite the 2006 paper.
+I am also always happy to hear about any usage of Q3C.
 
 ## Prerequisites
 
@@ -27,10 +28,22 @@ To successfully compile Q3C you must have pg_config in your PATH (that means tha
 
 - make 
 - make install  
-- Execute "create extension q3c" in the PostgreSQL client(psql) for the database where you plan to use q3c
+- Execute "CREATE EXTENSION q3c" in the PostgreSQL client(psql) for the database where you plan to use q3c
 
 After the installation you will have several new functions in PostgreSQL.
 All names of these functions start with the "q3c_" prefix.
+
+## Updating 
+
+If you are updating from previous version of q3c, you still need to do the make, make install steps, but after that you need to do
+
+- ALTER EXTENSION q3c UPDATE TO 'A.B.C';
+
+instead of 'CREATE EXTENSION'. Here A.B.C is the placeholder for the version, i.e. '2.0.0';
+You also may want to check what version of q3c is installed by either of following commands:
+
+- select q3c_version();
+- SELECT * FROM pg_available_extension_versions WHERE name ='q3c';
 
 ## Table preparation for Q3C
 
@@ -39,7 +52,7 @@ on your tables.
 
 In this demonstration we'll assume that you have the table called "mytable" with "ra" and "dec" columns (right ascension and declination in degrees).
 
-First, you will need to create the spatial index, using the following command:
+First, you will need to create the spatial index, using the command:
 
 `my_db# CREATE INDEX ON mytable (q3c_ang2ipix(ra, dec)); `
 
