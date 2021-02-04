@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         container: ['ubuntu:18.04']
-        compiler: [gcc, clang]
+        # compiler: [gcc, clang]
         PGVERSION: [11, 12, 13]
     steps:
       - name: Checkout 
