@@ -34,7 +34,7 @@ PGVERNEW := $(shell if [ $(MAJORVERSION) -ge 12 ] ; then echo N ; else echo O ; 
 
 ifeq ($(PGVERNEW), N)
 	PG_LIBS += -L$(shell $(PG_CONFIG) --pkglibdir)
-	LIBS := $(filter-out -lpam -lxml2 -lxslt -lselinux -ledit, $(LIBS))
+	LIBS := $(filter-out -lpam -lxml2 -lxslt -lselinux -ledit -lgssapi_krb5, $(LIBS))
 	MYBINLIBS := $(LIBS) $(PG_LIBS) -lm
 else
 	MYBINLIBS := $(PG_LIBS) -lm
