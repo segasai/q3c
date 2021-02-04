@@ -33,7 +33,7 @@ jobs:
           sudo /etc/init.d/postgresql restart
           # if [[ ${COVERAGE} == 1 ]] ; then sudo /etc/init.d/postgresql stop ; fi
           sudo pip install cpp-coveralls
-          createuser -U postgres -s travis
+          createuser -U postgres -s runner
       - name: install
         run: |
           make && sudo make install
