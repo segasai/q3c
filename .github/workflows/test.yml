@@ -12,15 +12,15 @@ jobs:
         container: ['ubuntu:18.04']
         compiler: [gcc]
         PGVERSION: [11, 12, 13]
-        COVERAGE: [0]
-        APT: [1]
+        COVERAGE: ['0']
+        APT: ['1']
         include:
-          - APT: 0
-            COVERAGE: 1
+          - APT: '0'
+            COVERAGE: '1'
             compiler: gcc
-          - APT: 0
-            COVERAGE: 0
-            compiler: clang
+          - APT: '0'
+            COVERAGE: '0'
+            compiler: 'clang'
 
     steps:
       - name: Checkout 
@@ -29,13 +29,11 @@ jobs:
         run: |
           sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
           sudo apt-get -y install python3 python3-pip lcov
+          sudo pip install cpp-coveralls
           sudo rm -rf /var/lib/postgresql        
-      - if: ${{ matrix.APT }} == 1
+      - if: ${{ matrix.APT }} == '1'
         name: PG APT setup
         run: |
-          sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
-          sudo apt-get -y install python3 python3-pip lcov
-          sudo rm -rf /var/lib/postgresql
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo sh -c "echo deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main ${{ matrix.PGVERSION }} >> /etc/apt/sources.list.d/postgresql.list"
           sudo sh -c "echo deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg-testing main ${{ matrix.PGVERSION }} >> /etc/apt/sources.list.d/postgresql.list"
@@ -47,10 +45,8 @@ jobs:
           sudo echo "host    all         all         127.0.0.1/32          trust" >> /etc/postgresql/${{ matrix.PGVERSION }}/main/pg_hba.conf
           sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/${{ matrix.PGVERSION }}/main/pg_hba.conf
           sudo /etc/init.d/postgresql restart
-          # if [[ ${COVERAGE} == 1 ]] ; then sudo /etc/init.d/postgresql stop ; fi
-          sudo pip install cpp-coveralls
           createuser -U postgres -s runner
-      - if: ${{ matrix.APT}} == 0
+      - if: ${{ matrix.APT}} == '0'
         name: PG source setup
         run: |
           export CC=${{ matrix.compiler }}
@@ -68,7 +64,7 @@ jobs:
           sleep 2
           make install
           make test
-      - if: ${{ matrix.COVERAGE }} == 1
+      - if: ${{ matrix.COVERAGE }} == '1'
         name: Coverall
         run: |
           cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '-lp' 
