@@ -61,7 +61,8 @@ jobs:
       - name: Build q3c
         run: |
           if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
-          make && sudo -E make install
+          make
+          sudo PATH=$PWD/../pg_install/bin/:$PATH make install
       - name: Test
         run: |
           if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
