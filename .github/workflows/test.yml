@@ -53,7 +53,7 @@ jobs:
           tar xfj postgresql-11.8.tar.bz2
           mv postgresql-11.8 ../
           cd ../postgresql-11.8/
-          if [[ ${{ matrix.COVERAGE} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
+          if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
           make install
           cd ../q3c/
           export PATH=$PWD/../pg_install/bin/:$PATH
