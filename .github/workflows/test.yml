@@ -64,6 +64,7 @@ jobs:
           make && sudo make install
       - name: Test
         run: |
+          if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
           make test
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coverall
