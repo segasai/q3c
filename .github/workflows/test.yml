@@ -46,7 +46,7 @@ jobs:
           sudo echo "host    all         all         ::1/128               trust" >> /etc/postgresql/${{ matrix.PGVERSION }}/main/pg_hba.conf
           sudo /etc/init.d/postgresql restart
           createuser -U postgres -s runner
-      - if: ${{ matrix.APT}} == '0'
+      - if: ${{ matrix.APT == '0' }}
         name: PG source setup
         run: |
           export CC=${{ matrix.compiler }}
@@ -64,7 +64,7 @@ jobs:
           sleep 2
           make install
           make test
-      - if: ${{ matrix.COVERAGE }} == '1'
+      - if: ${{ matrix.COVERAGE == '1' }}
         name: Coverall
         run: |
           cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '-lp' 
