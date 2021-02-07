@@ -71,4 +71,5 @@ jobs:
         name: Coverall
         run: |
           cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' 
-          
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
