@@ -55,23 +55,18 @@ jobs:
           cd ../postgresql-11.8/
           if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
           make install
-          cd ../q3c/
-          export PATH=$PWD/../pg_install/bin/:$PATH
-          make clean
           ../pg_install/bin/initdb -D ../pg_install/data
           ../pg_install/bin/postgres -D ../pg_install/data &
           sleep 2
-          make install
+      - name: Build q3c
+        run: |
+          if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
+          make && sudo make install
+      - name: Test
+        run: |
           make test
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coverall
         run: |
           cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' 
-      - name: install
-        run: |
-          make && sudo make install
-      - name: Test
-        run: |
-          make test
-
           
