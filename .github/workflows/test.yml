@@ -18,7 +18,6 @@ jobs:
           - APT: 0
             COVERAGE: 1
             compiler: gcc
-        include:
           - APT: 0
             COVERAGE: 0
             compiler: clang
