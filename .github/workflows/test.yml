@@ -15,15 +15,14 @@ jobs:
         COVERAGE: [0]
         APT: [1]
         include:
-          APT: 0
-          COVERAGE: 1
-          compiler: gcc
+          - APT: 0
+            COVERAGE: 1
+            compiler: gcc
         include:
-          APT: 0
-          COVERAGE: 0
-          compiler: clang
-          
-          
+          - APT: 0
+            COVERAGE: 0
+            compiler: clang
+
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
