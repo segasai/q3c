@@ -10,12 +10,30 @@ jobs:
     strategy:
       matrix:
         container: ['ubuntu:18.04']
-        # compiler: [gcc, clang]
+        compiler: [gcc]
         PGVERSION: [11, 12, 13]
+        COVERAGE: [0]
+        APT: [1]
+        include:
+          APT: 0
+          COVERAGE: 1
+          compiler: gcc
+        include:
+          APT: 0
+          COVERAGE: 0
+          compiler: clang
+          
+          
     steps:
       - name: Checkout 
         uses: actions/checkout@v2
-      - name: PG setup
+      - name: PG cleanup
+        run: |
+          sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
+          sudo apt-get -y install python3 python3-pip lcov
+          sudo rm -rf /var/lib/postgresql        
+      - if: APT == 1
+        name: PG APT setup
         run: |
           sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
           sudo apt-get -y install python3 python3-pip lcov
@@ -34,6 +52,28 @@ jobs:
           # if [[ ${COVERAGE} == 1 ]] ; then sudo /etc/init.d/postgresql stop ; fi
           sudo pip install cpp-coveralls
           createuser -U postgres -s runner
+      - if: APT == 0
+        name: PG source setup
+        run: |
+          export CC=${{ matrix.compiler }}
+          wget https://ftp.postgresql.org/pub/source/v11.8/postgresql-11.8.tar.bz2
+          tar xfj postgresql-11.8.tar.bz2
+          mv postgresql-11.8 ../
+          cd ../postgresql-11.8/
+          ./configure --enable-coverage --prefix=$PWD/../pg_install/
+          make install
+          cd ../q3c/
+          export PATH=$PWD/../pg_install/bin/:$PATH
+          make clean
+          ../pg_install/bin/initdb -D ../pg_install/data
+          ../pg_install/bin/postgres -D ../pg_install/data &
+          sleep 2
+          make install
+          make test
+      - if: COVERAGE == 1
+        name: Coverall
+        run: |
+          cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '-lp' 
       - name: install
         run: |
           make && sudo make install
