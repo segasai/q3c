@@ -46,6 +46,14 @@ typedef int64 q3c_ipix_t;
 #endif /* Q3C_IPIX_FMT */
 
 
+#ifndef Q3C_MAX_IPIX
+#define Q3C_MAX_IPIX ( (((q3c_ipix_t)1<<60)-1) + ((q3c_ipix_t)1<<60) + ((q3c_ipix_t)1<<62))
+/* This is maximum allowed ipix value 
+101 + 1111111111111....111
+         60 ones
+ */
+#endif /* Q3C_MAX_IPIX */
+
 
 /* If You have not specified the Q3C_LONG_DOUBLE macro then we will use simple
    double functions */

@@ -274,7 +274,11 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	char typalign;
 	ArrayType  *result;
 	ipix = PG_GETARG_INT64(0);
+	if ((ipix < 0) || (ipix > Q3C_MAX_IPIX))
+	  {
+		elog(ERROR, "Invalid ipix value");
 
+	  }
 	q3c_ipix2ang(&hprm, ipix, &ra, &dec);
 
 	data = ( Datum *) palloc(sizeof(Datum) * 2);
@@ -309,6 +313,14 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	if (depth > 30)
 	{
 		elog(ERROR, "Invalid depth. It should be less than 31.");
+	}
+	if (ipix < 0)
+	{
+		elog(ERROR, "Invalid ipix value");
+	}
+	if (ipix > Q3C_MAX_IPIX) 
+	{
+		elog(ERROR, "Invalid ipix value");
 	}
 
 	res = q3c_pixarea(&hprm, ipix, depth);

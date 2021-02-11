@@ -3,3 +3,7 @@
  t
 (1 row)
 
+ERROR:  Invalid depth. It should be less than 31.
+ERROR:  Invalid depth. It should be greater than 0.
+ERROR:  Invalid ipix value
+ERROR:  Invalid ipix value

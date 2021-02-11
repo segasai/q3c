@@ -22,3 +22,5 @@ select q3c_dist_pm(0,0,3600000,0,0,0,90,0,90)<1e-9;
 select q3c_dist_pm(0,0,0,3600000,0,0,0,90,90)<1e-9;
 select sum((q3c_ang2ipix(((q3c_ipix2ang(q3c_ang2ipix(ra,dec)))[1]),(q3c_ipix2ang(q3c_ang2ipix(ra,dec)))[2])=q3c_ang2ipix(ra,dec))::int) from test;
 select sum((q3c_ang2ipix(ra::real,dec::real) = q3c_ang2ipix( (ra::real)::double precision, (dec::real)::double precision))::int) from test;
+select q3c_ipix2ang(0);
+select q3c_ipix2ang(-1);

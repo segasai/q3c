@@ -77,9 +77,9 @@ test: gen_data
 	psql q3c_test -c 'ANALYZE test_pm1'
 	psql q3c_test -c 'ANALYZE test_small'
 	mkdir -p results
-	cat sql/ang2ipix.sql | psql q3c_test > results/ang2ipix.out
+	cat sql/ang2ipix.sql | psql q3c_test > results/ang2ipix.out 2>&1
 	diff results/ang2ipix.out expected/ang2ipix.expected
-	cat sql/cone.sql | psql q3c_test > results/cone.out
+	cat sql/cone.sql | psql q3c_test > results/cone.out 2>&1
 	diff results/cone.out expected/cone.expected
 	cat sql/cone_join_rev.sql | psql q3c_test > results/cone.out
 	diff results/cone.out expected/cone.expected
@@ -99,7 +99,7 @@ test: gen_data
 	diff results/poly1.out expected/poly.expected
 	cat sql/version.sql | psql q3c_test > results/version.out
 	diff results/version.out expected/version.expected
-	cat sql/area.sql | psql q3c_test > results/area.out
+	cat sql/area.sql | psql q3c_test > results/area.out 2>&1
 	diff results/area.out expected/area.expected
 	dropdb q3c_test
 	createdb q3c_test
