@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/segasai/q3c.svg?branch=master)](https://travis-ci.org/segasai/q3c)
+[![Build Status](https://github.com/segasai/q3c/workflows/q3c/badge.svg)](https://github.com/segasai/q3c/actions)
 [![Coverage Status](https://coveralls.io/repos/github/segasai/q3c/badge.svg?branch=master)](https://coveralls.io/github/segasai/q3c?branch=master)
 # Q3C
 
 Author: Sergey Koposov, University of Edinburgh
 
-Copyright (c) 2004-2020 Sergey Koposov
+Copyright (c) 2004-2021 Sergey Koposov
 
 Email:  skoposov AT ed DOT ac DOT uk
 
