@@ -1,5 +1,5 @@
 /*
-       Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2021 Sergey Koposov
 
     Email:  skoposov AT ed DOT ac DOT uk
 
@@ -374,7 +374,8 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
 	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
-	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
+	if ((!PG_ARGISNULL(pmra_arg_pos))&&
+	    (!PG_ARGISNULL(pmdec_arg_pos))&&
 	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
 	{
 		pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
