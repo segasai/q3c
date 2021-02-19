@@ -374,9 +374,9 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
 	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
-	if ((!PG_ARGISNULL(pmra_arg_pos))&&
-	    (!PG_ARGISNULL(pmdec_arg_pos))&&
-	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
+	if ((!PG_ARGISNULL(pmra_arg_pos)) &&
+	    (!PG_ARGISNULL(pmdec_arg_pos)) &&
+	    (!PG_ARGISNULL(epoch_arg_pos)) && (!PG_ARGISNULL(epoch2_arg_pos)))
 	{
 		pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
 		pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
@@ -440,8 +440,8 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
 	dec1 = PG_GETARG_FLOAT8(dec_arg_pos);
 
-	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
-	    (!PG_ARGISNULL(epoch_arg_pos))&&(!PG_ARGISNULL(epoch2_arg_pos)))
+	if ((!PG_ARGISNULL(pmra_arg_pos)) && (!PG_ARGISNULL(pmdec_arg_pos)) &&
+	    (!PG_ARGISNULL(epoch_arg_pos)) && (!PG_ARGISNULL(epoch2_arg_pos)))
 	{
 		pmra1 = PG_GETARG_FLOAT8(pmra_arg_pos);
 		pmdec1 = PG_GETARG_FLOAT8(pmdec_arg_pos);
@@ -569,7 +569,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	ra_cen = PG_GETARG_FLOAT8(ra_arg_pos); // ra_cen
 	dec_cen = PG_GETARG_FLOAT8(dec_arg_pos); // dec_cen
 
-	if (!PG_ARGISNULL(pmra_arg_pos)&&(!PG_ARGISNULL(pmdec_arg_pos))&&
+	if ((!PG_ARGISNULL(pmra_arg_pos)) && (!PG_ARGISNULL(pmdec_arg_pos)) &&
 	    (!PG_ARGISNULL(maxepochdelta_arg_pos)))
 	{
 		pmra = PG_GETARG_FLOAT8(pmra_arg_pos);
