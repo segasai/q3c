@@ -13,9 +13,11 @@ EXTRA_CLEAN = dump.c prepare prepare.o gen_data.o \
 			results/join.out results/cone.out results/ellipse.out \
 			results/version.out results/poly.out results/area.out \
 			gen_data
-
-OPT = -O3
-OPT_LOW = -O2
+ifeq ($(Q3C_NOOPT),1)
+	OPT = -O0
+else
+	OPT = -O3
+endif
 #DEBUG = -O0 -g3 -ggdb -DQ3C_DEBUG
 PG_CPPFLAGS = $(DEBUG) $(OPT) -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -DQ3C_VERSION='"'$(EXTVERSION)'"'
 CPPFLAGS = $(CPPFLAGS) -D$(Q3CVERSION)
