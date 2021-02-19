@@ -1,0 +1,7 @@
+ERROR:  Polygons with more than 100 vertices are not supported
+CONTEXT:  SQL function "q3c_poly_query" during inlining
+ERROR:  Invalid array argument!
+The array should contain even number of elements
+CONTEXT:  SQL function "q3c_poly_query" during inlining
+ERROR:  Invalid polygon! The polygon must have more than two vertices
+CONTEXT:  SQL function "q3c_poly_query" during inlining

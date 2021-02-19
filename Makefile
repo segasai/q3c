@@ -101,6 +101,8 @@ test: gen_data
 	diff results/version.out expected/version.expected
 	cat sql/area.sql | psql q3c_test > results/area.out 2>&1
 	diff results/area.out expected/area.expected
+	cat sql/errors.sql | psql q3c_test > results/errors.out 2>&1
+	diff results/errors.out expected/errors.expected
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c 'CREATE EXTENSION q3c VERSION "1.6.0"'

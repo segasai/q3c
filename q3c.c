@@ -918,7 +918,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	 * function deconstruct_array
 	 */
 
-	if (poly_nitems % 2 != 0)
+	if ((poly_nitems % 2) != 0)
 	{
 		elog(ERROR, "Invalid array argument!\nThe array should contain even number of elements");
 	}
@@ -926,11 +926,10 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	{
 		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
 	}
-	else if (poly_nitems> 2 * Q3C_MAX_N_POLY_VERTEX)
+	else if (poly_nitems > (2 * Q3C_MAX_N_POLY_VERTEX))
 	{
 		elog(ERROR,"Polygons with more than 100 vertices are not supported");
 	}
-
 	p = ARR_DATA_PTR(poly_arr);
 	poly_nitems /= 2;
 	*nvert = poly_nitems;
@@ -965,6 +964,10 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 	if (npts < 3)
 	{
 		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
+	}
+	else if (npts > Q3C_MAX_N_POLY_VERTEX)
+	{
+		elog(ERROR,"Polygons with more than 100 vertices are not supported");
 	}
 
 	for(i = 0; i<npts; i++)
