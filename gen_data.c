@@ -1,5 +1,5 @@
 /*
-       Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2021 Sergey Koposov
 
     Email: skoposov AT ed DOT ac DOT uk
 
@@ -29,12 +29,12 @@
 
 static int64_t rand_state = 1;
 static const int64_t c = 12345;
-static const int64_t m = ((int64_t)1)<<31;
+static const int64_t m = ((int64_t)1) << 31;
 static const int64_t a = 1103515245;
 
 int64_t get_rand()
 {
-	rand_state =  ( a * rand_state + c ) % m;
+	rand_state = ( a * rand_state + c ) % m;
 	return rand_state;
 }
 
@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
 	const int nrabins = 36000;
 	const int ndecbins = 18000;
 	const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
-	double corrections[ndecbins], total = 0, pmra, pmdec, pmscale=1;
+	double corrections[ndecbins], total = 0, pmra, pmdec, pmscale = 1;
 	int npoints;
-	bool random_epoch=false;
+	bool random_epoch = false;
 	double epoch, cur_epoch;
 	int i, extraarg;
 	char parsing_error = 1;
@@ -72,11 +72,11 @@ int main(int argc, char *argv[])
 		get_rand(); // advance one step
 		npoints = atoi(argv[2]);
 		parsing_error = 0;
-		for (extraarg=0; extraarg<(argc-3); extraarg++)
+		for (extraarg = 0; extraarg<(argc - 3); extraarg++)
 		{
-			char *curarg = argv[3+extraarg];
-			if (strncmp(curarg,"--randomepoch", 13)==0) {random_epoch=true;}
-			if (strncmp(curarg,"--withpm", 9)==0) {withpm=true;}
+			char *curarg = argv[3 + extraarg];
+			if (strncmp(curarg,"--randomepoch", 13)==0) {random_epoch = true;}
+			if (strncmp(curarg,"--withpm", 9)==0) {withpm = true;}
 			if (strncmp(curarg,"--pmscale=", 10)==0)
 			{
 				if (sscanf(curarg, "--pmscale=%lf", &pmscale)==0)
@@ -111,15 +111,15 @@ int main(int argc, char *argv[])
 	int npointsleft = npoints;
 	while (npointsleft)
 	{
-		int64_t ra = (int64_t)(get_rand() * 1./m * nrabins);
-		int64_t dec = (int64_t)(get_rand() * 1./m * ndecbins);
+		int64_t ra = (int64_t)(get_rand() * 1. / m * nrabins);
+		int64_t dec = (int64_t)(get_rand() * 1. / m * ndecbins);
 		if (withpm )
 		{
-			pmra = ((get_rand() * 1./m)*2 -1) * pmscale;
-			pmdec = ((get_rand() * 1./m)*2 -1) * pmscale;
+			pmra = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
+			pmdec = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
 			if (random_epoch)
 			{
-				cur_epoch = ((get_rand() * 1./m) ) * 20 + 1980;
+				cur_epoch = ((get_rand() * 1. / m) ) * 20 + 1980;
 			}
 			else
 			{
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if (get_rand() < (corrections[dec]*m))
+		if (get_rand() < (corrections[dec] * m))
 		{
 			if (withpm)
 			{

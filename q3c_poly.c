@@ -1,5 +1,5 @@
 /*
-       Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2021 Sergey Koposov
 
     Email:  skoposov AT ed DOT ac DOT uk
 
@@ -53,12 +53,12 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 	q3c_coord_t *ax = qp->ax;
 	q3c_coord_t *ay = qp->ay;
 	int result = !Q3C_DISJUNCT;
-	for(i=0; i<n; i++)
+	for(i = 0; i<n; i++)
 	{
-		if (((y0<=y[i])==(y0>y[(i+1)%n])) &&
-		    ((x0-x[i])<(y0-y[i])*ax[i]/ay[i]))
+		if (((y0<=y[i])==(y0>y[(i + 1) % n])) &&
+		    ((x0 - x[i])<(y0 - y[i]) * ax[i] / ay[i]))
 		{
-			result=!result;
+			result = !result;
 		}
 	}
 	return !result;
@@ -128,7 +128,7 @@ void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 		{
 			ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
 			dec1 = Q3C_DEGRA * dec[i];
-			tmpval =  q3c_cos(ra1);
+			tmpval = q3c_cos(ra1);
 			if (tmpval < Q3C_MINDISCR)
 			{
 				*large_flag = 1;
@@ -288,7 +288,7 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
 	}
 	else
 	{
-		if (q3c_poly_intersection_check(qp, xl_cur, xr_cur, yb_cur, yt_cur, cur_size)||
+		if (q3c_poly_intersection_check(qp, xl_cur, xr_cur, yb_cur, yt_cur, cur_size) ||
 		    ((qp->x[0] > xl_cur) && (qp->x[0] < xr_cur) &&
 		     (qp->y[0] > yb_cur) && (qp->y[0] < yt_cur)))
 		{
@@ -343,7 +343,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 	q3c_coord_t xmin,xmax,ymin, ymax;
 	q3c_ipix_t ipix;
 	q3c_coord_t points[4];
-	char face_num, face_num0, cur_face_num, large_flag=0;
+	char face_num, face_num0, cur_face_num, large_flag = 0;
 	q3c_coord_t x0, y0;
 
 	int face_count = -1, i;
@@ -369,7 +369,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 		q3c_project_poly(&qp, face_num, &large_flag);
 		if (large_flag)
 		{
-			*too_large=1;
+			*too_large = 1;
 		}
 		q3c_prepare_poly(&qp);
 
@@ -405,7 +405,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
 				q3c_project_poly(&qp, faces[face_count], &large_flag);
 				if (large_flag)
 				{
-					*too_large=1;
+					*too_large = 1;
 				}
 
 				q3c_prepare_poly(&qp);

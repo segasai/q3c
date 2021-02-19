@@ -1,7 +1,7 @@
 /*
-       Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2021 Sergey Koposov
 
-    Email: skoposov@cmu.edu
+    Email: skoposov AT ed DOT ac DOT uk
 
     This file is part of Q3C.
 

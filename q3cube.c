@@ -1,5 +1,5 @@
 /*
-       Copyright (C) 2004-2020 Sergey Koposov
+       Copyright (C) 2004-2021 Sergey Koposov
 
     Email:  skoposov AT ed DOT ac DOT uk
 
@@ -2151,7 +2151,7 @@ static char q3c_circle_cover_check(q3c_coord_t xc_cur, q3c_coord_t yc_cur,
 		if (
 			(Q3C_INTERSECT(xmin, xmax, xl_cur, xr_cur) &&
 			 Q3C_INTERSECT(ymin, ymax, yb_cur, yt_cur)
-			)&&
+			) &&
 			((((2 * axx * xl_cur + axy * yt_cur + ax) *
 			   (2 * axx * xr_cur + axy * yt_cur + ax)) < 0) ||
 			 (((2 * axx * xl_cur + axy * yb_cur + ax) *
