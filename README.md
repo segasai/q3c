@@ -310,6 +310,10 @@ my_db# WITH x AS (
           )
     SELECT * FROM x, sdssdr9.phototag AS s WHERE x.match_objid=s.objid;
 ```
+## Limitations 
+
+- Querying of very large polygons occupying area with the diameter > 25 degrees or so is not supported
+- Polygons with more than 100 vertices are not supported
 
 ## Perfomance issues/Slow queries
 
