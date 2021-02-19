@@ -275,10 +275,10 @@ Datum pgq3c_ipix2ang(PG_FUNCTION_ARGS)
 	ArrayType  *result;
 	ipix = PG_GETARG_INT64(0);
 	if ((ipix < 0) || (ipix > Q3C_MAX_IPIX))
-	  {
+	{
 		elog(ERROR, "Invalid ipix value");
 
-	  }
+	}
 	q3c_ipix2ang(&hprm, ipix, &ra, &dec);
 
 	data = ( Datum *) palloc(sizeof(Datum) * 2);
@@ -318,7 +318,7 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS)
 	{
 		elog(ERROR, "Invalid ipix value");
 	}
-	if (ipix > Q3C_MAX_IPIX) 
+	if (ipix > Q3C_MAX_IPIX)
 	{
 		elog(ERROR, "Invalid ipix value");
 	}
@@ -925,6 +925,10 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	else if (poly_nitems <= 4)
 	{
 		elog(ERROR, "Invalid polygon! The polygon must have more than two vertices");
+	}
+	else if (poly_nitems> 2 * Q3C_MAX_N_POLY_VERTEX)
+	{
+		elog(ERROR,"Polygons with more than 100 vertices are not supported");
 	}
 
 	p = ARR_DATA_PTR(poly_arr);
