@@ -71,6 +71,7 @@ jobs:
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coverall
         run: |
-          cpp-coveralls --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp' 
+          export TRAVIS_JOB_ID=$BUILD_NUMBER
+          cpp-coveralls --verbose --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp'
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
