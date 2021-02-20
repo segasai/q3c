@@ -106,4 +106,6 @@ SELECT * FROM test_small WHERE q3c_poly_query(ra, dec,
 (0.998210,-0.059804))'::polygon);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4,5,6,7]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4]);
+SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((1,2),(3,4))'::polygon);
+SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((0,0),(90,0),(45,89))'::polygon);
 
