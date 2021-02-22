@@ -26,6 +26,7 @@
 
 void q3c_prepare_poly(q3c_poly *qp)
 {
+	/* Compute the sides of the polygon for a given projection */
 	int n = qp->n - 1;
 	int i;
 	q3c_coord_t *ax = qp->ax;
@@ -68,6 +69,7 @@ void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin,
                          q3c_coord_t *xmax, q3c_coord_t *ymin,
                          q3c_coord_t *ymax)
 {
+	/* Compute the bounding box of the polygon in the current face */
 	int i;
 	const int n = qp->n;
 	q3c_coord_t *x = qp->x, *y = qp->y, t;
