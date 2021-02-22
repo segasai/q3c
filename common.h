@@ -47,9 +47,9 @@ typedef int64 q3c_ipix_t;
 
 
 #ifndef Q3C_MAX_IPIX
-#define Q3C_MAX_IPIX ( (((q3c_ipix_t)1<<60)-1) + ((q3c_ipix_t)1<<60) + ((q3c_ipix_t)1<<62))
-/* This is maximum allowed ipix value 
-101 + 1111111111111....111
+#define Q3C_MAX_IPIX ( (((q3c_ipix_t)1 << 60) - 1) + ((q3c_ipix_t)1 << 60) + ((q3c_ipix_t)1 << 62))
+/* This is maximum allowed ipix value
+   101 + 1111111111111....111
          60 ones
  */
 #endif /* Q3C_MAX_IPIX */
@@ -199,8 +199,8 @@ typedef long double q3c_coord_t;
 #define q3c_sincos(a,b,c) q3c_sincos0(a,&b,&c)
 #else
 #define q3c_sincos(a,b,c) do { \
-		b=q3c_sin(a); \
-		c=q3c_cos(a); \
+		b = q3c_sin(a); \
+		c = q3c_cos(a); \
 } while(0);
 #endif
 
@@ -221,9 +221,9 @@ struct q3c_square
 };
 
 #define SET_SQUARE(sq, x, y, n) do { \
-		sq->x0=x; \
-		sq->y0=y; \
-		sq->nside0=n; \
+		sq->x0 = x; \
+		sq->y0 = y; \
+		sq->nside0 = n; \
 } while(0);
 
 

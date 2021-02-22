@@ -72,21 +72,21 @@ int main(int argc, char *argv[])
 		get_rand(); // advance one step
 		npoints = atoi(argv[2]);
 		parsing_error = 0;
-		for (extraarg = 0; extraarg<(argc - 3); extraarg++)
+		for (extraarg = 0; extraarg < (argc - 3); extraarg++)
 		{
 			char *curarg = argv[3 + extraarg];
-			if (strncmp(curarg,"--randomepoch", 13)==0) {random_epoch = true;}
-			if (strncmp(curarg,"--withpm", 9)==0) {withpm = true;}
-			if (strncmp(curarg,"--pmscale=", 10)==0)
+			if (strncmp(curarg,"--randomepoch", 13) == 0) {random_epoch = true;}
+			if (strncmp(curarg,"--withpm", 9) == 0) {withpm = true;}
+			if (strncmp(curarg,"--pmscale=", 10) == 0)
 			{
-				if (sscanf(curarg, "--pmscale=%lf", &pmscale)==0)
+				if (sscanf(curarg, "--pmscale=%lf", &pmscale) == 0)
 				{
 					fprintf(stderr, "Formatting error of pmscale\n");
 					exit(1);
 				}
 			}
 
-			if (strncmp(curarg,"--epoch=",8)==0)
+			if (strncmp(curarg,"--epoch=",8) == 0)
 			{
 				sscanf(curarg, "--epoch=%lf", &epoch);
 			}

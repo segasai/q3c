@@ -198,7 +198,7 @@ Datum pgq3c_ang2ipix(PG_FUNCTION_ARGS)
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
 
-	if (invocation==0)
+	if (invocation == 0)
 	{
 
 	}
@@ -236,7 +236,7 @@ Datum pgq3c_ang2ipix_real(PG_FUNCTION_ARGS)
 	static q3c_coord_t ra_buf, dec_buf;
 	static q3c_ipix_t ipix_buf;
 
-	if (invocation==0)
+	if (invocation == 0)
 	{
 
 	}
@@ -391,7 +391,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 		epoch1 = 0;
 		epoch2 = 0;
 	}
-	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos) != 0;
 	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
@@ -456,7 +456,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 		epoch1 = 0;
 		epoch2 = 0;
 	}
-	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos) != 0;
 	ra2 = PG_GETARG_FLOAT8(ra2_arg_pos);
 	dec2 = PG_GETARG_FLOAT8(dec2_arg_pos);
 
@@ -522,7 +522,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	}
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
+	if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = radius;
@@ -584,7 +584,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		max_epoch_delta = 0;
 	}
 
-	cosdec = PG_GETARG_INT32(cosdec_arg_pos)!=0;
+	cosdec = PG_GETARG_INT32(cosdec_arg_pos) != 0;
 	radius = PG_GETARG_FLOAT8(radius_arg_pos); // error radius
 
 	iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
@@ -600,7 +600,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		pmdec = 0;
 		max_epoch_delta = 0;
 	}
-	if (max_epoch_delta<0)
+	if (max_epoch_delta < 0)
 	{
 		elog(ERROR, "The maximum epoch difference must be >=0 ");
 	}
@@ -633,7 +633,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 		new_radius = radius;
 	}
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
+	if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = new_radius;
@@ -699,7 +699,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	}
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90) {dec_cen = q3c_fmod(dec_cen,90);}
+	if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
 
 	ellipse.ra = ra_cen;
 	ellipse.dec = dec_cen;
@@ -752,7 +752,7 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	static int invocation;
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90)
+	if (q3c_fabs(dec_cen) > 90)
 	{
 		elog(ERROR, "The absolute value of declination > 90!");
 	}
@@ -824,7 +824,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	static int invocation;
 
 	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen)>90)
+	if (q3c_fabs(dec_cen) > 90)
 	{
 		elog(ERROR, "The absolute value of declination > 90!");
 	}
@@ -971,11 +971,11 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 		elog(ERROR,"Polygons with more than 100 vertices are not supported");
 	}
 
-	for(i = 0; i<npts; i++)
+	for(i = 0; i < npts; i++)
 	{
 		newx = poly->p[i].x;
 		newy = poly->p[i].y;
-		if ((newx != ra[i]) || (newy !=dec[i])) {identical = 0;}
+		if ((newx != ra[i]) || (newy != dec[i])) {identical = 0;}
 		ra[i] = newx;
 		dec[i] = newy;
 	}
@@ -1005,15 +1005,15 @@ typedef struct q3c_poly_info_type {
 static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
 {
 	int i,j;
-	for (i = 0; i<(2 * Q3C_NPARTIALS); i++)
+	for (i = 0; i < (2 * Q3C_NPARTIALS); i++)
 	{
 		b->partials[i] = a->partials[i];
 	}
-	for (i = 0; i<(2 * Q3C_NPARTIALS); i++)
+	for (i = 0; i < (2 * Q3C_NPARTIALS); i++)
 	{
 		b->fulls[i] = a->fulls[i];
 	}
-	for (i = 0; i<Q3C_MAX_N_POLY_VERTEX; i++)
+	for (i = 0; i < Q3C_MAX_N_POLY_VERTEX; i++)
 	{
 		b->ra[i] = a->ra[i];
 		b->dec[i] = a->dec[i];
@@ -1021,7 +1021,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 		b->y[i] = a->y[i];
 		b->ax[i] = a->ax[i];
 		b->ay[i] = a->ay[i];
-		for (j = 0; j<3; j++)
+		for (j = 0; j < 3; j++)
 		{
 			b->axpj[j][i] = a->axpj[j][i];
 			b->aypj[j][i] = a->aypj[j][i];
@@ -1031,7 +1031,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 		}
 
 	}
-	for (i = 0; i<6; i++)
+	for (i = 0; i < 6; i++)
 	{
 		b->faces[i] = a->faces[i];
 	}
@@ -1068,7 +1068,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	int identical = 0;
 	static q3c_poly_info_type lqpit;
 
-	if (fcinfo->flinfo->fn_extra==0)
+	if (fcinfo->flinfo->fn_extra == 0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
@@ -1116,7 +1116,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 		}
 	}
-	if (iteration==0)
+	if (iteration == 0)
 	{
 		good_cache = 0;
 		copy_q3c_poly_info_type(qpit, &lqpit);
@@ -1150,7 +1150,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 	int identical = 0;
 	static q3c_poly_info_type lqpit;
 
-	if (fcinfo->flinfo->fn_extra==0)
+	if (fcinfo->flinfo->fn_extra == 0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
@@ -1198,7 +1198,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 		}
 	}
-	if (iteration==0)
+	if (iteration == 0)
 	{
 		good_cache = 0;
 		copy_q3c_poly_info_type(qpit, &lqpit);
@@ -1249,7 +1249,7 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	int identical;
 	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra==0)
+	if (fcinfo->flinfo->fn_extra == 0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
@@ -1289,7 +1289,7 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 	int identical;
 	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra==0)
+	if (fcinfo->flinfo->fn_extra == 0)
 	{
 		// allocate memory where we are going to store converted info
 		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));

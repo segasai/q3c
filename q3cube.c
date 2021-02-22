@@ -1105,7 +1105,7 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
 	x2 = x2 / sqrt(1 + x2 * x2);
 	y2 = y2 / sqrt(1 + y2 * y2);
 
-	if (q3c_fabs(x1 - x2)>1e-4)
+	if (q3c_fabs(x1 - x2) > 1e-4)
 	{
 		result = ( q3c_acos(x1 * y2) - q3c_acos(x1 * y1) ) +
 		         ( q3c_acos(x2 * y1) - q3c_acos(x2 * y2) );
@@ -1439,7 +1439,7 @@ void q3c_get_xy_minmax(q3c_coord_t axx, q3c_coord_t ayy, q3c_coord_t axy,
 	 * I don't know how to compute the intersection of the cube
 	 * and the hyperbola
 	 */
-	if (tmp2< Q3C_MINDISCR)
+	if (tmp2 < Q3C_MINDISCR)
 	{
 		*xmax = 2 * Q3C_HALF;
 		*ymax = 2 * Q3C_HALF;
@@ -1473,7 +1473,7 @@ char q3c_too_big_check(q3c_region region, void * region_data)
 	case Q3C_CIRCLE:
 	{
 		q3c_circle_region circle = *(q3c_circle_region *)region_data;
-		if (circle.rad>Q3C_MAXRAD)
+		if (circle.rad > Q3C_MAXRAD)
 		{
 			return 1;
 		}
@@ -1486,7 +1486,7 @@ char q3c_too_big_check(q3c_region region, void * region_data)
 	case Q3C_ELLIPSE:
 	{
 		q3c_ellipse_region ellipse = *(q3c_ellipse_region *)region_data;
-		if (ellipse.rad>Q3C_MAXRAD)
+		if (ellipse.rad > Q3C_MAXRAD)
 		{
 			return 1;
 		}
@@ -2481,7 +2481,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * I can instead of querying the whole sphere, just query the appropriate
 	 * faces
 	 */
-	if (rad>=Q3C_MAXRAD)
+	if (rad >= Q3C_MAXRAD)
 	{
 		q3c_ipix_t maxval = 6 * (nside * nside);
 		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
@@ -2874,7 +2874,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	 * I can instead of querying the whole sphere, just query the appropriate
 	 * faces
 	 */
-	if (majax>= Q3C_MAXRAD)
+	if (majax >= Q3C_MAXRAD)
 	{
 		q3c_ipix_t maxval = 6 * (nside * nside);
 		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)

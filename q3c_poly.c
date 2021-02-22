@@ -53,10 +53,10 @@ int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0,
 	q3c_coord_t *ax = qp->ax;
 	q3c_coord_t *ay = qp->ay;
 	int result = !Q3C_DISJUNCT;
-	for(i = 0; i<n; i++)
+	for(i = 0; i < n; i++)
 	{
-		if (((y0<=y[i])==(y0>y[(i + 1) % n])) &&
-		    ((x0 - x[i])<(y0 - y[i]) * ax[i] / ay[i]))
+		if (((y0 <= y[i]) == (y0 > y[(i + 1) % n])) &&
+		    ((x0 - x[i]) < (y0 - y[i]) * ax[i] / ay[i]))
 		{
 			result = !result;
 		}
@@ -194,7 +194,7 @@ static char q3c_poly_intersection_check(q3c_poly *qp,
 	q3c_coord_t *y = qp->y;
 	q3c_coord_t txl, txr, tyb, tyt, axi, ayi, xi, yi, tmp, tmp1;
 	char ret = 0;
-	for( i = 0; i <n; i++)
+	for( i = 0; i < n; i++)
 	{
 		xi = x[i];
 		yi = y[i];
