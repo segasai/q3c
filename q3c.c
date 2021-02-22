@@ -368,7 +368,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
 	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
-		elog(ERROR, "The RA, DEC columns are not allowed to be null");
+		PG_RETURN_NULL();
 	}
 
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
@@ -434,7 +434,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
 	    PG_ARGISNULL(ra2_arg_pos) || PG_ARGISNULL(dec2_arg_pos))
 	{
-		elog(ERROR, "The RA, DEC columns are not allowed to be null");
+		PG_RETURN_NULL();
 	}
 
 	ra1 = PG_GETARG_FLOAT8(ra_arg_pos);
