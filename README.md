@@ -82,8 +82,8 @@ The functions installed by Q3C are:
 - q3c_dist_pm(ra1, dec1, pmra1, pmdec1, cosdec_flag, epoch1, ra2, dec2, epoch2) -- returns 
   the distance in degrees between two points (ra1,dec1) and (ra2,dec2) at
   the epoch epoch2 while taking the proper motion into account.
-  *IMPORTANT* The cosdec flag (0 or 1) is telling whether the proper motion
-  is computed with the cos(dec) term or without it. The previous versions
+  *IMPORTANT* The cosdec flag (0 or 1) indicates whether the provided proper motion
+  includes the cos(dec) term (1) or not (0) . The previous versions
   (q3c 1.8) did not have that parameter and assumed pmra without cos(dec))
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
@@ -100,8 +100,8 @@ The functions installed by Q3C are:
   in catalog2 is 2015, then the max_delta_epoch should be 45). 
   You should use this function if the index on q3c_ang2ipix(ra2,dec2)
   was created. 
-  *IMPORTANT* The cosdec flag (0 or 1) is telling whether the proper motion
-  is computed with the cos(dec) term or without it. The previous versions
+  *IMPORTANT* The cosdec flag (0 or 1) indicates whether the provided proper motion
+  includes the cos(dec) term (1) or not (0) . The previous versions
   (q3c 1.8) did not have that parameter and assumed pmra without cos(dec))
 
 
