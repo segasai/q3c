@@ -27,7 +27,7 @@ To successfully compile Q3C you must have pg_config in your PATH (that means tha
 ## Installation
 
 - make 
-- make install  
+- make install
 - Execute "CREATE EXTENSION q3c" in the PostgreSQL client(psql) for the database where you plan to use q3c
 
 After the installation you will have several new functions in PostgreSQL.
@@ -60,7 +60,7 @@ The next procedure is optional but strongly recommended: cluster the table using
 
 `my_db# CLUSTER mytable_q3c_ang2ipix_idx ON mytable;`
 
-Alternatively, instead of CLUSTER, you can also just reorder your table yourself before indexing (can be faster)  
+Alternatively, instead of CLUSTER, you can also just reorder your table yourself before indexing (can be faster)
 `my_db# create table mytable1 as select * from mytable order by q3c_ang2ipix(ra,dec);`
 
 The last step is analyzing your table:
@@ -107,7 +107,7 @@ The functions installed by Q3C are:
 
 - q3c_ellipse_join(ra1, dec1, ra2, dec2, major, ratio, pa) -- like
   q3c_join, except (ra1, dec1) have to be within an ellipse with
-  major axis major, the axis ratio ratio and the position angle pa
+  semi-major axis major, the axis ratio ratio and the position angle pa
   (from north through east)
 
 - q3c_radial_query(ra, dec, center_ra, center_dec, radius) -- returns
@@ -118,7 +118,7 @@ The functions installed by Q3C are:
 - q3c_ellipse_query(ra, dec, center_ra, center_dec, maj_ax,
 						axis_ratio, PA ) -- returns
   true if ra, dec is within the ellipse from center_ra, center_dec.
-  The ellipse is specified by major axis, axis ratio and positional angle.
+  The ellipse is specified by semi-major axis, axis ratio and positional angle.
   This function should be used if when the index on q3c_ang2ipix(ra,dec) is created.
 
 - q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the 
@@ -165,8 +165,7 @@ table:
 my_db=# select * from mytable WHERE
 	q3c_ellipse_query(ra, dec, 10, 20, 1, 0.5 ,10);
 ```
-returns the objects which are within the ellipse with the center at (ra,dec)=(10,20)
-major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
+returns the objects which are within the ellipse with the center at (ra,dec)=(10,20) semi-major axis of 1 degree, axis ratio of 0.5 and positional angle of 10 degrees.
 
 - The polygonal query, i.e. the query of the objects which lie inside the 
   region  bounded by the polygon on the sphere. 
@@ -202,7 +201,8 @@ The order of arguments is important again, because it determines whether an
 index is going to be used or not. The ra,dec columns from the table with the 
 index should go after the ra,dec columns from the table without the index.
 
-It is important that the query will return *ALL* the pairs within the matching distance, rather than just nearest neighbors. See the nearest neighbors queries below.
+It is important that the query will return *ALL* the pairs within the matching 
+distance, rather than just nearest neighbors. See the nearest neighbors queries below.
   
 If every object in table1 have his own error circle ( we'll assume 
 that the radius of that circle in degrees is stored in the column "err"),
@@ -225,8 +225,8 @@ my_db# SELECT * FROM table1 AS a, table2 AS b WHERE
 		a.axis_ratio, a.PA);
 ```
 where axis_ratio is the column with axis ratio of the ellipses and PA is the 
-column with the positional angles of them, and maj_ax is the column with major
-axises of those ellipses.
+column with the positional angles of them, and maj_ax is the column with
+semi-major axes of those ellipses.
 
 - The positional cross-match of the tables with proper motions taken into
   account
@@ -281,7 +281,8 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t
                     ASC LIMIT 1
                ) as ss ON true;
 ```
-The idea behind the query is that for every row of your table LATERAL() executes the subquery, that retuns all the neihhbours 
+The idea behind the query is that for every row of your table LATERAL() executes the subquery, 
+that returns all the neihhbours 
 within the aperture and then orders them by distance takes the top one.
   
 If you want only the objects that have the neighbors then the query will look like that
@@ -302,9 +303,10 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t,
 
 -  Nearest neighbor 2 
 
-This query selects the only nearest neighbor for each row in your table. If there are no neighbor, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
+This query selects the only nearest neighbor for each row in your table. If there are no 
+neighbors, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
 ```
-my_db# WITH x AS (
+my_db# WITH x AS MATERIALIZED (
       SELECT *, ( SELECT objid FROM sdssdr9.phototag AS p WHERE q3c_join(m.ra, m.dec, p.ra, p.dec, 1./3600)
                   ORDER BY q3c_dist(m.ra, m.dec, p.ra, p.dec) ASC LIMIT 1) AS match_objid  FROM mytable AS m 
           )
@@ -329,7 +331,7 @@ solutions.
 - Cluster your table using q3c index to sort your table by position.
 - Check if you are using q3c_join() query together with additional clauses. I.e. the query select * from t1, t2 where q3c_join(t1.ra,t1.dec,t2.ra,t2.dec,1./3600) and t1.mag<1 and t2.mag>33  likely will NOT execute properly, you will likely need to rewrite it as 
 ```
-with x as (select * from t1 where t1.mag<1) 
+WITH x AS MATERIALIZED (select * from t1 where t1.mag<1) 
    y as (select *, t2.mag as t2mag from x, t2 where q3c_join(t1.ra,t1.dec,t2.ra,t2.dec,1./3600) )
    select * from y where t2mag>33
 ```  

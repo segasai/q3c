@@ -142,7 +142,7 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_nearby_it(double precision, double precis
 
 CREATE OR REPLACE FUNCTION q3c_in_ellipse(ra0 double precision, dec0 double precision,
 					ra_ell double precision, dec_ell double precision,
-					maj_ax double precision, axis_ratio double precision,
+					semimaj_ax double precision, axis_ratio double precision,
 					pa double precision)
         RETURNS boolean
         AS 'MODULE_PATHNAME', 'pgq3c_in_ellipse'
@@ -160,7 +160,7 @@ CREATE OR REPLACE FUNCTION q3c_radial_query_it(double precision,
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_query_it(ra_ell double precision,
 												dec_ell double precision,
-												majax double precision,
+												semimajax double precision,
 												axis_ratio double precision,
 												PA double precision,
 												iteration integer,
@@ -262,7 +262,7 @@ SELECT (
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec double precision,
 				rightra double precision, rightdec double precision,
-				majoraxis double precision, axisratio double precision,
+				semimajoraxis double precision, axisratio double precision,
 				pa double precision)
         RETURNS boolean AS
 '
@@ -494,7 +494,7 @@ q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
 CREATE OR REPLACE FUNCTION q3c_ellipse_query(
                 ra_col double precision, dec_col double precision,
                 ra_ell double precision, dec_ell double precision,
-                majax double precision, axis_ratio double precision,
+                semimajax double precision, axis_ratio double precision,
 				PA double precision)
         RETURNS boolean AS 
 'SELECT (
