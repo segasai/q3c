@@ -12,12 +12,12 @@ on:
 jobs:
   tester:
     name: Test the code
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        container: ['ubuntu:18.04']
+        container: ['ubuntu:22.04']
         compiler: [gcc]
-        PGVERSION: [11, 12, 13]
+        PGVERSION: [12, 13, 14, 15]
         COVERAGE: ['0']
         APT: ['1']
         include:
