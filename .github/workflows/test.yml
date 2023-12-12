@@ -74,10 +74,10 @@ jobs:
         run: |
           if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
           make test
-      - name: update_version
+      - name: UpdateExtension
         run: |
           if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
-	  createdb exttest
+          createdb exttest
           psql -c "create extension q3c version '2.0.0'" exttest
           psql -c "alter extension q3c update to '2.0.1'" exttest 
       - if: ${{ matrix.COVERAGE == '1' }}
