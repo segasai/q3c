@@ -67,7 +67,7 @@ COMMENT ON FUNCTION q3c_ipix2ang (bigint)
 CREATE OR REPLACE FUNCTION q3c_pixarea(ipix bigint, depth int)
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_pixarea'
-        LANGUAGE C IMMUTABLE STRICT  PARALLEL SAFET;
+        LANGUAGE C IMMUTABLE STRICT  PARALLEL SAFE;
 COMMENT ON FUNCTION q3c_pixarea (bigint, int )
 	IS 'Function returning the area of the pixel containing ipix being located at certain depth in the quadtree';
 

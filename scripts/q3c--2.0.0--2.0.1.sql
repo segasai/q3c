@@ -20,8 +20,7 @@ CREATE OR REPLACE FUNCTION q3c_ipix2ang(ipix bigint)
 CREATE OR REPLACE FUNCTION q3c_pixarea(ipix bigint, depth int)
         RETURNS double precision
         AS 'MODULE_PATHNAME', 'pgq3c_pixarea'
-        LANGUAGE C IMMUTABLE STRICT  PARALLEL SAFET;
-
+        LANGUAGE C IMMUTABLE STRICT  PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION q3c_dist(ra1 double precision, dec1 double precision,
 									ra2 double precision, dec2 double precision)
