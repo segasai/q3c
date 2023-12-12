@@ -1,4 +1,4 @@
 comment = 'q3c sky indexing plugin'
-default_version = '2.0.0'
+default_version = '2.0.1'
 module_pathname = '$libdir/q3c'
 relocatable = true
