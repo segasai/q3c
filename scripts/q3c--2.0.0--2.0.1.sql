@@ -1,6 +1,6 @@
 \echo Use "CREATE EXTENSION q3c" to load this file. \quit
 
-# make functions parallel safe
+-- make functions parallel safe
 
 CREATE OR REPLACE FUNCTION q3c_ang2ipix(double precision, double precision)
         RETURNS bigint
