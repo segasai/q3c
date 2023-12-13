@@ -55,10 +55,10 @@ jobs:
         name: PG source setup
         run: |
           export CC=${{ matrix.compiler }}
-          wget https://ftp.postgresql.org/pub/source/v11.8/postgresql-11.8.tar.bz2
-          tar xfj postgresql-11.8.tar.bz2
-          mv postgresql-11.8 ../
-          cd ../postgresql-11.8/
+          wget https://ftp.postgresql.org/pub/source/v14.10/postgresql-14.10.tar.bz2
+          tar xfj postgresql-14.10.tar.bz2
+          mv postgresql-14.10 ../
+          cd ../postgresql-14.10/
           if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
           make install
           ../pg_install/bin/initdb -D ../pg_install/data
@@ -74,6 +74,12 @@ jobs:
         run: |
           if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
           make test
+      - name: UpdateExtension
+        run: |
+          if [[ ${{ matrix.APT }} == 0 ]] ; then  export PATH=$PWD/../pg_install/bin/:$PATH ; fi
+          createdb exttest
+          psql -c "create extension q3c version '2.0.0'" exttest
+          psql -c "alter extension q3c update to '2.0.1'" exttest 
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coverall
         run: |
