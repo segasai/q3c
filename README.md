@@ -4,7 +4,7 @@
 
 Author: Sergey Koposov, University of Edinburgh
 
-Copyright (c) 2004-2021 Sergey Koposov
+Copyright (c) 2004-2023 Sergey Koposov
 
 Email:  skoposov AT ed DOT ac DOT uk
 
@@ -265,8 +265,8 @@ within a given pixel, and pixel area. If you use that query you should
 keep in mind that Q3C doesn't have the property of uniform pixel areas (as 
 opposed to HEALPIX).
 
-- Nearest neighbor queries: 
-This query selects the only nearest neighbor for each row in your table. If there is no neighbor, 
+- Nearest neighbour queries: 
+This query selects the only nearest neighbour for each row in your table. If there is no neighbor, 
 the columns are filled with nulls.
 ```
 my_db# SELECT  t.*, ss.* FROM mytable AS t
@@ -282,10 +282,10 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t
                ) as ss ON true;
 ```
 The idea behind the query is that for every row of your table LATERAL() executes the subquery, 
-that returns all the neihhbours 
+that returns all the neighbours 
 within the aperture and then orders them by distance takes the top one.
   
-If you want only the objects that have the neighbors then the query will look like that
+If you want only the objects that have the neighbours then the query will look like that
   
 ```
 my_db# SELECT  t.*, ss.* FROM mytable AS t,
@@ -301,10 +301,10 @@ my_db# SELECT  t.*, ss.* FROM mytable AS t,
                ) as ss ;
 ```
 
--  Nearest neighbor 2 
+-  Nearest neighbour 2 
 
-This query selects the only nearest neighbor for each row in your table. If there are no 
-neighbors, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
+This query selects the only nearest neighbour for each row in your table. If there are no 
+neighbours, the columns are filled with nulls. This query requires presence of some object id column with the index on the table.
 ```
 my_db# WITH x AS MATERIALIZED (
       SELECT *, ( SELECT objid FROM sdssdr9.phototag AS p WHERE q3c_join(m.ra, m.dec, p.ra, p.dec, 1./3600)
@@ -317,7 +317,7 @@ my_db# WITH x AS MATERIALIZED (
 - Querying of very large polygons occupying area with the diameter > 25 degrees or so is not supported
 - Polygons with more than 100 vertices are not supported
 
-## Perfomance issues/Slow queries
+## Performance issues/Slow queries
 
 If you experience slow q3c queries, the following list may suggest possible 
 solutions. 
@@ -327,7 +327,7 @@ solutions.
 - Verify the plan of the query using 'EXPLAIN ...' command. That will tell you
   how PG tries to execute it. If you see something involving merge_join, or 
   just seq scans (instead of bitmap scans using the q3c index), likely the plan is wrong and you have to fix it
-- Force postgresql to use the q3c_index by disabling seq scans or merge and hash joins by setting 'set enable_mergejoin to off; set enable_seqscan to off; set enable hashjoin to off;'
+- Force Postgresql to use the q3c_index by disabling seq scans or merge and hash joins by setting 'set enable_mergejoin to off; set enable_seqscan to off; set enable hashjoin to off;'
 - Cluster your table using q3c index to sort your table by position.
 - Check if you are using q3c_join() query together with additional clauses. I.e. the query select * from t1, t2 where q3c_join(t1.ra,t1.dec,t2.ra,t2.dec,1./3600) and t1.mag<1 and t2.mag>33  likely will NOT execute properly, you will likely need to rewrite it as 
 ```
