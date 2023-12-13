@@ -1,5 +1,5 @@
 /*
-       Copyright (C) 2004-2021 Sergey Koposov
+       Copyright (C) 2004-2023 Sergey Koposov
 
     Email: skoposov AT ed DOT ac DOT uk
 
