@@ -33,6 +33,8 @@
 #include "utils/array.h"
 #include "utils/geo_decls.h"
 #include "catalog/pg_type.h"
+#include "nodes/supportnodes.h"
+#include "optimizer/optimizer.h"
 #include "fmgr.h"
 #if PG_VERSION_NUM >= 90300
 #include "access/tupmacs.h"
@@ -60,6 +62,7 @@ Datum pgq3c_pixarea(PG_FUNCTION_ARGS);
 Datum pgq3c_dist(PG_FUNCTION_ARGS);
 Datum pgq3c_dist_pm(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist(PG_FUNCTION_ARGS);
+Datum pgq3c_sindist_bool(PG_FUNCTION_ARGS);
 Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS);
 Datum q3c_strquery(PG_FUNCTION_ARGS);
 Datum pgq3c_nearby_it(PG_FUNCTION_ARGS);
@@ -78,7 +81,7 @@ Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_seloper(PG_FUNCTION_ARGS);
-
+Datum pgq3c_join_selectivity(PG_FUNCTION_ARGS);
 
 /* Dummy function that implements the selectivity operator */
 PG_FUNCTION_INFO_V1(pgq3c_seloper);
@@ -130,6 +133,66 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 
 	PG_RETURN_FLOAT8(ratio);
 }
+
+PG_FUNCTION_INFO_V1(pgq3c_join_selectivity);
+Datum pgq3c_join_selectivity(PG_FUNCTION_ARGS)
+{
+  Node    *rawreq = (Node *) PG_GETARG_POINTER(0);
+  Node    *ret = NULL;
+  Datum radDatum;
+  double rad;
+  double ratio;
+  Node *dummy = NULL;
+  
+  if (IsA(rawreq, SupportRequestSelectivity))
+    {
+      SupportRequestSelectivity *req = (SupportRequestSelectivity *) rawreq;
+      /* we pass a constant as the 5th argument */
+      dummy = (Node *) lfirst(list_nth_cell(req->args, 4));
+
+      /* some simple error checking */
+      if (IsA(dummy,Const))
+	{
+	  Const *con = (Const *) dummy;
+	  radDatum = PointerGetDatum(con->constvalue);
+	  rad = DatumGetFloat8(radDatum);	  
+	  ratio = 3.14 * rad * rad / 41252.;  /* pi*r^2/whole_sky_area */
+	  /* clamp at 0, 1*/
+	  CLAMP_PROBABILITY(ratio);
+	  //elog(WARNING, "HERE0.... %e", ratio);
+	  req->selectivity = ratio;
+	  ret = (Node *) req;
+	}
+    }
+  if (IsA(rawreq, SupportRequestSimplify))
+    {
+      SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+      /* not yet implemented, not sure what can usefully be done */
+      
+      PG_RETURN_POINTER((Node *)0);
+    }
+  if (IsA(rawreq, SupportRequestCost))
+    {
+      /* Provide some generic estimate */
+      SupportRequestCost *req = (SupportRequestCost *) rawreq;
+
+      /* in my experiments making these costs low doesn't change
+	 the total cost very much at all */
+      
+      req->startup = 1e-8;
+      req->per_tuple = 1e-8;
+      
+      ret = (Node *) req;
+    }
+  if (IsA(rawreq, SupportRequestRows))
+    {
+      /* not yet implemented, not sure what can usefully be done */
+    }
+  
+  PG_RETURN_POINTER(ret);
+}
+
 
 
 PG_FUNCTION_INFO_V1(pgq3c_seljoin);
@@ -351,6 +414,21 @@ Datum pgq3c_sindist(PG_FUNCTION_ARGS)
 	q3c_coord_t res;
 	res = q3c_sindist(ra1, dec1, ra2, dec2);
 	PG_RETURN_FLOAT8(res);
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_sindist_bool);
+Datum pgq3c_sindist_bool(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra1 = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec1 = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra2 = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec2 = PG_GETARG_FLOAT8(3);
+	double rad = PG_GETARG_FLOAT8(4);
+	q3c_coord_t res;
+	res = q3c_sindist(ra1, dec1, ra2, dec2);
+	rad = rad*Q3C_DEGRA/2;
+	rad = sin(rad)*sin(rad);
+	PG_RETURN_BOOL(res < rad);
 }
 
 

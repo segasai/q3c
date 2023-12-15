@@ -24,6 +24,12 @@ CREATE OR REPLACE FUNCTION q3c_seljoin(internal, oid, internal, int2, internal)
         AS 'MODULE_PATHNAME', 'pgq3c_seljoin'
         LANGUAGE C IMMUTABLE STRICT ;
  
+CREATE OR REPLACE FUNCTION q3c_join_selectivity(internal)
+       RETURNS internal
+       AS 'MODULE_PATHNAME', 'pgq3c_join_selectivity'
+       LANGUAGE C IMMUTABLE STRICT;
+
+
 
  -- distance operator with correct selectivity
 CREATE OPERATOR ==<<>>== (
@@ -95,6 +101,15 @@ CREATE OR REPLACE FUNCTION q3c_sindist(double precision, double precision,
 COMMENT ON FUNCTION q3c_sindist(double precision, double precision,
 				double precision, double precision)
 	IS 'Function q3c_sindist(ra1, dec1, ra2, dec2) computing the sin(distance/2)^2 between points (ra1, dec1) and (ra2, dec2)';
+
+CREATE OR REPLACE FUNCTION q3c_sindist_bool(leftra double precision, leftde double precision,
+                                       rightra double precision, rightde double precision,rad double precision)
+        RETURNS bool
+        AS 'MODULE_PATHNAME', 'pgq3c_sindist_bool'
+        LANGUAGE C IMMUTABLE STRICT COST 1 SUPPORT q3c_join_selectivity;
+COMMENT ON FUNCTION q3c_sindist_bool(double precision, double precision,
+				double precision, double precision,double precision)
+	IS 'Function q3c_sindist_bool(ra1, dec1, ra2, dec2, rad) is rad than the sin(distance/2)^2 between points (ra1, dec1) and (ra2, dec2)';
 
 CREATE OR REPLACE FUNCTION q3c_sindist_pm(
        ra1 double precision, dec1 double precision,
@@ -206,6 +221,19 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
     OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
     AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
+    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
+' LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_join_bool(leftra double precision, leftdec double precision,
+				    rightra double precision, rightdec double precision,
+				    radius double precision)
+        RETURNS boolean AS
+'
+SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,1))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,3))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
+    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
+    AND q3c_sindist_bool($1,$2,$3,$4,$5)
     AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
 ' LANGUAGE SQL IMMUTABLE;
 
