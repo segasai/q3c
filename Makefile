@@ -3,7 +3,7 @@ EXTVERSION := $(shell grep default_version $(EXTENSION).control | \
 		 sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
 
 
-DOCS = README.md
+DOCS = q3c.md
 OBJS = dump.o q3c.o q3c_poly.o q3cube.o
 MODULE_big = q3c
 DATA = $(wildcard scripts/*sql)
@@ -41,6 +41,9 @@ ifeq ($(PGVERNEW), N)
 else
 	MYBINLIBS := $(PG_LIBS) -lm
 endif
+
+readme:
+	cp README.md q3c.md
 
 dump.c: prepare
 	./prepare
