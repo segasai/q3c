@@ -45,10 +45,10 @@ endif
 readme:
 	cp README.md q3c.md
 
-dump.c: prepare
+dump.c: prepare readme
 	./prepare
 
-prepare: prepare.o q3cube.o q3c_poly.o readme
+prepare: prepare.o q3cube.o q3c_poly.o
 	$(CC) $? $(CFLAGS) $(PG_LIBS) $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
 
 gen_data: gen_data.c
