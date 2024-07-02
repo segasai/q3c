@@ -63,7 +63,7 @@ The next procedure is optional but strongly recommended: cluster the table using
 Alternatively, instead of CLUSTER, you can also just reorder your table yourself before indexing (can be faster)
 `my_db# create table mytable1 as select * from mytable order by q3c_ang2ipix(ra,dec);`
 
-The last step is analyzing your table:
+The last step after creating the index is analyzing your table:
 
 `my_db# ANALYZE mytable;`
 
@@ -73,17 +73,19 @@ Now you should be able to use q3c queries.
 
 *IMPORTANT* Throughout q3c it is assumed that all the angles (ra, dec and distances) are in units of angular degrees, the proper motions are in mas/year, and that the units for the epochs are years, i.e. 2000.5, 2010.5.
 
+Throughout the rest of the text I will use ipix as reference to the 64 bit integer identifier of the pixel on the sphere in Q3C.
+
 The functions installed by Q3C are: 
 
-- q3c_ang2ipix(ra, dec) -- returns the ipix value at ra and dec
+- q3c_ang2ipix(ra, dec) -- returns the ipix value for given ra and dec
 
-- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two  points (ra1,dec1) and (ra2,dec2)
+- q3c_dist(ra1, dec1, ra2, dec2) -- returns the distance in degrees between two points (ra1,dec1) and (ra2,dec2)
 
 - q3c_dist_pm(ra1, dec1, pmra1, pmdec1, cosdec_flag, epoch1, ra2, dec2, epoch2) -- returns 
   the distance in degrees between two points (ra1,dec1) and (ra2,dec2) at
   the epoch epoch2 while taking the proper motion into account.
   *IMPORTANT* The cosdec flag (0 or 1) indicates whether the provided proper motion
-  includes the cos(dec) term (1) or not (0) . The previous versions
+  includes the cos(dec) term (1) or not (0) . The previous version of q3c
   (q3c 1.8) did not have that parameter and assumed pmra without cos(dec))
 
 - q3c_join(ra1, dec1, ra2, dec2, radius)  -- returns true if (ra1, dec1)
@@ -119,7 +121,7 @@ The functions installed by Q3C are:
 						axis_ratio, PA ) -- returns
   true if ra, dec is within the ellipse from center_ra, center_dec.
   The ellipse is specified by semi-major axis, axis ratio and positional angle.
-  This function should be used if when the index on q3c_ang2ipix(ra,dec) is created.
+  This function should be used when the index on q3c_ang2ipix(ra,dec) is created.
 
 - q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the 
   spherical polygon specified as an array of right ascensions and declinations
@@ -129,27 +131,29 @@ The functions installed by Q3C are:
 
 - q3c_ipix2ang(ipix) -- returns a two-element array of (ra,dec) corresponding to a given ipix.
 
-- q3c_pixarea(ipix, bits) -- returns the area corresponding to a given ipix at the pixelisation level given by 
-	bits (1 is smallest, 30 is the cube face) in steradians.
+- q3c_pixarea(ipix, bits) -- returns the spherical area corresponding to a given ipix at the pixelisation level given by 
+	bits (1 is smallest, 30 is the cube face).
 
 - q3c_ipixcenter(ra, dec, bits) -- returns the ipix value of the
 	pixel center at certain pixel depth covering the specified (ra,dec)
 
 - q3c_in_poly(ra, dec, poly) -- returns true/false if point is inside a 
-  polygon. This function will not use the index.
+  polygon. This function will *NOT* use the q3c index.
 
 - q3c_version() -- returns the version of Q3C that is installed
 
 
 ## Query examples
 
-- The cone search (the query of all objects within the circular region of the sky):
-  For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12)deg in the table mytable you would do:
+- The cone search (the query of all objects within the circle around around the point on the sky):
+  For example to query all objects within radius of 0.1 deg from (ra,dec) = (11,12) deg in the table mytable you would do:
+
 ```
 my_db# SELECT * FROM mytable WHERE q3c_radial_query(ra, dec, 11, 12, 0.1);
 ```
-The order of arguments is important, so that the column names of the table should come first, and the 
-location where you search after, otherwise the index won't be used.
+
+The order of arguments of q3c_radial_query() is important, so that the column names of
+the table should come first, and the location where you search after, otherwise the index won't be used.
 
 There is also an alternative way of doing cone searches which could be a bit 
 faster if the table that you are working with that table that is small. In 
@@ -159,6 +163,7 @@ table:
 ```
   my_db# SELECT * FROM mytable WHERE q3c_join(11, 12, ra, dec, 0.1);
 ```
+Note here ra,dec column names are 3rd and 4th argument respectively.
 
 - The ellipse search: search for objects within the ellipse from a given point:
 ```
@@ -202,9 +207,9 @@ index is going to be used or not. The ra,dec columns from the table with the
 index should go after the ra,dec columns from the table without the index.
 
 It is important that the query will return *ALL* the pairs within the matching 
-distance, rather than just nearest neighbors. See the nearest neighbors queries below.
+distance, rather than just nearest neighbors. See below for examples of nearest neighbor queries.
   
-If every object in table1 have his own error circle ( we'll assume 
+If every object in table1 have their own error circle/matching radius ( we'll assume 
 that the radius of that circle in degrees is stored in the column "err"),
 then you should run the query:
   
