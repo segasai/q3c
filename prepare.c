@@ -25,11 +25,11 @@
 #include "common.h"
 int main()
 {
-	struct q3c_prm hprm1;
+	struct q3c_prm_write hprm1;
 
-	init_q3c1(&hprm1,1073741824);
+	init_q3c1(&hprm1, 1073741824);
 
-	q3c_dump_prm(&hprm1,"dump.c");
+	q3c_dump_prm(&hprm1, "dump.c");
 
 	return 0;
 
