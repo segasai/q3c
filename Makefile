@@ -3,7 +3,12 @@ EXTVERSION := $(shell grep default_version $(EXTENSION).control | \
 		 sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
 
 
+# Note the filename is different from README.md
+# because of the requirement to have unique filenames
+# we create q3c.md out of README.md when compiling
+# the extension
 DOCS = q3c.md
+
 OBJS = dump.o q3c.o q3c_poly.o q3cube.o
 MODULE_big = q3c
 DATA = $(wildcard scripts/*sql)
