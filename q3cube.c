@@ -180,8 +180,9 @@ void q3c_ang2ipix_xy (struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0,
 {
 	q3c_coord_t x0 = 0, y0 = 0, ra1, dec1, tmp0, td1;
 	q3c_coord_t ra,dec;
-	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
-	           *ybits = hprm->ybits, xi, yi;
+	const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits,
+	  *ybits = hprm->ybits;
+	q3c_ipix_t xi, yi;
 	char face_num;
 
 	/* We check against crazy right ascensions */
@@ -561,8 +562,9 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
                     q3c_ipix_t *ipix)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[4];
-	q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits,
-	           *ipix_cur = ipix, ipix0, xi, yi, n0, n1, ixmin,
+	const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits;
+	
+	q3c_ipix_t *ipix_cur = ipix, ipix0, xi, yi, n0, n1, ixmin,
 	           ixmax, iymin, iymax, xistack[4], yistack[4], facestack[4],
 	           nstack[4];
 	char face_num, face_num0, multi_flag;
@@ -963,8 +965,8 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 /* Converts integer coordinates on cube face to
  * ipix number by performing bit interleaving
  */
-q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
-                         q3c_ipix_t *ybits, char face_num,
+q3c_ipix_t q3c_xiyi2ipix(const q3c_ipix_t nside, const q3c_ipix_t *xbits,
+                         const q3c_ipix_t *ybits, char face_num,
                          q3c_ipix_t xi, q3c_ipix_t yi)
 {
 
@@ -980,8 +982,9 @@ q3c_ipix_t q3c_xiyi2ipix(q3c_ipix_t nside, q3c_ipix_t *xbits,
 void q3c_ipix2ang(struct q3c_prm *hprm, q3c_ipix_t ipix,
                   q3c_coord_t *ra, q3c_coord_t *dec)
 {
-	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1 = hprm->xbits1,
-	           *ybits1 = hprm->ybits1, i2, i3, x0, y0;
+	const q3c_ipix_t nside = hprm->nside, *xbits1 = hprm->xbits1,
+	  *ybits1 = hprm->ybits1;
+	q3c_ipix_t ipix1, i2, i3, x0, y0;
 
 	q3c_coord_t x, y, ra0;
 	char face_num = ipix / (nside * nside);
@@ -1058,8 +1061,9 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth)
  * In the future I should split the ipix2xy and xy2ang codepaths
  * and put them in the separate functions
  */
-	q3c_ipix_t nside = hprm->nside, ipix1, *xbits1 = hprm->xbits1,
-	           *ybits1 = hprm->ybits1, i2, i3, x0, y0, idx,
+	const q3c_ipix_t nside = hprm->nside, *xbits1 = hprm->xbits1,
+	  *ybits1 = hprm->ybits1;
+	q3c_ipix_t ipix1, i2, i3, x0, y0, idx,
 	           ix1, iy1, ix2, iy2;
 	q3c_coord_t x1, y1, x2, y2, result;
 /*	char face_num = ipix / (nside * nside);*/
@@ -1176,7 +1180,7 @@ char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0)
  * hprm -- Pointer to main Q3C structure
  * nside -- Nside parameter (number of quadtree subdivisions)
  */
-void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
+void init_q3c1(struct q3c_prm_write *hprm, q3c_ipix_t nside)
 {
 	int i, k, m, l;
 	const q3c_ipix_t nbits = Q3C_INTERLEAVED_NBITS;
@@ -1290,7 +1294,7 @@ void init_q3c1(struct q3c_prm *hprm, q3c_ipix_t nside)
 
 
 /* Dump the definitions of  main Q3C arrays into a .c file */
-void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
+void q3c_dump_prm(struct q3c_prm_write *hprm,char *filename)
 {
 	FILE *fp = fopen(filename, "w");
 	int i, x = 1 << Q3C_INTERLEAVED_NBITS;
@@ -1298,7 +1302,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	           *xbits1 = hprm->xbits1, *ybits1 = hprm->ybits1;
 
 	fprintf(fp, "#include \"common.h\"\n");
-	fprintf(fp, "\nq3c_ipix_t ____xbits[%d]={", x);
+	fprintf(fp, "\nconst q3c_ipix_t ____xbits[%d]={", x);
 	fprintf(fp, " ");
 
 	for(i = 0; i < x; i++)
@@ -1311,7 +1315,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	}
 	fprintf(fp, "};");
 
-	fprintf(fp, "\nq3c_ipix_t ____ybits[%d]={",x);
+	fprintf(fp, "\nconst q3c_ipix_t ____ybits[%d]={",x);
 	fprintf(fp, " ");
 
 	for(i = 0; i < x; i++)
@@ -1324,7 +1328,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	}
 	fprintf(fp, "};");
 
-	fprintf(fp, "\nq3c_ipix_t ____xbits1[%d]={", x);
+	fprintf(fp, "\nconst q3c_ipix_t ____xbits1[%d]={", x);
 	fprintf(fp, " ");
 
 	for(i = 0; i < x; i++)
@@ -1337,7 +1341,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	}
 	fprintf(fp, "};");
 
-	fprintf(fp, "\nq3c_ipix_t ____ybits1[%d]={",x);
+	fprintf(fp, "\nconst q3c_ipix_t ____ybits1[%d]={",x);
 	fprintf(fp, " ");
 
 	for(i = 0; i < x; i++)
@@ -1350,7 +1354,7 @@ void q3c_dump_prm(struct q3c_prm *hprm,char *filename)
 	}
 	fprintf(fp, "};\n");
 
-	fprintf(fp, "struct q3c_prm hprm={"
+	fprintf(fp, "const struct q3c_prm hprm={"
 	        Q3C_IPIX_FMT ",____xbits,____ybits,____xbits1,____ybits1};\n", hprm->nside);
 	fclose(fp);
 }
@@ -2362,7 +2366,7 @@ void q3c_output_stack( struct q3c_prm *hprm,
 {
 	int i, j;
 	q3c_ipix_t xi, yi, ipix_tmp1, ipix_tmp2, ntmp1;
-	q3c_ipix_t  *xbits = hprm->xbits, *ybits = hprm->ybits;
+	const q3c_ipix_t  *xbits = hprm->xbits, *ybits = hprm->ybits;
 
 	struct q3c_square *cur_square;
 	/* Run through fully covered squares (we take them from out_stack) */
@@ -2461,7 +2465,8 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
 	            points[4];
 
-	q3c_ipix_t n0, nside = hprm->nside;
+	q3c_ipix_t n0;
+	const q3c_ipix_t nside = hprm->nside;
 
 	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3] = {0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
@@ -2673,7 +2678,8 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
 	            points[4];
 
-	q3c_ipix_t n0, nside = hprm->nside;
+	q3c_ipix_t n0;
+	const q3c_ipix_t nside = hprm->nside;
 
 	char face_num, multi_flag = 0, face_count, face_num0, large_flag = 0;
 	int out_ipix_arr_fulls_pos = 0;
@@ -2854,7 +2860,8 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	            yc_cur = 0, cur_size, xesize, yesize,
 	            points[4], axx, ayy, axy, ax, ay, a;
 
-	q3c_ipix_t n0, nside = hprm->nside;
+	q3c_ipix_t n0;
+	const q3c_ipix_t nside = hprm->nside;
 
 	char face_num, multi_flag = 0, face_count, face_num0;
 	int out_ipix_arr_fulls_pos = 0;
