@@ -89,7 +89,6 @@ jobs:
           pg_ctl -D $PWD/../pg_install/data stop || true
           lcov --capture --directory . --output-file lcov.info
           lcov --extract lcov.info "$PWD/*" --output-file lcov.info
-          lcov --remove lcov.info "$PWD/dump.c" --output-file lcov.info
           lcov --list lcov.info
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coveralls
