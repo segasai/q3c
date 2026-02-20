@@ -23,7 +23,17 @@
 
 #include <math.h>
 #include <stdlib.h>
+
+/* This is for compiling q3c stuff without postresql */
+#ifdef Q3C_STANDALONE
+#include <stdint.h>
+#include <inttypes.h>
+typedef int64_t int64;
+#define INT64_FORMAT "%" PRId64
+#define INT64CONST(x) INT64_C(x)
+#else
 #include "postgres.h"
+#endif
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS

@@ -37,15 +37,6 @@ $(error "The $(PGXS) file not found. Check your PG installation. Exiting...")
 endif
 
 include $(PGXS)
-PGVERNEW := $(shell if [ $(MAJORVERSION) -ge 12 ] ; then echo N ; else echo O ; fi )
-
-ifeq ($(PGVERNEW), N)
-	PG_LIBS += -L$(shell $(PG_CONFIG) --pkglibdir)
-	LIBS := $(filter-out -lpam -lxml2 -lxslt -lselinux -ledit -lgssapi_krb5, $(LIBS))
-	MYBINLIBS := $(LIBS) $(PG_LIBS) -lm
-else
-	MYBINLIBS := $(PG_LIBS) -lm
-endif
 
 readme:
 	cp README.md q3c.md
@@ -53,8 +44,8 @@ readme:
 dump.c: prepare readme
 	./prepare
 
-prepare: prepare.o q3cube.o q3c_poly.o
-	$(CC) $? $(CFLAGS) $(PG_LIBS) $(PG_LDFLAGS) $(LDFLAGS) $(MYBINLIBS) -o $@
+prepare: prepare.c q3cube.c q3c_poly.c
+	$(CC) $(PG_CPPFLAGS) $(CFLAGS) -DQ3C_STANDALONE $^ $(LDFLAGS) -lm -o $@
 
 gen_data: gen_data.c
 	$(CC) $< $(CPPFLAGS) $(LDFLAGS) -lm -o $@
