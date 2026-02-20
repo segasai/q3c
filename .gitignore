@@ -1,7 +1,14 @@
 *~
+#*#
 *.o
 *.so
+*.bc
+*.gcda
+*.gcno
+lcov.info
+coverage.info
 dump.c
 gen_data
 prepare
 results/
+q3c.md

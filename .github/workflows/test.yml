@@ -32,9 +32,9 @@ jobs:
         uses: actions/checkout@v5
       - name: PG cleanup
         run: |
+          sudo apt-get update
           sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common
-          sudo apt-get -y install python3 python3-pip lcov
-          sudo pip install cpp-coveralls
+          sudo apt-get -y install lcov
           sudo rm -rf /var/lib/postgresql        
       - if: ${{ matrix.APT == '1' }}
         name: PG APT setup
@@ -83,9 +83,17 @@ jobs:
           psql -c "create extension q3c version '2.0.0'" exttest
           psql -c "alter extension q3c update to '2.0.1'" exttest 
       - if: ${{ matrix.COVERAGE == '1' }}
-        name: Coverall
+        name: Generate Coverage Report
         run: |
-          export TRAVIS_JOB_ID=$GITHUB_RUN_ID
-          cpp-coveralls --verbose --exclude postgres.h --exclude pg_list.h --exclude stdio2.h --exclude dump.c --gcov-options '\-lp'
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          export PATH=$PWD/../pg_install/bin/:$PATH
+          pg_ctl -D $PWD/../pg_install/data stop || true
+          lcov --capture --directory . --output-file lcov.info
+          lcov --extract lcov.info "$PWD/*" --output-file lcov.info
+          lcov --remove lcov.info "$PWD/dump.c" --output-file lcov.info
+          lcov --list lcov.info
+      - if: ${{ matrix.COVERAGE == '1' }}
+        name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
