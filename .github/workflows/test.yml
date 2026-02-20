@@ -12,10 +12,10 @@ on:
 jobs:
   tester:
     name: Test the code
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        container: ['ubuntu:22.04']
+        container: ['ubuntu:24.04']
         compiler: [gcc]
         PGVERSION: [14, 15, 16, 17, 18]
         COVERAGE: ['0']
@@ -55,10 +55,11 @@ jobs:
         name: PG source setup
         run: |
           export CC=${{ matrix.compiler }}
-          wget https://ftp.postgresql.org/pub/source/v14.10/postgresql-14.10.tar.bz2
-          tar xfj postgresql-14.10.tar.bz2
-          mv postgresql-14.10 ../
-          cd ../postgresql-14.10/
+          export PGVER=17.8
+          wget https://ftp.postgresql.org/pub/source/v$PGVER/postgresql-PGVER.tar.bz2
+          tar xfj postgresql-$PGVER.tar.bz2
+          mv postgresql-$PGVER ../
+          cd ../postgresql-$PGVER/
           if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
           make install
           ../pg_install/bin/initdb -D ../pg_install/data
