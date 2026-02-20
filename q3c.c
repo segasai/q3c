@@ -1009,7 +1009,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 	{
 		b->partials[i] = a->partials[i];
 	}
-	for (i = 0; i < (2 * Q3C_NPARTIALS); i++)
+	for (i = 0; i < (2 * Q3C_NFULLS); i++)
 	{
 		b->fulls[i] = a->fulls[i];
 	}
