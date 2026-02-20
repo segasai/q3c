@@ -61,7 +61,7 @@ jobs:
           tar xfj postgresql-$PGVER.tar.bz2
           mv postgresql-$PGVER ../
           cd ../postgresql-$PGVER/
-          if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --prefix=$PWD/../pg_install/ ; fi
+          if [[ ${{ matrix.COVERAGE }} == 1 ]] ; then ./configure --without-readline --enable-coverage --prefix=$PWD/../pg_install/ ; else ./configure --without-readline --prefix=$PWD/../pg_install/ ; fi
           make install
           ../pg_install/bin/initdb -D ../pg_install/data
           ../pg_install/bin/postgres -D ../pg_install/data &
