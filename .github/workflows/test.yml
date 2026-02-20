@@ -17,7 +17,7 @@ jobs:
       matrix:
         container: ['ubuntu:22.04']
         compiler: [gcc]
-        PGVERSION: [14, 15, 16, 17]
+        PGVERSION: [14, 15, 16, 17, 18]
         COVERAGE: ['0']
         APT: ['1']
         include:
