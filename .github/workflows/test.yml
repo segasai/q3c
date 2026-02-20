@@ -17,7 +17,7 @@ jobs:
       matrix:
         container: ['ubuntu:22.04']
         compiler: [gcc]
-        PGVERSION: [12, 13, 14, 15, 16, 17]
+        PGVERSION: [14, 15, 16, 17]
         COVERAGE: ['0']
         APT: ['1']
         include:
@@ -29,7 +29,7 @@ jobs:
             compiler: 'clang'
     steps:
       - name: Checkout 
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: PG cleanup
         run: |
           sudo apt-get -y --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common

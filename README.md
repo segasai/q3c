@@ -4,7 +4,7 @@
 
 Author: Sergey Koposov, University of Edinburgh
 
-Copyright (c) 2004-2024 Sergey Koposov
+Copyright (c) 2004-2026 Sergey Koposov
 
 Email:  skoposov AT ed DOT ac DOT uk
 
