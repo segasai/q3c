@@ -82,6 +82,7 @@ jobs:
           createdb exttest
           psql -c "create extension q3c version '2.0.0'" exttest
           psql -c "alter extension q3c update to '2.0.1'" exttest 
+          psql -c "alter extension q3c update to '2.0.2'" exttest 
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Generate Coverage Report
         run: |
