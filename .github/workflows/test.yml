@@ -56,7 +56,7 @@ jobs:
         run: |
           export CC=${{ matrix.compiler }}
           export PGVER=17.8
-          wget https://ftp.postgresql.org/pub/source/v$PGVER/postgresql-PGVER.tar.bz2
+          wget https://ftp.postgresql.org/pub/source/v$PGVER/postgresql-$PGVER.tar.bz2
           tar xfj postgresql-$PGVER.tar.bz2
           mv postgresql-$PGVER ../
           cd ../postgresql-$PGVER/
