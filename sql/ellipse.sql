@@ -731,3 +731,43 @@ select count(*) from test where q3c_ellipse_query(ra,dec,314,-37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-37,6,1,0);
 select count(*) from test where  q3c_ellipse_query(ra,dec,-45,-6,1,1,0);
+-- Large-major-axis checks should remain exact vs brute-force predicate
+select count(*) from test where q3c_ellipse_query(ra,dec,10,20,50,0.6,20);
+select count(*) from test where q3c_in_ellipse(ra,dec,10,20,50,0.6,20);
+select count(*) from test where q3c_ellipse_query(ra,dec,130,-35,110,0.4,70);
+select count(*) from test where q3c_in_ellipse(ra,dec,130,-35,110,0.4,70);
+select count(*) from test where q3c_ellipse_query(ra,dec,250,45,95,0.9,135);
+select count(*) from test where q3c_in_ellipse(ra,dec,250,45,95,0.9,135);
+
+-- Directional consistency for large ellipses:
+-- deterministic "random-like" directions + preferential directions.
+WITH dirs(ra0, dec0) AS (
+	VALUES
+	(13.1, -77.7), (47.3, -12.9), (88.8, 33.3), (121.7, 71.5),
+	(166.6, -48.4), (203.9, 4.2), (249.5, 58.1), (287.4, -63.6),
+	(319.2, 26.8), (355.1, -5.7),
+	(0.0, 0.0), (90.0, 0.0), (180.0, 0.0), (270.0, 0.0),
+	(0.0, 89.9), (0.0, -89.9),
+	(45.0, 35.26438968), (135.0, 35.26438968),
+	(225.0, -35.26438968), (315.0, -35.26438968)
+), cmp AS (
+	SELECT
+		ra0, dec0,
+		(SELECT count(*) FROM test
+		 WHERE q3c_ellipse_query(ra, dec, ra0, dec0, 50.0, 0.6, 20.0)) AS e1_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_in_ellipse(ra, dec, ra0, dec0, 50.0, 0.6, 20.0)) AS e1_ref,
+		(SELECT count(*) FROM test
+		 WHERE q3c_ellipse_query(ra, dec, ra0, dec0, 110.0, 0.4, 70.0)) AS e2_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_in_ellipse(ra, dec, ra0, dec0, 110.0, 0.4, 70.0)) AS e2_ref,
+		(SELECT count(*) FROM test
+		 WHERE q3c_ellipse_query(ra, dec, ra0, dec0, 95.0, 0.9, 135.0)) AS e3_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_in_ellipse(ra, dec, ra0, dec0, 95.0, 0.9, 135.0)) AS e3_ref
+	FROM dirs
+)
+SELECT count(*) FROM cmp
+WHERE e1_idx <> e1_ref
+   OR e2_idx <> e2_ref
+   OR e3_idx <> e3_ref;
