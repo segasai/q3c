@@ -84,8 +84,8 @@ test: gen_data
 	diff results/ang2ipix.out expected/ang2ipix.expected
 	cat sql/cone.sql | psql q3c_test > results/cone.out 2>&1
 	diff results/cone.out expected/cone.expected
-	cat sql/cone_join_rev.sql | psql q3c_test > results/cone.out
-	diff results/cone.out expected/cone.expected
+	cat sql/cone_join_rev.sql | psql q3c_test > results/cone_join_rev.out
+	diff results/cone_join_rev.out expected/cone_join_rev.expected
 	cat sql/ellipse.sql | psql q3c_test > results/ellipse.out
 	diff results/ellipse.out expected/ellipse.expected
 	cat sql/join.sql | psql q3c_test > results/join.out

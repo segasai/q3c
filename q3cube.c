@@ -122,10 +122,279 @@ static void q3c_fast_get_ellipse_xy_minmax(char, q3c_coord_t, q3c_coord_t,
 
 static void array_filler(q3c_ipix_t *fulls, int fullpos,
                          q3c_ipix_t *parts, int partpos);
+static void q3c_radec_to_unitvec(q3c_coord_t ra, q3c_coord_t dec,
+                                 q3c_coord_t *vx, q3c_coord_t *vy, q3c_coord_t *vz);
+static q3c_coord_t q3c_min4(q3c_coord_t a, q3c_coord_t b, q3c_coord_t c, q3c_coord_t d);
+static q3c_coord_t q3c_max4(q3c_coord_t a, q3c_coord_t b, q3c_coord_t c, q3c_coord_t d);
+static char q3c_check_single_face_cone(q3c_coord_t nw, q3c_coord_t nu,
+                                       q3c_coord_t nv, q3c_coord_t s,
+                                       q3c_coord_t c_norm, q3c_coord_t c_sq);
+static char q3c_circle_face_classify_acute(char face_num,
+                                           q3c_coord_t vx, q3c_coord_t vy, q3c_coord_t vz,
+                                           q3c_coord_t ctheta);
+static char q3c_circle_face_classify(char face_num, q3c_coord_t ra0,
+                                     q3c_coord_t dec0, q3c_coord_t rad);
+static void q3c_emit_face_status_ranges(const char *face_status,
+                                        q3c_ipix_t nside,
+                                        q3c_ipix_t *out_ipix_arr_fulls,
+                                        int *out_ipix_arr_fulls_pos,
+                                        q3c_ipix_t *out_ipix_arr_partials,
+                                        int *out_ipix_arr_partials_pos);
 
 void q3c_get_version(char *out, int maxchar)
 {
 	strncpy(out,__q3c_version,maxchar);
+}
+
+/*
+ * Convert sky coordinates to a unit vector on the sphere:
+ *   v = (cos(dec)cos(ra), cos(dec)sin(ra), sin(dec)).
+ */
+static void q3c_radec_to_unitvec(q3c_coord_t ra, q3c_coord_t dec,
+                                 q3c_coord_t *vx, q3c_coord_t *vy, q3c_coord_t *vz)
+{
+	q3c_coord_t cra, sra, cdec, sdec;
+	q3c_sincos(Q3C_DEGRA * ra, sra, cra);
+	q3c_sincos(Q3C_DEGRA * dec, sdec, cdec);
+	*vx = cdec * cra;
+	*vy = cdec * sra;
+	*vz = sdec;
+}
+
+/* Small helpers used by the corner tests in q3c_check_single_face_cone(). */
+static q3c_coord_t q3c_min4(q3c_coord_t a, q3c_coord_t b, q3c_coord_t c, q3c_coord_t d)
+{
+	q3c_coord_t m1 = (a < b) ? a : b;
+	q3c_coord_t m2 = (c < d) ? c : d;
+	return (m1 < m2) ? m1 : m2;
+}
+
+
+static q3c_coord_t q3c_max4(q3c_coord_t a, q3c_coord_t b, q3c_coord_t c, q3c_coord_t d)
+{
+	q3c_coord_t m1 = (a > b) ? a : b;
+	q3c_coord_t m2 = (c > d) ? c : d;
+	return (m1 > m2) ? m1 : m2;
+}
+
+/*
+ * Classify one cube face against a circular cone on the unit sphere.
+ *
+ * Parameters are in a local oriented frame for that face:
+ *   w = outward face axis, u/v = in-face axes, s in {+1,-1} picks +w/-w face.
+ * Cone axis is N=(nw,nu,nv), cone half-angle theta is encoded by:
+ *   c_norm = sqrt(3)*cos(theta), c_sq = cos(theta)^2.
+ *
+ * Geometry used below:
+ * 1) Corner tests:
+ *    Face corners are (s, +/-1, +/-1) with norm sqrt(3). A corner is inside
+ *    iff N dot corner >= sqrt(3)*cos(theta) = c_norm.
+ * 2) Face-interior axis hit:
+ *    Intersect ray t*N with plane w=s. Hit lies inside the 2x2 square iff
+ *    |nu|<=|nw| and |nv|<=|nw| (and snw>0 means it hits this oriented face).
+ * 3) Edge maxima:
+ *    On each edge f(x)=(A+Bx)/sqrt(2+x^2). Interior maximum occurs at x=2B/A.
+ *    If |2B|<=A and f(x_max)^2 >= cos(theta)^2 then edge intersects cone.
+ *    The closed form is f(x_max)^2 = 0.5*A^2 + B^2.
+ * 4) Otherwise the face is disjunct from the cone.
+ */
+static char q3c_check_single_face_cone(q3c_coord_t nw, q3c_coord_t nu,
+                                       q3c_coord_t nv, q3c_coord_t s,
+                                       q3c_coord_t c_norm, q3c_coord_t c_sq)
+{
+	q3c_coord_t snw = s * nw;
+	q3c_coord_t d1 = snw + nu + nv;
+	q3c_coord_t d2 = snw + nu - nv;
+	q3c_coord_t d3 = snw - nu + nv;
+	q3c_coord_t d4 = snw - nu - nv;
+	q3c_coord_t A, B, vtest;
+
+	/* Phase 1: all corners in cone => full cover. */
+	if (q3c_min4(d1, d2, d3, d4) >= c_norm)
+	{
+		return Q3C_COVER;
+	}
+	/* Phase 1b: at least one corner in cone => partial overlap. */
+	if (q3c_max4(d1, d2, d3, d4) >= c_norm)
+	{
+		return Q3C_PARTIAL;
+	}
+
+	/* Phase 2: cone axis pierces the interior of this face square. */
+	if ((snw > 0) && (q3c_fabs(nu) <= q3c_fabs(nw)) && (q3c_fabs(nv) <= q3c_fabs(nw)))
+	{
+		return Q3C_PARTIAL;
+	}
+
+	/* Phase 3: edge-intersection checks using the analytic edge maximum. */
+	B = nv;
+	A = snw + nu;
+	if (A > 0)
+	{
+		vtest = 0.5 * A * A + B * B;
+		if ((q3c_fabs(2 * B) <= A) && (vtest >= c_sq))
+		{
+			return Q3C_PARTIAL;
+		}
+	}
+	A = snw - nu;
+	if (A > 0)
+	{
+		vtest = 0.5 * A * A + B * B;
+		if ((q3c_fabs(2 * B) <= A) && (vtest >= c_sq))
+		{
+			return Q3C_PARTIAL;
+		}
+	}
+
+	B = nu;
+	A = snw + nv;
+	if (A > 0)
+	{
+		vtest = 0.5 * A * A + B * B;
+		if ((q3c_fabs(2 * B) <= A) && (vtest >= c_sq))
+		{
+			return Q3C_PARTIAL;
+		}
+	}
+	A = snw - nv;
+	if (A > 0)
+	{
+		vtest = 0.5 * A * A + B * B;
+		if ((q3c_fabs(2 * B) <= A) && (vtest >= c_sq))
+		{
+			return Q3C_PARTIAL;
+		}
+	}
+
+	/* Phase 4: no corners/axis/edges intersect. */
+	return Q3C_DISJUNCT;
+}
+
+
+/*
+ * Evaluate one face for an acute cone (rad <= 90 deg).
+ * The mapping of (w,u,v,s) matches q3c face numbering:
+ *   0:+z, 1:+x, 2:+y, 3:-x, 4:-y, 5:-z.
+ */
+static char q3c_circle_face_classify_acute(char face_num,
+                                           q3c_coord_t vx, q3c_coord_t vy, q3c_coord_t vz,
+                                           q3c_coord_t ctheta)
+{
+	q3c_coord_t c_norm = ctheta * q3c_sqrt(3.0);
+	q3c_coord_t c_sq = ctheta * ctheta;
+
+	/*
+	 * Why the permutations below are correct:
+	 * q3c_check_single_face_cone() is defined in a generic oriented frame
+	 * (w,u,v,s), where the tested face is plane w=s and u,v in [-1,1].
+	 * For each cube face we only rename axes:
+	 *   w = face-normal axis,
+	 *   s = +1 for +axis face, -1 for -axis face,
+	 *   u,v = the two in-face axes.
+	 * This permutation/sign change preserves all dot products and inequalities
+	 * used by the corner/interior/edge tests, so classification is invariant.
+	 *   face 0 (+z): (w,u,v,s)=(z,x,y,+1) -> (vz,vx,vy,+1)
+	 *   face 1 (+x): (w,u,v,s)=(x,y,z,+1) -> (vx,vy,vz,+1)
+	 *   face 2 (+y): (w,u,v,s)=(y,z,x,+1) -> (vy,vz,vx,+1)
+	 *   face 3 (-x): (w,u,v,s)=(x,y,z,-1) -> (vx,vy,vz,-1)
+	 *   face 4 (-y): (w,u,v,s)=(y,z,x,-1) -> (vy,vz,vx,-1)
+	 *   face 5 (-z): (w,u,v,s)=(z,x,y,-1) -> (vz,vx,vy,-1)
+	 */
+	switch(face_num)
+	{
+	case 0:
+		return q3c_check_single_face_cone(vz, vx, vy, 1, c_norm, c_sq);
+	case 1:
+		return q3c_check_single_face_cone(vx, vy, vz, 1, c_norm, c_sq);
+	case 2:
+		return q3c_check_single_face_cone(vy, vz, vx, 1, c_norm, c_sq);
+	case 3:
+		return q3c_check_single_face_cone(vx, vy, vz, -1, c_norm, c_sq);
+	case 4:
+		return q3c_check_single_face_cone(vy, vz, vx, -1, c_norm, c_sq);
+	default:
+		return q3c_check_single_face_cone(vz, vx, vy, -1, c_norm, c_sq);
+	}
+}
+
+/*
+ * Classify one face for any circle radius in [0,180].
+ *
+ * For rad > 90 we avoid direct obtuse-cone edge math by complement:
+ *   Cone(N, rad) = complement(Cone(-N, 180-rad)).
+ * So we classify the complementary acute cone and invert
+ * COVER <-> DISJUNCT (PARTIAL stays PARTIAL).
+ */
+static char q3c_circle_face_classify(char face_num, q3c_coord_t ra0,
+                                     q3c_coord_t dec0, q3c_coord_t rad)
+{
+	q3c_coord_t vx, vy, vz;
+	q3c_coord_t ctheta;
+	char s;
+
+	if (rad >= 180)
+	{
+		return Q3C_COVER;
+	}
+	if (rad <= 0)
+	{
+		return Q3C_DISJUNCT;
+	}
+
+	q3c_radec_to_unitvec(ra0, dec0, &vx, &vy, &vz);
+
+	if (rad <= 90)
+	{
+		ctheta = q3c_cos(Q3C_DEGRA * rad);
+		return q3c_circle_face_classify_acute(face_num, vx, vy, vz, ctheta);
+	}
+
+	/* For obtuse cones classify the complementary acute cone and invert */
+	ctheta = q3c_cos(Q3C_DEGRA * (180 - rad));
+	s = q3c_circle_face_classify_acute(face_num, -vx, -vy, -vz, ctheta);
+	if (s == Q3C_COVER)
+	{
+		return Q3C_DISJUNCT;
+	}
+	if (s == Q3C_DISJUNCT)
+	{
+		return Q3C_COVER;
+	}
+	return Q3C_PARTIAL;
+}
+
+/*
+ * Convert per-face status to q3c ipix ranges.
+ * Covered faces go to full ranges, overlapping faces to partial ranges.
+ */
+static void q3c_emit_face_status_ranges(const char *face_status,
+                                        q3c_ipix_t nside,
+                                        q3c_ipix_t *out_ipix_arr_fulls,
+                                        int *out_ipix_arr_fulls_pos,
+                                        q3c_ipix_t *out_ipix_arr_partials,
+                                        int *out_ipix_arr_partials_pos)
+{
+	int face_num;
+	for (face_num = 0; face_num < 6; face_num++)
+	{
+		q3c_ipix_t ipix0;
+		if (face_status[face_num] == Q3C_DISJUNCT)
+		{
+			continue;
+		}
+		ipix0 = ((q3c_ipix_t)face_num) * nside * nside;
+		if (face_status[face_num] == Q3C_COVER)
+		{
+			out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix0;
+			out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix0 + nside * nside;
+		}
+		else
+		{
+			out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix0;
+			out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix0 + nside * nside;
+		}
+	}
 }
 
 
@@ -2477,35 +2746,24 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
-	/* 35 degrees is a magic size above which the cone from the search can
-	 * produce a hyperbola or a parabola on a main face and where a lot of
-	 * code will start to break.
-	 * So if the query is that large, I just query the whole sphere
-	 */
-	/* TODO
-	 * I can instead of querying the whole sphere, just query the appropriate
-	 * faces
+	/* 35 degrees is a magic size above which projecting the cone boundary
+	 * onto faces can become parabolic/hyperbolic and the polynomial branch
+	 * is no longer reliable. Fall back to direct per-face status tests.
 	 */
 	if (rad >= Q3C_MAXRAD)
 	{
-		q3c_ipix_t maxval = 6 * (nside * nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
+		char face_status[6];
+		for (i = 0; i < 6; i++)
 		{
-			/* don't have any fully covered squares*/
-			out_ipix_arr_fulls[i++] = 1;
-			out_ipix_arr_fulls[i++] = -1;
+			face_status[i] = q3c_circle_face_classify(i, ra0, dec0, rad);
 		}
-
-		i = out_ipix_arr_partials_pos;
-		out_ipix_arr_partials[i++] = -1;
-		out_ipix_arr_partials[i++] = maxval;
-		/* everything is partially covered */
-		for(; i < (2 * Q3C_NPARTIALS);)
-		{
-			/* fill with dummy ranges the rest*/
-			out_ipix_arr_partials[i++] = 1;
-			out_ipix_arr_partials[i++] = -1;
-		}
+		q3c_emit_face_status_ranges(face_status, nside,
+		                            out_ipix_arr_fulls,
+		                            &out_ipix_arr_fulls_pos,
+		                            out_ipix_arr_partials,
+		                            &out_ipix_arr_partials_pos);
+		array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
+		             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 		return;
 	}
 
@@ -2872,35 +3130,42 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
-	/* 35 degrees is a magic size above which the cone from the search can
-	 * produce a hyperbola or a parabola on a main face and where a lot of
-	 * code will start to break.
-	 * So if the query is that large, I just query the whole sphere
-	 */
-	/* TODO
-	 * I can instead of querying the whole sphere, just query the appropriate
-	 * faces
+	/* For large major axes, projected-conic handling can break for the same
+	 * reason as in radial query. Use direct per-face circle-based bounds:
+	 * majax gives DISJUNCT and minax can safely promote to COVER.
 	 */
 	if (majax >= Q3C_MAXRAD)
 	{
-		q3c_ipix_t maxval = 6 * (nside * nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
+		char face_status_max[6], face_status_min[6], face_status[6];
+		q3c_coord_t minax = majax * q3c_sqrt(1 - ell * ell);
+		if (minax < 0)
 		{
-			/* don't have any fully covered squares*/
-			out_ipix_arr_fulls[i++] = 1;
-			out_ipix_arr_fulls[i++] = -1;
+			minax = 0;
 		}
-
-		i = out_ipix_arr_partials_pos;
-		out_ipix_arr_partials[i++] = -1;
-		out_ipix_arr_partials[i++] = maxval;
-		/* everything is partially covered */
-		for(; i < (2 * Q3C_NPARTIALS);)
+		for (i = 0; i < 6; i++)
 		{
-			/* fill with dummy ranges the rest*/
-			out_ipix_arr_partials[i++] = 1;
-			out_ipix_arr_partials[i++] = -1;
+			face_status_max[i] = q3c_circle_face_classify(i, ra0, dec0, majax);
+			face_status_min[i] = q3c_circle_face_classify(i, ra0, dec0, minax);
+			if (face_status_max[i] == Q3C_DISJUNCT)
+			{
+				face_status[i] = Q3C_DISJUNCT;
+			}
+			else if (face_status_min[i] == Q3C_COVER)
+			{
+				face_status[i] = Q3C_COVER;
+			}
+			else
+			{
+				face_status[i] = Q3C_PARTIAL;
+			}
 		}
+		q3c_emit_face_status_ranges(face_status, nside,
+		                            out_ipix_arr_fulls,
+		                            &out_ipix_arr_fulls_pos,
+		                            out_ipix_arr_partials,
+		                            &out_ipix_arr_partials_pos);
+		array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
+		             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 		return;
 	}
 
@@ -3040,4 +3305,3 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
 } /* End of q3c_ellipse_query() */
-

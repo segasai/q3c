@@ -745,5 +745,45 @@ select count(*) from test where  q3c_radial_query(ra,dec,0,90,90);
 select count(*) from test where dec>0;
 select count(*) from test where  q3c_radial_query(ra,dec,0,-90,90);
 select count(*) from test where dec<0;
+-- Large-radius checks should remain exact vs brute-force predicate
+select count(*) from test where q3c_radial_query(ra,dec,10,20,40);
+select count(*) from test where q3c_sindist(ra,dec,10,20)<POW(SIN(RADIANS(40)/2),2);
+select count(*) from test where q3c_radial_query(ra,dec,130,-35,80);
+select count(*) from test where q3c_sindist(ra,dec,130,-35)<POW(SIN(RADIANS(80)/2),2);
+select count(*) from test where q3c_radial_query(ra,dec,250,45,120);
+select count(*) from test where q3c_sindist(ra,dec,250,45)<POW(SIN(RADIANS(120)/2),2);
+
+-- Directional consistency for large circles:
+-- deterministic "random-like" directions + preferential directions.
+WITH dirs(ra0, dec0) AS (
+	VALUES
+	(13.1, -77.7), (47.3, -12.9), (88.8, 33.3), (121.7, 71.5),
+	(166.6, -48.4), (203.9, 4.2), (249.5, 58.1), (287.4, -63.6),
+	(319.2, 26.8), (355.1, -5.7),
+	(0.0, 0.0), (90.0, 0.0), (180.0, 0.0), (270.0, 0.0),
+	(0.0, 89.9), (0.0, -89.9),
+	(45.0, 35.26438968), (135.0, 35.26438968),
+	(225.0, -35.26438968), (315.0, -35.26438968)
+), cmp AS (
+	SELECT
+		ra0, dec0,
+		(SELECT count(*) FROM test
+		 WHERE q3c_radial_query(ra, dec, ra0, dec0, 40.0)) AS c40_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_sindist(ra, dec, ra0, dec0) < POW(SIN(RADIANS(40.0)/2), 2)) AS c40_ref,
+		(SELECT count(*) FROM test
+		 WHERE q3c_radial_query(ra, dec, ra0, dec0, 80.0)) AS c80_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_sindist(ra, dec, ra0, dec0) < POW(SIN(RADIANS(80.0)/2), 2)) AS c80_ref,
+		(SELECT count(*) FROM test
+		 WHERE q3c_radial_query(ra, dec, ra0, dec0, 120.0)) AS c120_idx,
+		(SELECT count(*) FROM test
+		 WHERE q3c_sindist(ra, dec, ra0, dec0) < POW(SIN(RADIANS(120.0)/2), 2)) AS c120_ref
+	FROM dirs
+)
+SELECT count(*) FROM cmp
+WHERE c40_idx <> c40_ref
+   OR c80_idx <> c80_ref
+   OR c120_idx <> c120_ref;
 -- select count(*) from test where  q3c_radial_query(ra,dec,45,96,1);
 -- this will wait till i run stuff via pg_regress
