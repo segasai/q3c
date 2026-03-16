@@ -25,14 +25,38 @@ CREATE OR REPLACE FUNCTION q3c_seljoin(internal, oid, internal, int2, internal)
         LANGUAGE C IMMUTABLE STRICT ;
  
 
+CREATE OR REPLACE FUNCTION q3c_join_selectivity(internal)
+       RETURNS internal
+       AS 'MODULE_PATHNAME', 'pgq3c_join_selectivity'
+       LANGUAGE C IMMUTABLE STRICT;
+
  -- distance operator with correct selectivity
 CREATE OPERATOR ==<<>>== (
-        LEFTARG = double precision,                                                    RIGHTARG = q3c_type,
+        LEFTARG = double precision,
+        RIGHTARG = q3c_type,
         PROCEDURE = q3c_seloper,
         RESTRICT = q3c_sel,
 	JOIN = q3c_seljoin
 );
 
+
+CREATE OR REPLACE FUNCTION q3c_multirange_nearby_it(double precision,
+       double precision, double precision)
+                     RETURNS int8multirange
+             AS 'MODULE_PATHNAME','pgq3c_multirange_nearby_it'
+             LANGUAGE C IMMUTABLE STRICT;
+ 
+CREATE OR REPLACE FUNCTION q3c_multirange_radial_query_it_filtered(double precision,
+       double precision, double precision)
+                     RETURNS int8multirange
+             AS 'MODULE_PATHNAME','pgq3c_multirange_radial_query_it_filtered'
+             LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION q3c_multirange_radial_query_it_unfiltered(double precision,
+       double precision, double precision)
+                     RETURNS int8multirange
+             AS 'MODULE_PATHNAME','pgq3c_multirange_radial_query_it_unfiltered'
+             LANGUAGE C IMMUTABLE STRICT;
 
 
 CREATE OR REPLACE FUNCTION q3c_version()
@@ -159,12 +183,12 @@ CREATE OR REPLACE FUNCTION q3c_radial_query_it(double precision,
 
 
 CREATE OR REPLACE FUNCTION q3c_ellipse_query_it(ra_ell double precision,
-												dec_ell double precision,
-												semimajax double precision,
-												axis_ratio double precision,
-												PA double precision,
-												iteration integer,
-												full_flag integer)
+       dec_ell double precision,
+       semimajax double precision,
+       axis_ratio double precision,
+       PA double precision,
+       iteration integer,
+       full_flag integer)
 	RETURNS bigint
 	AS 'MODULE_PATHNAME', 'pgq3c_ellipse_query_it'
 LANGUAGE C IMMUTABLE STRICT;
@@ -194,6 +218,29 @@ CREATE OR REPLACE FUNCTION q3c_in_poly(double precision, double precision,
         RETURNS boolean
         AS 'MODULE_PATHNAME', 'pgq3c_in_poly1'
         LANGUAGE C IMMUTABLE STRICT;
+
+
+CREATE OR REPLACE FUNCTION q3c_join_gist(leftra double precision, leftdec double precision,
+                                   rightra double precision, rightdec double precision,
+                                   radius double precision)
+        RETURNS boolean AS
+'
+SELECT (q3c_multirange_nearby_it($1,$2,$5) @> int8range(q3c_ang2ipix($3,$4),q3c_ang2ipix($3,$4)+1)
+       AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2))
+       AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
+' LANGUAGE SQL IMMUTABLE support q3c_join_selectivity;  -- SUPPORT q3c_join_selectivity;
+
+
+CREATE OR REPLACE FUNCTION q3c_join_gist2(leftra double precision, leftdec double precision,
+                                   rightra double precision, rightdec double precision,
+                                   radius double precision)
+        RETURNS boolean AS
+'
+SELECT (q3c_multirange_nearby_it($1,$2,$5) @> int8range(q3c_ang2ipix($3,$4),q3c_ang2ipix($3,$4)+1)
+       AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2))
+' LANGUAGE SQL IMMUTABLE support q3c_join_selectivity;  -- SUPPORT q3c_join_selectivity;
+
+
 
 
 CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
@@ -273,6 +320,36 @@ SELECT (((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,0))) AND (q
     AND q3c_in_ellipse($3,$4,$1,$2,$5,$6,$7)
     AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type) 
 ' LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION q3c_radial_query_gist(leftra double precision, leftdec double precision,
+                                   rightra double precision, rightdec double precision,
+                                   radius double precision)
+        RETURNS boolean AS
+'
+SELECT (q3c_multirange_radial_query_it_unfiltered($1,$2,$5) @> int8range(q3c_ang2ipix($3,$4),q3c_ang2ipix($3,$4)+1)
+       AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2))
+       AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
+' LANGUAGE SQL IMMUTABLE;  -- SUPPORT q3c_join_selectivity;
+
+CREATE OR REPLACE FUNCTION q3c_radial_query_gist_filtered(leftra double precision, leftdec double precision,
+                                   rightra double precision, rightdec double precision,
+                                   radius double precision)
+        RETURNS boolean AS
+'
+SELECT (q3c_multirange_radial_query_it_filtered($1,$2,$5) @> int8range(q3c_ang2ipix($3,$4),q3c_ang2ipix($3,$4)+1)
+       AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2))
+' LANGUAGE SQL IMMUTABLE;  -- SUPPORT q3c_join_selectivity;
+
+CREATE OR REPLACE FUNCTION q3c_radial_query_gist_unfiltered(leftra double precision, leftdec double precision,
+                                   rightra double precision, rightdec double precision,
+                                   radius double precision)
+        RETURNS boolean AS
+'
+SELECT (q3c_multirange_radial_query_it_unfiltered($1,$2,$5) @> int8range(q3c_ang2ipix($3,$4),q3c_ang2ipix($3,$4)+1)
+       AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2))
+' LANGUAGE SQL IMMUTABLE;  -- SUPPORT q3c_join_selectivity;
+
 
 CREATE OR REPLACE FUNCTION q3c_radial_query(
                   real, real,

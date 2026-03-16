@@ -33,12 +33,16 @@
 #include "utils/array.h"
 #include "utils/geo_decls.h"
 #include "catalog/pg_type.h"
+#include "nodes/supportnodes.h"
+#include "optimizer/optimizer.h"
 #include "fmgr.h"
 #if PG_VERSION_NUM >= 90300
 #include "access/tupmacs.h"
 #endif
 //#include "nodes/relation.h"
 #include "utils/selfuncs.h"
+#include "utils/rangetypes.h"
+#include "utils/multirangetypes.h"
 
 
 
@@ -78,7 +82,7 @@ Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_seloper(PG_FUNCTION_ARGS);
-
+Datum pgq3c_join_selectivity(PG_FUNCTION_ARGS);
 
 /* Dummy function that implements the selectivity operator */
 PG_FUNCTION_INFO_V1(pgq3c_seloper);
@@ -129,6 +133,46 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	//elog(WARNING, "HERE0.... %e", ratio);
 
 	PG_RETURN_FLOAT8(ratio);
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_join_selectivity);
+Datum pgq3c_join_selectivity(PG_FUNCTION_ARGS)
+{
+  Node    *rawreq = (Node *) PG_GETARG_POINTER(0);
+  Node    *ret = NULL;
+
+  elog(WARNING,"in pgq3c_join_selectivity %d %d %d %d",
+       rawreq->type,T_SupportRequestSelectivity,T_SupportRequestSimplify,
+       T_SupportRequestCost);
+
+  
+  if (IsA(rawreq, SupportRequestSelectivity))
+    {
+      elog(WARNING,"found SupportRequestSelectivity");
+    }
+  if (IsA(rawreq, SupportRequestSimplify))
+    {
+      SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+      
+      elog(WARNING,"found SupportRequestSimplify");
+      PG_RETURN_POINTER((Node *)0);
+    }
+  if (IsA(rawreq, SupportRequestCost))
+    {
+      elog(WARNING,"found SupportRequestCost");
+      /* Provide some generic estimate */
+      SupportRequestCost *req = (SupportRequestCost *) rawreq;
+      //elog(WARNING, "req->startup %e", req->startup);
+      //elog(WARNING, "req->per_tuple %e", req->per_tuple);
+      //elog(WARNING, "req->funcid %d", req->funcid);
+      req->startup = 0;
+      //req->per_tuple = 2.0 * cpu_operator_cost;
+      req->per_tuple = 1e-36;
+      //elog(WARNING, "req->per_tuple %e", req->per_tuple);      
+      ret = (Node *) req;
+    }
+
+  PG_RETURN_POINTER(ret);
 }
 
 
@@ -1313,4 +1357,235 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 	}
 
 	PG_RETURN_BOOL(result);
+}
+
+
+Datum pgq3c_multirange_nearby_it(PG_FUNCTION_ARGS);
+
+PG_FUNCTION_INFO_V1(pgq3c_multirange_nearby_it);
+Datum pgq3c_multirange_nearby_it(PG_FUNCTION_ARGS)
+{
+
+  int range_count=4;
+  RangeType* ranges[4];
+  TypeCacheEntry *rangetyp;
+  extern struct q3c_prm hprm;
+  RangeBound  lower;
+  RangeBound  upper;
+  MultirangeType *mr;
+  q3c_circle_region circle;
+  q3c_ipix_t ipix_array[8];
+  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
+  long int maxint = PG_INT64_MIN;
+  int max_ipix_idx = -1;
+  
+  //elog(WARNING, "HERE0 in get_multirange_nearby_it .... %e %e %e", ra_cen, dec_cen, radius);
+  
+  rangetyp = range_get_typcache(fcinfo, INT8RANGEOID);
+  lower.lower=true;
+  upper.lower=false;
+  lower.infinite=false;
+  upper.infinite=false; 
+  lower.inclusive=true;
+  upper.inclusive=true;
+
+  ra_cen = UNWRAP_RA(ra_cen);
+  if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
+  circle.ra = ra_cen;
+  circle.dec = dec_cen;
+  circle.rad = radius;
+  q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+
+  
+  // remove invalid entries from ipix_array before calling make_range
+
+  for (int i=0; i < range_count; i++)
+    {
+      if (maxint < ipix_array[2*i+1])
+	{
+	  maxint = ipix_array[2*i+1];
+	  max_ipix_idx = i;
+	}
+    }
+
+  for (int i=0; i < range_count; i++)
+    {
+      if (ipix_array[2*i] == 1)
+	{
+	  ipix_array[2*i]=ipix_array[2*max_ipix_idx];
+	  ipix_array[2*i+1]=ipix_array[2*max_ipix_idx+1];
+	}
+    }
+
+  /*
+  elog(WARNING, "HERE0 in get_multirange_nearby_it .... %ld %ld %ld %ld",
+       ipix_array[0],ipix_array[1],ipix_array[2],ipix_array[3]);
+  elog(WARNING, "HERE0 in get_multirange_nearby_it .... %ld %ld %ld %ld",
+       ipix_array[4],ipix_array[5],ipix_array[6],ipix_array[7]);
+  elog(WARNING, "maxint %ld max_ipix_idx %d",maxint,max_ipix_idx);
+  */
+  
+  for (int i=0;i<range_count;i++)
+    {
+      lower.val = ipix_array[2*i];
+      upper.val = ipix_array[2*i+1];
+      if (upper.val == -1)
+	lower.val = -1;
+      //elog(WARNING, "l %ld u %ld",lower.val, upper.val);
+      ranges[i] = make_range(rangetyp, &lower, &upper, false);
+    }
+  rangetyp = multirange_get_typcache(fcinfo, INT8MULTIRANGEOID);
+  mr = make_multirange(INT8MULTIRANGEOID, rangetyp->rngtype,
+		       range_count, ranges);
+  PG_RETURN_MULTIRANGE_P(mr);
+  // https://github.com/postgres/postgres/blob/07d683b54af854098cc559d4b8640905f9efa0ea/src/backend/utils/adt/multirangetypes.c#L641
+}
+
+Datum pgq3c_multirange_radial_query_it_filtered(PG_FUNCTION_ARGS);
+
+PG_FUNCTION_INFO_V1(pgq3c_multirange_radial_query_it_filtered);
+Datum pgq3c_multirange_radial_query_it_filtered(PG_FUNCTION_ARGS)
+{
+
+  int range_count=0;
+  RangeType* ranges[2*(Q3C_NFULLS+Q3C_NPARTIALS)];
+  TypeCacheEntry *rangetyp;
+  extern struct q3c_prm hprm;
+  RangeBound  lower;
+  RangeBound  upper;
+  MultirangeType *mr;
+  static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+  static q3c_ipix_t fulls[2 * Q3C_NFULLS];
+
+  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
+  
+  //elog(WARNING, "HERE0 in get_multirange_radial_query_it .... %e %e %e", ra_cen, dec_cen, radius);
+  
+  rangetyp = range_get_typcache(fcinfo, INT8RANGEOID);
+  lower.lower=true;
+  upper.lower=false;
+  lower.infinite=false;
+  upper.infinite=false;
+  lower.inclusive=true;
+  upper.inclusive=true;
+  
+  ra_cen = UNWRAP_RA(ra_cen);
+  if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
+  
+  q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+
+  //elog(WARNING, "after q3c_radial_query %d %d",Q3C_NPARTIALS,Q3C_NFULLS);
+
+  for (int i=0;i<Q3C_NFULLS;i++)
+    {
+      lower.val = fulls[2*i];
+      upper.val = fulls[2*i+1];
+      if (upper.val == -1)
+	{
+	  lower.val = -1;
+	}
+      //elog(WARNING, "fulls l %ld u %ld %d",lower.val, upper.val,i);
+      /* try to make it faster by omitting ranges with no stars */
+      if (upper.val != lower.val){
+	//elog(WARNING, "adding fulls l %ld u %ld %d %d",lower.val, upper.val,range_count,i);
+	ranges[range_count] = make_range(rangetyp, &lower, &upper, false);
+	range_count++;
+      }
+    }
+
+  for (int i=0;i<Q3C_NPARTIALS;i++)
+    {
+      lower.val = partials[2*i];
+      upper.val = partials[2*i+1];
+      if (upper.val != lower.val)
+	lower.val = -1;
+      //elog(WARNING, "partials l %ld u %ld %d %ld",lower.val, upper.val,i,Zero.val);
+      if (upper.val > 0){
+	//elog(WARNING, "adding partials l %ld u %ld %d %d %ld",lower.val, upper.val,range_count,i, Zero.val);
+	ranges[range_count] = make_range(rangetyp, &lower, &upper, false);
+	range_count++;
+      }
+    }
+
+  //elog(WARNING, "range_count %d",range_count);  
+  rangetyp = multirange_get_typcache(fcinfo, INT8MULTIRANGEOID);
+  mr = make_multirange(INT8MULTIRANGEOID, rangetyp->rngtype,
+		       range_count, ranges);
+  PG_RETURN_MULTIRANGE_P(mr);
+  // https://github.com/postgres/postgres/blob/07d683b54af854098cc559d4b8640905f9efa0ea/src/backend/utils/adt/multirangetypes.c#L641
+}
+
+Datum pgq3c_multirange_radial_query_it_unfiltered(PG_FUNCTION_ARGS);
+
+PG_FUNCTION_INFO_V1(pgq3c_multirange_radial_query_it_unfiltered);
+Datum pgq3c_multirange_radial_query_it_unfiltered(PG_FUNCTION_ARGS)
+{
+
+  int range_count=0;
+  RangeType* ranges[2*(Q3C_NFULLS+Q3C_NPARTIALS)];
+  TypeCacheEntry *rangetyp;
+  extern struct q3c_prm hprm;
+  RangeBound  lower;
+  RangeBound  upper;
+  MultirangeType *mr;
+  static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+  static q3c_ipix_t fulls[2 * Q3C_NFULLS];
+
+  q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+  q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+  q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
+  
+  //elog(WARNING, "HERE0 in get_multirange_radial_query_it .... %e %e %e", ra_cen, dec_cen, radius);
+  
+  rangetyp = range_get_typcache(fcinfo, INT8RANGEOID);
+  lower.lower=true;
+  upper.lower=false;
+  lower.infinite=false;
+  upper.infinite=false;
+  lower.inclusive=true;
+  upper.inclusive=true;
+  
+  ra_cen = UNWRAP_RA(ra_cen);
+  if (q3c_fabs(dec_cen) > 90) {dec_cen = q3c_fmod(dec_cen,90);}
+  
+  q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+
+  //elog(WARNING, "after q3c_radial_query %d %d",Q3C_NPARTIALS,Q3C_NFULLS);
+
+  for (int i=0;i<Q3C_NFULLS;i++)
+    {
+      lower.val = fulls[2*i];
+      upper.val = fulls[2*i+1];
+      if (upper.val == -1)
+	{
+	  lower.val = -1;
+	}
+      //elog(WARNING, "fulls l %ld u %ld %d",lower.val, upper.val,i);
+      //elog(WARNING, "adding fulls l %ld u %ld %d %d",lower.val, upper.val,range_count,i);
+      ranges[range_count] = make_range(rangetyp, &lower, &upper, false);
+      range_count++;
+    }
+
+  for (int i=0;i<Q3C_NPARTIALS;i++)
+    {
+      lower.val = partials[2*i];
+      upper.val = partials[2*i+1];
+      if (upper.val != lower.val)
+	lower.val = -1;
+      //elog(WARNING, "partials l %ld u %ld %d %ld",lower.val, upper.val,i,Zero.val);
+      //elog(WARNING, "adding partials l %ld u %ld %d %d %ld",lower.val, upper.val,range_count,i, Zero.val);
+      ranges[range_count] = make_range(rangetyp, &lower, &upper, false);
+      range_count++;
+    }
+
+  //elog(WARNING, "range_count %d",range_count);  
+  rangetyp = multirange_get_typcache(fcinfo, INT8MULTIRANGEOID);
+  mr = make_multirange(INT8MULTIRANGEOID, rangetyp->rngtype,
+		       range_count, ranges);
+  PG_RETURN_MULTIRANGE_P(mr);
+  // https://github.com/postgres/postgres/blob/07d683b54af854098cc559d4b8640905f9efa0ea/src/backend/utils/adt/multirangetypes.c#L641
 }
