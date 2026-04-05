@@ -74,6 +74,7 @@ Datum pgq3c_radial_query(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS);
 #include "parser/parse_func.h"
 
+PG_FUNCTION_INFO_V1(pgq3c_radial_query);
 Datum pgq3c_radial_query(PG_FUNCTION_ARGS)
 {
 	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
@@ -90,7 +91,6 @@ Datum pgq3c_radial_query(PG_FUNCTION_ARGS)
 }
 
 PG_FUNCTION_INFO_V1(pgq3c_radial_query_real);
-
 Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS)
 {
 	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
@@ -106,7 +106,6 @@ Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(result);
 }
 
-PG_FUNCTION_INFO_V1(pgq3c_radial_query);
 PG_FUNCTION_INFO_V1(q3c_radial_query_support);
 
 Datum q3c_radial_query_support(PG_FUNCTION_ARGS)
