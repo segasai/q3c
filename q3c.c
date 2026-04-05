@@ -38,6 +38,9 @@
 #include "access/tupmacs.h"
 #endif
 //#include "nodes/relation.h"
+#include "nodes/supportnodes.h"
+#include "nodes/makefuncs.h"
+#include "nodes/nodeFuncs.h"
 #include "utils/selfuncs.h"
 
 
@@ -67,6 +70,209 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS);
+#include "parser/parse_func.h"
+
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t center_ra = PG_GETARG_FLOAT8(2);
+	q3c_coord_t center_dec = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	q3c_coord_t dist = q3c_sindist(ra, dec, center_ra, center_dec);
+	q3c_coord_t rad_sin = sin(radius * M_PI / 180.0 / 2.0);
+	bool result = dist < (rad_sin * rad_sin);
+
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_real);
+
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_coord_t center_ra = PG_GETARG_FLOAT8(2);
+	q3c_coord_t center_dec = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	q3c_coord_t dist = q3c_sindist(ra, dec, center_ra, center_dec);
+	q3c_coord_t rad_sin = sin(radius * M_PI / 180.0 / 2.0);
+	bool result = dist < (rad_sin * rad_sin);
+
+	PG_RETURN_BOOL(result);
+}
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query);
+PG_FUNCTION_INFO_V1(q3c_radial_query_support);
+
+Datum q3c_radial_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+
+	if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req = (SupportRequestSelectivity *) rawreq;
+		List *args = req->args;
+
+		if (list_length(args) == 5)
+		{
+			Node *radius_node = estimate_expression_value(req->root, list_nth(args, 4));
+			if (IsA(radius_node, Const) && !((Const *)radius_node)->constisnull)
+			{
+				float8 radius = DatumGetFloat8(((Const *)radius_node)->constvalue);
+				double rad_sin = sin(radius * M_PI / 180.0 / 2.0);
+				double ratio = rad_sin * rad_sin;
+
+				CLAMP_PROBABILITY(ratio);
+				req->selectivity = ratio;
+				PG_RETURN_POINTER(req);
+			}
+		}
+		PG_RETURN_POINTER(NULL);
+	}
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+		FuncExpr *fcall = req->fcall;
+
+		float8 ra_cen;
+		float8 dec_cen;
+		float8 radius;
+		Oid arg_type0;
+		Oid arg_type1;
+		Oid argtypes2[2];
+		Oid q3c_ang2ipix_oid;
+		Oid argtypes5[5];
+		Oid q3c_radial_query_base_oid;
+		extern struct q3c_prm hprm;
+		q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+		q3c_ipix_t fulls[2 * Q3C_NFULLS];
+		List *or_args = NIL;
+		Expr *or_expr;
+		FuncExpr *base_call;
+		Expr *final_expr;
+		int i;
+
+		Node *ra_expr = list_nth(fcall->args, 0);
+		Node *dec_expr = list_nth(fcall->args, 1);
+		Node *center_ra_node = list_nth(fcall->args, 2);
+		Node *center_dec_node = list_nth(fcall->args, 3);
+		Node *radius_node = list_nth(fcall->args, 4);
+
+		arg_type0 = exprType(ra_expr);
+		arg_type1 = exprType(dec_expr);
+
+		argtypes5[0] = arg_type0;
+		argtypes5[1] = arg_type1;
+		argtypes5[2] = FLOAT8OID;
+		argtypes5[3] = FLOAT8OID;
+		argtypes5[4] = FLOAT8OID;
+		q3c_radial_query_base_oid = LookupFuncName(list_make1(makeString("q3c_radial_query_base")), 5, argtypes5, true);
+
+		if (fcall->funcid == q3c_radial_query_base_oid)
+		{
+			PG_RETURN_POINTER(NULL);
+		}
+
+		if (!IsA(center_ra_node, Const) ||
+			!IsA(center_dec_node, Const) ||
+			!IsA(radius_node, Const))
+		{
+			PG_RETURN_POINTER(NULL);
+		}
+
+		if (((Const *)center_ra_node)->constisnull ||
+			((Const *)center_dec_node)->constisnull ||
+			((Const *)radius_node)->constisnull)
+		{
+			PG_RETURN_POINTER(NULL);
+		}
+
+		ra_cen = DatumGetFloat8(((Const *)center_ra_node)->constvalue);
+		dec_cen = DatumGetFloat8(((Const *)center_dec_node)->constvalue);
+		radius = DatumGetFloat8(((Const *)radius_node)->constvalue);
+
+		ra_cen = UNWRAP_RA(ra_cen);
+		if (q3c_fabs(dec_cen) > 90)
+		{
+			PG_RETURN_POINTER(NULL);
+		}
+
+		argtypes2[0] = arg_type0;
+		argtypes2[1] = arg_type1;
+		q3c_ang2ipix_oid = LookupFuncName(list_make1(makeString("q3c_ang2ipix")), 2, argtypes2, true);
+
+		if (!OidIsValid(q3c_ang2ipix_oid) || !OidIsValid(q3c_radial_query_base_oid))
+		{
+			PG_RETURN_POINTER(NULL);
+		}
+
+		q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+
+		/* Process full ranges */
+		for (i = 0; i < Q3C_NFULLS; i++)
+		{
+			q3c_ipix_t min_val = fulls[2 * i];
+			q3c_ipix_t max_val = fulls[2 * i + 1];
+			FuncExpr *ang2ipix;
+			OpExpr *ge;
+			OpExpr *lt;
+			Expr *and_expr;
+			
+			if (min_val > max_val)
+			{
+				break;
+			}
+			
+			ang2ipix = makeFuncExpr(q3c_ang2ipix_oid, INT8OID, list_make2(copyObject(ra_expr), copyObject(dec_expr)), InvalidOid, InvalidOid, COERCE_EXPLICIT_CALL);
+			ge = (OpExpr*)make_opclause(415, BOOLOID, false, (Expr*)copyObject(ang2ipix), (Expr*)makeConst(INT8OID, -1, InvalidOid, sizeof(int64), Int64GetDatum(min_val), false, true), InvalidOid, InvalidOid);
+			lt = (OpExpr*)make_opclause(412, BOOLOID, false, (Expr*)copyObject(ang2ipix), (Expr*)makeConst(INT8OID, -1, InvalidOid, sizeof(int64), Int64GetDatum(max_val), false, true), InvalidOid, InvalidOid);
+			and_expr = (Expr*)makeBoolExpr(AND_EXPR, list_make2(ge, lt), -1);
+			or_args = lappend(or_args, and_expr);
+		}
+
+		/* Process partial ranges */
+		for (i = 0; i < Q3C_NPARTIALS; i++)
+		{
+			q3c_ipix_t min_val = partials[2 * i];
+			q3c_ipix_t max_val = partials[2 * i + 1];
+			FuncExpr *ang2ipix;
+			OpExpr *ge;
+			OpExpr *lt;
+			Expr *and_expr;
+			
+			if (min_val > max_val)
+			{
+				break;
+			}
+			
+			ang2ipix = makeFuncExpr(q3c_ang2ipix_oid, INT8OID, list_make2(copyObject(ra_expr), copyObject(dec_expr)), InvalidOid, InvalidOid, COERCE_EXPLICIT_CALL);
+			ge = (OpExpr*)make_opclause(415, BOOLOID, false, (Expr*)copyObject(ang2ipix), (Expr*)makeConst(INT8OID, -1, InvalidOid, sizeof(int64), Int64GetDatum(min_val), false, true), InvalidOid, InvalidOid);
+			lt = (OpExpr*)make_opclause(412, BOOLOID, false, (Expr*)copyObject(ang2ipix), (Expr*)makeConst(INT8OID, -1, InvalidOid, sizeof(int64), Int64GetDatum(max_val), false, true), InvalidOid, InvalidOid);
+			and_expr = (Expr*)makeBoolExpr(AND_EXPR, list_make2(ge, lt), -1);
+			or_args = lappend(or_args, and_expr);
+		}
+
+		if (or_args == NIL)
+		{
+			/* No ranges, just return false */
+			PG_RETURN_POINTER(makeConst(BOOLOID, -1, InvalidOid, sizeof(bool), BoolGetDatum(false), false, true));
+		}
+
+		or_expr = (Expr*)makeBoolExpr(OR_EXPR, or_args, -1);
+		base_call = makeFuncExpr(q3c_radial_query_base_oid, BOOLOID, list_make5(copyObject(ra_expr), copyObject(dec_expr), copyObject(center_ra_node), copyObject(center_dec_node), copyObject(radius_node)), InvalidOid, InvalidOid, COERCE_EXPLICIT_CALL);
+		final_expr = (Expr*)makeBoolExpr(AND_EXPR, list_make2(or_expr, base_call), -1);
+
+		PG_RETURN_POINTER(final_expr);
+	}
+
+	PG_RETURN_POINTER(NULL);
+}
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
