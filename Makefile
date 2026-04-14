@@ -17,6 +17,7 @@ SHLIB_LINK += $(filter -lm, $(LIBS))
 EXTRA_CLEAN = dump.c prepare prepare.o gen_data.o \
 			results/join.out results/cone.out results/ellipse.out \
 			results/version.out results/poly.out results/area.out \
+			results/support.out results/relocation_support.out \
 			gen_data
 ifeq ($(Q3C_NOOPT),1)
 	OPT = -O0
@@ -106,12 +107,20 @@ test: gen_data
 	diff results/area.out expected/area.expected
 	cat sql/errors.sql | psql q3c_test > results/errors.out 2>&1
 	diff results/errors.out expected/errors.expected
+	cat sql/support.sql | psql q3c_test > results/support.out
+	grep -F "Bitmap Index Scan on q3c_idx" results/support.out
+	grep -F "q3c_radial_query_exact(test.ra, test.\"dec\", '11'::double precision" results/support.out
+	grep -F 'q3c_radial_query_it($$1, $$2, $$3, 0, 1)' results/support.out
+	grep -F 'q3c_radial_query_exact(test.ra, test."dec", $$1, $$2, $$3)' results/support.out
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c 'CREATE EXTENSION q3c VERSION "1.6.0"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.7.0"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "1.8.0"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.0"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.1"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.2"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "3.0.0"'
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"
@@ -121,9 +130,14 @@ test: gen_data
 
 	psql q3c_test -c 'CREATE schema tests'
 	psql q3c_test -c 'CREATE EXTENSION q3c schema tests'
+	psql q3c_test -c 'CREATE INDEX q3c_idx_reloc ON test (tests.q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'set search_path to public,tests; CREATE INDEX q3c_idx1 ON test1 (q3c_ang2ipix(ra,dec))'
 	psql q3c_test -c 'ANALYZE test'
 	psql q3c_test -c 'ANALYZE test1'
 	cat sql/relocation.sql | psql q3c_test > results/relocation.out
 	diff results/relocation.out expected/relocation.expected
+	cat sql/relocation_support.sql | psql q3c_test > results/relocation_support.out
+	grep -F "Bitmap Index Scan on q3c_idx_reloc" results/relocation_support.out
+	grep -F "tests.q3c_radial_query_it(" results/relocation_support.out
+	grep -F "tests.q3c_radial_query_exact(" results/relocation_support.out
 	dropdb q3c_test

@@ -25,7 +25,15 @@
 
 /* Postgres stuff */
 #include "postgres.h"
+#include "access/stratnum.h"
+#include "catalog/namespace.h"
+#include "catalog/pg_opfamily_d.h"
 #include "executor/spi.h"
+#include "nodes/makefuncs.h"
+#include "nodes/nodeFuncs.h"
+#include "nodes/supportnodes.h"
+#include "optimizer/clauses.h"
+#include "parser/parse_func.h"
 #include "utils/lsyscache.h"
 /* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
@@ -67,6 +75,11 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_exact(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_exact_real(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
@@ -78,6 +91,27 @@ Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_seloper(PG_FUNCTION_ARGS);
+
+static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra,
+								q3c_coord_t *in_dec, int *nvert);
+static Oid q3c_lookup_function_in_namespace(Oid reference_funcid,
+											const char *proname,
+											int nargs,
+											const Oid *argtypes);
+static Oid q3c_lookup_bigint_operator(StrategyNumber strategy);
+static Const *q3c_make_int4_const(int32 value);
+static FuncExpr *q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec);
+static FuncExpr *q3c_make_radial_query_it_call(Oid funcid, Expr *ra_cen,
+											   Expr *dec_cen, Expr *radius,
+											   int32 iteration,
+											   int32 full_flag);
+static Expr *q3c_build_radial_query_simplified_clause(Oid funcid, List *args);
+static bool q3c_estimate_radial_radius(PlannerInfo *root, Node *radius_node,
+									   double *radius);
+static bool q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec,
+								   q3c_coord_t ra_cen,
+								   q3c_coord_t dec_cen,
+								   q3c_coord_t radius);
 
 
 /* Dummy function that implements the selectivity operator */
@@ -173,7 +207,283 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(ratio);
 }
 
-static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert);
+
+static Oid
+q3c_lookup_function_in_namespace(Oid reference_funcid, const char *proname,
+								 int nargs, const Oid *argtypes)
+{
+	Oid nspid;
+	Oid funcid;
+	char *nspname;
+	List *qualified_name;
+
+	nspid = get_func_namespace(reference_funcid);
+	if (!OidIsValid(nspid))
+	{
+		elog(ERROR, "could not resolve namespace for function %u", reference_funcid);
+	}
+
+	nspname = get_namespace_name(nspid);
+	if (nspname == NULL)
+	{
+		elog(ERROR, "could not resolve namespace name for namespace %u", nspid);
+	}
+
+	qualified_name = list_make2(makeString(nspname),
+								makeString(pstrdup(proname)));
+	funcid = LookupFuncName(qualified_name, nargs, argtypes, false);
+
+	if (!OidIsValid(funcid))
+	{
+		elog(ERROR, "could not resolve function %s in namespace %s",
+			 proname, nspname);
+	}
+
+	return funcid;
+}
+
+
+static Oid
+q3c_lookup_bigint_operator(StrategyNumber strategy)
+{
+	Oid opid;
+
+	opid = get_opfamily_member(INTEGER_BTREE_FAM_OID, INT8OID, INT8OID,
+							   strategy);
+	if (!OidIsValid(opid))
+	{
+		elog(ERROR, "missing bigint operator for btree strategy %d",
+			 (int) strategy);
+	}
+
+	return opid;
+}
+
+
+static Const *
+q3c_make_int4_const(int32 value)
+{
+	return makeConst(INT4OID, -1, InvalidOid, sizeof(int32),
+					 Int32GetDatum(value), false, true);
+}
+
+
+static FuncExpr *
+q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec)
+{
+	List *args;
+
+	args = list_make2(copyObject(ra), copyObject(dec));
+	return makeFuncExpr(funcid, INT8OID, args, InvalidOid, InvalidOid,
+						COERCE_EXPLICIT_CALL);
+}
+
+
+static FuncExpr *
+q3c_make_radial_query_it_call(Oid funcid, Expr *ra_cen, Expr *dec_cen,
+							  Expr *radius, int32 iteration, int32 full_flag)
+{
+	List *args;
+
+	args = list_make5(copyObject(ra_cen),
+					  copyObject(dec_cen),
+					  copyObject(radius),
+					  q3c_make_int4_const(iteration),
+					  q3c_make_int4_const(full_flag));
+	return makeFuncExpr(funcid, INT8OID, args, InvalidOid, InvalidOid,
+						COERCE_EXPLICIT_CALL);
+}
+
+
+static Expr *
+q3c_build_radial_query_simplified_clause(Oid funcid, List *args)
+{
+	Oid ang2ipix_argtypes[2];
+	Oid radial_query_it_argtypes[5];
+	Oid exact_argtypes[5];
+	Oid ang2ipix_funcid;
+	Oid radial_query_it_funcid;
+	Oid exact_funcid;
+	Oid ge_opid;
+	Oid lt_opid;
+	Expr *ra;
+	Expr *dec;
+	Expr *ra_cen;
+	Expr *dec_cen;
+	Expr *radius;
+	Expr *exact_clause;
+	List *or_clauses = NIL;
+	int i;
+
+	if (list_length(args) != 5)
+	{
+		return NULL;
+	}
+
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+	ra_cen = (Expr *) lthird(args);
+	dec_cen = (Expr *) lfourth(args);
+	radius = (Expr *) llast(args);
+
+	ang2ipix_argtypes[0] = exprType((Node *) ra);
+	ang2ipix_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[0] = ang2ipix_argtypes[0];
+	exact_argtypes[1] = ang2ipix_argtypes[1];
+	exact_argtypes[2] = FLOAT8OID;
+	exact_argtypes[3] = FLOAT8OID;
+	exact_argtypes[4] = FLOAT8OID;
+	radial_query_it_argtypes[0] = FLOAT8OID;
+	radial_query_it_argtypes[1] = FLOAT8OID;
+	radial_query_it_argtypes[2] = FLOAT8OID;
+	radial_query_it_argtypes[3] = INT4OID;
+	radial_query_it_argtypes[4] = INT4OID;
+
+	ang2ipix_funcid = q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix",
+													   2, ang2ipix_argtypes);
+	radial_query_it_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_radial_query_it", 5,
+										 radial_query_it_argtypes);
+	exact_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_radial_query_exact", 5,
+										 exact_argtypes);
+	ge_opid = q3c_lookup_bigint_operator(BTGreaterEqualStrategyNumber);
+	lt_opid = q3c_lookup_bigint_operator(BTLessStrategyNumber);
+
+	for (i = 0; i < 2 * Q3C_NFULLS; i += 2)
+	{
+		Expr *lower_cmp;
+		Expr *upper_cmp;
+
+		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_radial_query_it_call(
+									  radial_query_it_funcid, ra_cen, dec_cen,
+									  radius, i, 1),
+								  InvalidOid, InvalidOid);
+		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_radial_query_it_call(
+									  radial_query_it_funcid, ra_cen, dec_cen,
+									  radius, i + 1, 1),
+								  InvalidOid, InvalidOid);
+		or_clauses = lappend(or_clauses,
+							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+	}
+
+	for (i = 0; i < 2 * Q3C_NPARTIALS; i += 2)
+	{
+		Expr *lower_cmp;
+		Expr *upper_cmp;
+
+		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_radial_query_it_call(
+									  radial_query_it_funcid, ra_cen, dec_cen,
+									  radius, i, 0),
+								  InvalidOid, InvalidOid);
+		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_radial_query_it_call(
+									  radial_query_it_funcid, ra_cen, dec_cen,
+									  radius, i + 1, 0),
+								  InvalidOid, InvalidOid);
+		or_clauses = lappend(or_clauses,
+							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+	}
+
+	exact_clause = (Expr *) makeFuncExpr(exact_funcid, BOOLOID,
+										 list_make5(copyObject(ra),
+													copyObject(dec),
+													copyObject(ra_cen),
+													copyObject(dec_cen),
+													copyObject(radius)),
+										 InvalidOid, InvalidOid,
+										 COERCE_EXPLICIT_CALL);
+
+	if (or_clauses == NIL)
+	{
+		return exact_clause;
+	}
+
+	return make_andclause(list_make2(make_orclause(or_clauses), exact_clause));
+}
+
+
+static bool
+q3c_estimate_radial_radius(PlannerInfo *root, Node *radius_node, double *radius)
+{
+	Node *estimated;
+	Const *radius_const;
+
+	if (radius == NULL)
+	{
+		return false;
+	}
+
+	if (radius_node == NULL)
+	{
+		return false;
+	}
+
+	estimated = radius_node;
+	if (root != NULL)
+	{
+		estimated = estimate_expression_value(root, radius_node);
+	}
+
+	if (estimated == NULL || !IsA(estimated, Const))
+	{
+		return false;
+	}
+
+	radius_const = (Const *) estimated;
+	if (radius_const->constisnull)
+	{
+		*radius = 0;
+		return true;
+	}
+
+	*radius = DatumGetFloat8(radius_const->constvalue);
+	if (!isfinite(*radius))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+static bool
+q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec, q3c_coord_t ra_cen,
+					   q3c_coord_t dec_cen, q3c_coord_t radius)
+{
+	q3c_coord_t threshold;
+	q3c_coord_t distance;
+
+	if ((!isfinite(ra)) || (!isfinite(dec)) ||
+		(!isfinite(ra_cen)) || (!isfinite(dec_cen)) ||
+		(!isfinite(radius)))
+	{
+		return false;
+	}
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen) > 90)
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
+	threshold = sin(radius * Q3C_DEGRA / 2);
+	threshold *= threshold;
+	distance = q3c_sindist(ra, dec, ra_cen, dec_cen);
+
+	return distance < threshold;
+}
 
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
@@ -796,6 +1106,94 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	{
 		PG_RETURN_INT64(partials[iteration]);
 	}
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_exact);
+Datum pgq3c_radial_query_exact(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_exact_real);
+Datum pgq3c_radial_query_exact_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query);
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_real);
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_support);
+Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_radial_query_simplified_clause(
+			req->fcall->funcid, req->fcall->args);
+	}
+	else if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req;
+		double radius;
+		double ratio;
+
+		req = (SupportRequestSelectivity *) rawreq;
+
+		if (!req->is_join && list_length(req->args) == 5 &&
+			q3c_estimate_radial_radius(req->root, (Node *) llast(req->args),
+									   &radius))
+		{
+			ratio = 3.14159265358979323846 * radius * radius / 41252.0;
+			CLAMP_PROBABILITY(ratio);
+			req->selectivity = ratio;
+			ret = (Node *) req;
+		}
+	}
+
+	PG_RETURN_POINTER(ret);
 }
 
 
