@@ -354,6 +354,11 @@ q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
 		Expr *lower_cmp;
 		Expr *upper_cmp;
 
+		if (fulls[i] == 1 && fulls[i + 1] == -1)
+		{
+			break;
+		}
+
 		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
 								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
 																  ra, dec),
@@ -372,6 +377,11 @@ q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
 	{
 		Expr *lower_cmp;
 		Expr *upper_cmp;
+
+		if (partials[i] == 1 && partials[i + 1] == -1)
+		{
+			break;
+		}
 
 		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
 								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
