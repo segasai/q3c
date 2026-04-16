@@ -81,6 +81,8 @@ Datum pgq3c_radial_query_exact(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_exact_real(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_query(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
@@ -101,14 +103,31 @@ static Oid q3c_lookup_function_in_namespace(Oid reference_funcid,
 static Oid q3c_lookup_bigint_operator(StrategyNumber strategy);
 static Const *q3c_make_int8_const(int64 value);
 static FuncExpr *q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec);
+static Expr *q3c_build_range_or_clause(Oid ang2ipix_funcid, Oid ge_opid,
+									   Oid lt_opid, Expr *ra, Expr *dec,
+									   const q3c_ipix_t *ranges, int nranges);
+static Expr *q3c_build_ranged_query_clause(Oid funcid, Expr *ra, Expr *dec,
+										   const char *exact_name,
+										   const Oid *exact_argtypes,
+										   int exact_nargs, List *exact_args,
+										   const q3c_ipix_t *fulls,
+										   const q3c_ipix_t *partials);
 static Expr *q3c_build_radial_query_simplified_clause(PlannerInfo *root,
 													  Oid funcid, List *args);
+static Expr *q3c_build_ellipse_query_simplified_clause(PlannerInfo *root,
+													   Oid funcid, List *args);
 static bool q3c_estimate_float8_expr(PlannerInfo *root, Node *node,
 									 double *value);
 static bool q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec,
 								   q3c_coord_t ra_cen,
 								   q3c_coord_t dec_cen,
 								   q3c_coord_t radius);
+static bool q3c_ellipse_query_match(q3c_coord_t ra, q3c_coord_t dec,
+									q3c_coord_t ra_cen,
+									q3c_coord_t dec_cen,
+									q3c_coord_t semimajax,
+									q3c_coord_t axis_ratio,
+									q3c_coord_t PA);
 
 
 /* Dummy function that implements the selectivity operator */
@@ -286,29 +305,128 @@ q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec)
 
 
 static Expr *
-q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
-										 List *args)
+q3c_build_range_or_clause(Oid ang2ipix_funcid, Oid ge_opid, Oid lt_opid,
+						  Expr *ra, Expr *dec, const q3c_ipix_t *ranges,
+						  int nranges)
 {
-	extern struct q3c_prm hprm;
+	List *or_clauses = NIL;
+	int i;
+
+	for (i = 0; i < nranges; i += 2)
+	{
+		Expr *lower_cmp;
+		Expr *upper_cmp;
+
+		if (ranges[i] == 1 && ranges[i + 1] == -1)
+		{
+			break;
+		}
+
+		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_int8_const(ranges[i]),
+								  InvalidOid, InvalidOid);
+		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_int8_const(ranges[i + 1]),
+								  InvalidOid, InvalidOid);
+		or_clauses = lappend(or_clauses,
+							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+	}
+
+	if (or_clauses == NIL)
+	{
+		return NULL;
+	}
+
+	return make_orclause(or_clauses);
+}
+
+
+static Expr *
+q3c_build_ranged_query_clause(Oid funcid, Expr *ra, Expr *dec,
+							  const char *exact_name,
+							  const Oid *exact_argtypes,
+							  int exact_nargs, List *exact_args,
+							  const q3c_ipix_t *fulls,
+							  const q3c_ipix_t *partials)
+{
 	Oid ang2ipix_argtypes[2];
-	Oid exact_argtypes[5];
 	Oid ang2ipix_funcid;
 	Oid exact_funcid;
 	Oid ge_opid;
 	Oid lt_opid;
+	Expr *full_clause;
+	Expr *partial_clause;
+	Expr *exact_clause;
+	List *range_clauses = NIL;
+	Expr *range_clause;
+
+	ang2ipix_argtypes[0] = exprType((Node *) ra);
+	ang2ipix_argtypes[1] = exprType((Node *) dec);
+
+	ang2ipix_funcid = q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix",
+													   2, ang2ipix_argtypes);
+	exact_funcid =
+		q3c_lookup_function_in_namespace(funcid, exact_name, exact_nargs,
+										 exact_argtypes);
+	ge_opid = q3c_lookup_bigint_operator(BTGreaterEqualStrategyNumber);
+	lt_opid = q3c_lookup_bigint_operator(BTLessStrategyNumber);
+
+	full_clause = q3c_build_range_or_clause(ang2ipix_funcid, ge_opid, lt_opid,
+											ra, dec, fulls,
+											2 * Q3C_NFULLS);
+	partial_clause = q3c_build_range_or_clause(ang2ipix_funcid, ge_opid, lt_opid,
+											   ra, dec, partials,
+											   2 * Q3C_NPARTIALS);
+
+	if (full_clause != NULL)
+	{
+		range_clauses = lappend(range_clauses, full_clause);
+	}
+	if (partial_clause != NULL)
+	{
+		range_clauses = lappend(range_clauses, partial_clause);
+	}
+
+	exact_clause = (Expr *) makeFuncExpr(exact_funcid, BOOLOID,
+										 copyObject(exact_args),
+										 InvalidOid, InvalidOid,
+										 COERCE_EXPLICIT_CALL);
+
+	if (range_clauses == NIL)
+	{
+		return exact_clause;
+	}
+
+	if (list_length(range_clauses) == 1)
+	{
+		range_clause = (Expr *) linitial(range_clauses);
+	}
+	else
+	{
+		range_clause = make_orclause(range_clauses);
+	}
+
+	return make_andclause(list_make2(range_clause, exact_clause));
+}
+
+
+static Expr *
+q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
+										 List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[5];
 	Expr *ra;
 	Expr *dec;
-	Expr *ra_cen;
-	Expr *dec_cen;
-	Expr *radius;
-	Expr *exact_clause;
-	List *or_clauses = NIL;
 	q3c_coord_t ra_cen_value;
 	q3c_coord_t dec_cen_value;
 	q3c_coord_t radius_value;
 	q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
-	int i;
 
 	if (list_length(args) != 5)
 	{
@@ -317,29 +435,16 @@ q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
 
 	ra = (Expr *) linitial(args);
 	dec = (Expr *) lsecond(args);
-	ra_cen = (Expr *) lthird(args);
-	dec_cen = (Expr *) lfourth(args);
-	radius = (Expr *) llast(args);
 
-	ang2ipix_argtypes[0] = exprType((Node *) ra);
-	ang2ipix_argtypes[1] = exprType((Node *) dec);
-	exact_argtypes[0] = ang2ipix_argtypes[0];
-	exact_argtypes[1] = ang2ipix_argtypes[1];
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
 	exact_argtypes[2] = FLOAT8OID;
 	exact_argtypes[3] = FLOAT8OID;
 	exact_argtypes[4] = FLOAT8OID;
 
-	ang2ipix_funcid = q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix",
-													   2, ang2ipix_argtypes);
-	exact_funcid =
-		q3c_lookup_function_in_namespace(funcid, "q3c_radial_query_exact", 5,
-										 exact_argtypes);
-	ge_opid = q3c_lookup_bigint_operator(BTGreaterEqualStrategyNumber);
-	lt_opid = q3c_lookup_bigint_operator(BTLessStrategyNumber);
-
-	if (!q3c_estimate_float8_expr(root, (Node *) ra_cen, &ra_cen_value) ||
-		!q3c_estimate_float8_expr(root, (Node *) dec_cen, &dec_cen_value) ||
-		!q3c_estimate_float8_expr(root, (Node *) radius, &radius_value))
+	if (!q3c_estimate_float8_expr(root, (Node *) lthird(args), &ra_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) lfourth(args), &dec_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) llast(args), &radius_value))
 	{
 		return NULL;
 	}
@@ -347,69 +452,63 @@ q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
 	q3c_radial_query(&hprm, ra_cen_value, dec_cen_value, radius_value,
 					 fulls, partials);
 
-	for (i = 0; i < 2 * Q3C_NFULLS; i += 2)
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_radial_query_exact",
+										 exact_argtypes, 5, args,
+										 fulls, partials);
+}
+
+
+static Expr *
+q3c_build_ellipse_query_simplified_clause(PlannerInfo *root, Oid funcid,
+										  List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[7];
+	Expr *ra;
+	Expr *dec;
+	double ra_cen_value;
+	double dec_cen_value;
+	double semimajax_value;
+	double axis_ratio_value;
+	double PA_value;
+	double ell_value;
+	q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+
+	if (list_length(args) != 7)
 	{
-		Expr *lower_cmp;
-		Expr *upper_cmp;
-
-		if (fulls[i] == 1 && fulls[i + 1] == -1)
-		{
-			break;
-		}
-
-		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
-								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
-																  ra, dec),
-								  (Expr *) q3c_make_int8_const(fulls[i]),
-								  InvalidOid, InvalidOid);
-		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
-								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
-																  ra, dec),
-								  (Expr *) q3c_make_int8_const(fulls[i + 1]),
-								  InvalidOid, InvalidOid);
-		or_clauses = lappend(or_clauses,
-							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+		return NULL;
 	}
 
-	for (i = 0; i < 2 * Q3C_NPARTIALS; i += 2)
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[2] = FLOAT8OID;
+	exact_argtypes[3] = FLOAT8OID;
+	exact_argtypes[4] = FLOAT8OID;
+	exact_argtypes[5] = FLOAT8OID;
+	exact_argtypes[6] = FLOAT8OID;
+
+	if (!q3c_estimate_float8_expr(root, (Node *) lthird(args), &ra_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) lfourth(args), &dec_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 4), &semimajax_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 5), &axis_ratio_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 6), &PA_value))
 	{
-		Expr *lower_cmp;
-		Expr *upper_cmp;
-
-		if (partials[i] == 1 && partials[i + 1] == -1)
-		{
-			break;
-		}
-
-		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
-								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
-																  ra, dec),
-								  (Expr *) q3c_make_int8_const(partials[i]),
-								  InvalidOid, InvalidOid);
-		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
-								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
-																  ra, dec),
-								  (Expr *) q3c_make_int8_const(partials[i + 1]),
-								  InvalidOid, InvalidOid);
-		or_clauses = lappend(or_clauses,
-							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+		return NULL;
 	}
 
-	exact_clause = (Expr *) makeFuncExpr(exact_funcid, BOOLOID,
-										 list_make5(copyObject(ra),
-													copyObject(dec),
-													copyObject(ra_cen),
-													copyObject(dec_cen),
-													copyObject(radius)),
-										 InvalidOid, InvalidOid,
-										 COERCE_EXPLICIT_CALL);
+	ell_value = q3c_sqrt(1 - axis_ratio_value * axis_ratio_value);
+	q3c_ellipse_query(&hprm, ra_cen_value, dec_cen_value, semimajax_value,
+					  ell_value, PA_value, fulls, partials);
 
-	if (or_clauses == NIL)
-	{
-		return exact_clause;
-	}
-
-	return make_andclause(list_make2(make_orclause(or_clauses), exact_clause));
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_in_ellipse",
+										 exact_argtypes, 7, args,
+										 fulls, partials);
 }
 
 
@@ -476,6 +575,32 @@ q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec, q3c_coord_t ra_cen,
 	distance = q3c_sindist(ra, dec, ra_cen, dec_cen);
 
 	return distance < threshold;
+}
+
+
+static bool
+q3c_ellipse_query_match(q3c_coord_t ra, q3c_coord_t dec, q3c_coord_t ra_cen,
+						q3c_coord_t dec_cen, q3c_coord_t semimajax,
+						q3c_coord_t axis_ratio, q3c_coord_t PA)
+{
+	q3c_coord_t e;
+
+	if ((!isfinite(ra)) || (!isfinite(dec)) ||
+		(!isfinite(ra_cen)) || (!isfinite(dec_cen)) ||
+		(!isfinite(semimajax)) || (!isfinite(axis_ratio)) ||
+		(!isfinite(PA)))
+	{
+		return false;
+	}
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen) > 90)
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
+	e = q3c_sqrt(1 - axis_ratio * axis_ratio);
+	return q3c_in_ellipse(ra_cen, dec_cen, ra, dec, semimajax, e, PA);
 }
 
 
@@ -1190,13 +1315,68 @@ Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_query);
+Datum pgq3c_ellipse_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t semimajax = PG_GETARG_FLOAT8(4);
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5);
+	q3c_coord_t PA = PG_GETARG_FLOAT8(6);
+
+	PG_RETURN_BOOL(q3c_ellipse_query_match(ra, dec, ra_cen, dec_cen,
+										   semimajax, axis_ratio, PA));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_support);
+Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_ellipse_query_simplified_clause(
+			req->root, req->fcall->funcid, req->fcall->args);
+	}
+	else if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req;
+		double semimajax;
+		double axis_ratio;
+		double ratio;
+
+		req = (SupportRequestSelectivity *) rawreq;
+
+		if (!req->is_join && list_length(req->args) == 7 &&
+			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 4),
+									 &semimajax) &&
+			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 5),
+									 &axis_ratio))
+		{
+			ratio = 3.14159265358979323846 * semimajax * semimajax * axis_ratio / 41252.0;
+			CLAMP_PROBABILITY(ratio);
+			req->selectivity = ratio;
+			ret = (Node *) req;
+		}
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
 PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_it);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 {
 	extern struct q3c_prm hprm;
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0);
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
-	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* Major axis */
+	q3c_coord_t semimajax = PG_GETARG_FLOAT8(2); /* Semi-major axis */
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* Axis ratio */
 	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
 	int iteration = PG_GETARG_INT32(5); /* iteration */
@@ -1204,7 +1384,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	/* 1 means full, 0 means partial */
 
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, semimajax_buf;
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
@@ -1231,7 +1411,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (semimajax == semimajax_buf))
 		{
 			if (full_flag)
 			{
@@ -1244,12 +1424,12 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
+	q3c_ellipse_query(&hprm, ra_cen, dec_cen, semimajax, ell, PA, fulls,
 	                  partials);
 
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
-	radius_buf = radius;
+	semimajax_buf = semimajax;
 	invocation = 1;
 
 	if (full_flag)
@@ -1609,17 +1789,16 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
 {
-
 	q3c_coord_t ra = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3); // dec_cen
-	q3c_coord_t radius = PG_GETARG_FLOAT8(4); // error radius
+	q3c_coord_t semimajax = PG_GETARG_FLOAT8(4); // semi-major axis
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5); // axis_ratio
 	q3c_coord_t PA = PG_GETARG_FLOAT8(6); // PA
-	q3c_coord_t e = q3c_sqrt(1 - axis_ratio * axis_ratio);
-	bool result = q3c_in_ellipse(ra_cen, dec_cen, ra,dec, radius, e, PA);
-	PG_RETURN_BOOL(result);
+
+	PG_RETURN_BOOL(q3c_ellipse_query_match(ra, dec, ra_cen, dec_cen,
+										   semimajax, axis_ratio, PA));
 }
 
 
