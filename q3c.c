@@ -83,11 +83,18 @@ Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_real(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query1(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query1_real(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
+Datum pgq3c_in_poly_real(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly1(PG_FUNCTION_ARGS);
+Datum pgq3c_in_poly1_real(PG_FUNCTION_ARGS);
 
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
@@ -96,6 +103,8 @@ Datum pgq3c_seloper(PG_FUNCTION_ARGS);
 
 static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra,
 								q3c_coord_t *in_dec, int *nvert);
+static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra,
+							   q3c_coord_t *dec, int *nvert);
 static Oid q3c_lookup_function_in_namespace(Oid reference_funcid,
 											const char *proname,
 											int nargs,
@@ -116,8 +125,25 @@ static Expr *q3c_build_radial_query_simplified_clause(PlannerInfo *root,
 													  Oid funcid, List *args);
 static Expr *q3c_build_ellipse_query_simplified_clause(PlannerInfo *root,
 													   Oid funcid, List *args);
+static Expr *q3c_build_poly_query_simplified_clause(PlannerInfo *root,
+													Oid funcid, List *args);
+static bool q3c_estimate_const_expr(PlannerInfo *root, Node *node,
+									Const **value_const);
 static bool q3c_estimate_float8_expr(PlannerInfo *root, Node *node,
 									 double *value);
+static bool q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
+								   q3c_coord_t *ra, q3c_coord_t *dec,
+								   int *nvert);
+static double q3c_polygon_perimeter(const q3c_coord_t *ra,
+									const q3c_coord_t *dec, int nvert);
+static bool q3c_poly_query_array_match(FunctionCallInfo fcinfo,
+									   q3c_coord_t ra_cen,
+									   q3c_coord_t dec_cen,
+									   ArrayType *poly_arr);
+static bool q3c_poly_query_polygon_match(FunctionCallInfo fcinfo,
+										 q3c_coord_t ra_cen,
+										 q3c_coord_t dec_cen,
+										 POLYGON *poly);
 static bool q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec,
 								   q3c_coord_t ra_cen,
 								   q3c_coord_t dec_cen,
@@ -513,12 +539,11 @@ q3c_build_ellipse_query_simplified_clause(PlannerInfo *root, Oid funcid,
 
 
 static bool
-q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
+q3c_estimate_const_expr(PlannerInfo *root, Node *node, Const **value_const)
 {
 	Node *estimated;
-	Const *value_const;
 
-	if (value == NULL || node == NULL)
+	if (value_const == NULL || node == NULL)
 	{
 		return false;
 	}
@@ -534,8 +559,80 @@ q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
 		return false;
 	}
 
-	value_const = (Const *) estimated;
-	if (value_const->constisnull)
+	*value_const = (Const *) estimated;
+	return !(*value_const)->constisnull;
+}
+
+
+static Expr *
+q3c_build_poly_query_simplified_clause(PlannerInfo *root, Oid funcid,
+									   List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[3];
+	Oid polytype;
+	Expr *ra;
+	Expr *dec;
+	Expr *poly_expr;
+	q3c_coord_t poly_ra[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_dec[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_x[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_y[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_ax[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_ay[Q3C_MAX_N_POLY_VERTEX];
+	q3c_poly qp;
+	q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	int nvert;
+	char too_large = 0;
+
+	if (list_length(args) != 3)
+	{
+		return NULL;
+	}
+
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+	poly_expr = (Expr *) llast(args);
+	polytype = exprType((Node *) poly_expr);
+
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[2] = polytype;
+
+	if (!q3c_estimate_poly_expr(root, (Node *) poly_expr, polytype,
+								poly_ra, poly_dec, &nvert))
+	{
+		return NULL;
+	}
+
+	qp.n = nvert;
+	qp.ra = poly_ra;
+	qp.dec = poly_dec;
+	qp.x = poly_x;
+	qp.y = poly_y;
+	qp.ax = poly_ax;
+	qp.ay = poly_ay;
+
+	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_in_poly",
+										 exact_argtypes, 3, args,
+										 fulls, partials);
+}
+
+
+static bool
+q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
+{
+	Const *value_const;
+
+	if (value == NULL || !q3c_estimate_const_expr(root, node, &value_const))
 	{
 		return false;
 	}
@@ -547,6 +644,63 @@ q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
 
 	*value = DatumGetFloat8(value_const->constvalue);
 	return isfinite(*value);
+}
+
+
+static bool
+q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
+					   q3c_coord_t *ra, q3c_coord_t *dec, int *nvert)
+{
+	Const *value_const;
+
+	if (ra == NULL || dec == NULL || nvert == NULL ||
+		!q3c_estimate_const_expr(root, node, &value_const))
+	{
+		return false;
+	}
+
+	if (value_const->consttype != polytype)
+	{
+		return false;
+	}
+
+	if (polytype == get_array_type(FLOAT8OID))
+	{
+		convert_pgarray2poly(DatumGetArrayTypeP(value_const->constvalue),
+							 ra, dec, nvert);
+		return true;
+	}
+
+	if (polytype == POLYGONOID)
+	{
+		convert_pgpoly2poly(DatumGetPolygonP(value_const->constvalue),
+							ra, dec, nvert);
+		return true;
+	}
+
+	return false;
+}
+
+
+static double
+q3c_polygon_perimeter(const q3c_coord_t *ra, const q3c_coord_t *dec, int nvert)
+{
+	double perimeter = 0;
+	int i;
+
+	if (ra == NULL || dec == NULL || nvert < 3)
+	{
+		return 0;
+	}
+
+	for (i = 0; i < nvert; i++)
+	{
+		int next = (i + 1) % nvert;
+
+		perimeter += q3c_dist(ra[i], dec[i], ra[next], dec[next]);
+	}
+
+	return perimeter;
 }
 
 
@@ -1370,6 +1524,95 @@ Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(pgq3c_poly_query);
+Datum pgq3c_poly_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra, dec, poly_arr));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_real);
+Datum pgq3c_poly_query_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra, dec, poly_arr));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query1);
+Datum pgq3c_poly_query1(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	POLYGON *poly = PG_GETARG_POLYGON_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra, dec, poly));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query1_real);
+Datum pgq3c_poly_query1_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	POLYGON *poly = PG_GETARG_POLYGON_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra, dec, poly));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_support);
+Datum pgq3c_poly_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_poly_query_simplified_clause(
+			req->root, req->fcall->funcid, req->fcall->args);
+	}
+	else if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req;
+		q3c_coord_t poly_ra[Q3C_MAX_N_POLY_VERTEX];
+		q3c_coord_t poly_dec[Q3C_MAX_N_POLY_VERTEX];
+		double perimeter;
+		double ratio;
+		int nvert;
+		Oid polytype;
+
+		req = (SupportRequestSelectivity *) rawreq;
+
+		if (!req->is_join && list_length(req->args) == 3)
+		{
+			polytype = exprType((Node *) llast(req->args));
+			if (q3c_estimate_poly_expr(req->root, (Node *) llast(req->args),
+									   polytype, poly_ra, poly_dec, &nvert))
+			{
+				perimeter = q3c_polygon_perimeter(poly_ra, poly_dec, nvert);
+				ratio = perimeter * perimeter /
+					(4 * Q3C_PI * 41252.0);
+				CLAMP_PROBABILITY(ratio);
+				req->selectivity = ratio;
+				ret = (Node *) req;
+			}
+		}
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
 PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_it);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 {
@@ -1610,6 +1853,101 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
 }
 
 
+static bool
+q3c_poly_query_array_match(FunctionCallInfo fcinfo, q3c_coord_t ra_cen,
+						   q3c_coord_t dec_cen, ArrayType *poly_arr)
+{
+	extern struct q3c_prm hprm;
+	char too_large = 0;
+	int nvert;
+	int identical;
+	q3c_poly_info_type *qpit;
+
+	if (fcinfo->flinfo->fn_extra == 0)
+	{
+		fcinfo->flinfo->fn_extra =
+			MemoryContextAlloc(fcinfo->flinfo->fn_mcxt,
+							 sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type *) fcinfo->flinfo->fn_extra)->ready = 0;
+	}
+
+	qpit = (q3c_poly_info_type *) fcinfo->flinfo->fn_extra;
+	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) &&
+		qpit->ready;
+
+	if (q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
+									   ra_cen, dec_cen, &too_large, identical,
+									   qpit->xpj, qpit->ypj,
+									   qpit->axpj, qpit->aypj,
+									   qpit->faces,
+									   &(qpit->multi_flag)) == Q3C_DISJUNCT)
+	{
+		if (too_large)
+		{
+			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+		}
+
+		qpit->ready = 1;
+		return false;
+	}
+
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+	qpit->ready = 1;
+	return true;
+}
+
+
+static bool
+q3c_poly_query_polygon_match(FunctionCallInfo fcinfo, q3c_coord_t ra_cen,
+							 q3c_coord_t dec_cen, POLYGON *poly)
+{
+	extern struct q3c_prm hprm;
+	char too_large = 0;
+	int nvert;
+	int identical;
+	q3c_poly_info_type *qpit;
+
+	if (fcinfo->flinfo->fn_extra == 0)
+	{
+		fcinfo->flinfo->fn_extra =
+			MemoryContextAlloc(fcinfo->flinfo->fn_mcxt,
+							 sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type *) fcinfo->flinfo->fn_extra)->ready = 0;
+	}
+
+	qpit = (q3c_poly_info_type *) fcinfo->flinfo->fn_extra;
+	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) &&
+		qpit->ready;
+
+	if (q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
+									   ra_cen, dec_cen, &too_large, identical,
+									   qpit->xpj, qpit->ypj,
+									   qpit->axpj, qpit->aypj,
+									   qpit->faces,
+									   &(qpit->multi_flag)) == Q3C_DISJUNCT)
+	{
+		if (too_large)
+		{
+			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+		}
+
+		qpit->ready = 1;
+		return false;
+	}
+
+	qpit->ready = 1;
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+
+	return true;
+}
+
+
 /* Cache logic here is the following
    when the function is called for the first time with iteration =0
    I compute everything allocate memory and store computations in the static variable
@@ -1812,37 +2150,21 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
-	extern struct q3c_prm hprm;
-	char too_large = 0;
-	int nvert;
-	bool result;
-	int identical;
-	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra == 0)
-	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
-	}
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra_cen, dec_cen,
+											  poly_arr));
+}
 
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+PG_FUNCTION_INFO_V1(pgq3c_in_poly_real);
+Datum pgq3c_in_poly_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT4(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT4(1); // dec_cen
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 
-	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-	                                        ra_cen, dec_cen, &too_large, identical,
-	                                        qpit->xpj, qpit->ypj,
-	                                        qpit->axpj, qpit->aypj,
-	                                        qpit->faces, &(qpit->multi_flag)
-	                                        ) !=    Q3C_DISJUNCT;
-	if (too_large)
-	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-	}
-	qpit->ready = 1;
-
-	PG_RETURN_BOOL(result);
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra_cen, dec_cen,
+											  poly_arr));
 }
 
 
@@ -1852,35 +2174,19 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
-	extern struct q3c_prm hprm;
-	char too_large = 0;
-	int nvert;
-	bool result;
-	int identical;
-	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra == 0)
-	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
-	}
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra_cen, dec_cen,
+												poly));
+}
 
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+PG_FUNCTION_INFO_V1(pgq3c_in_poly1_real);
+Datum pgq3c_in_poly1_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT4(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT4(1); // dec_cen
+	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
 
-	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-	                                        ra_cen, dec_cen, &too_large, identical,
-	                                        qpit->xpj, qpit->ypj,
-	                                        qpit->axpj, qpit->aypj,
-	                                        qpit->faces, &(qpit->multi_flag)
-	                                        ) !=    Q3C_DISJUNCT;
-	qpit->ready = 1;
-	if (too_large)
-	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-	}
-
-	PG_RETURN_BOOL(result);
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra_cen, dec_cen,
+												poly));
 }

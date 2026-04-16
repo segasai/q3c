@@ -50,3 +50,56 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_query(
         LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
         SUPPORT q3c_ellipse_query_support
         COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_in_poly(real, real,
+				       double precision[])
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_in_poly_real'
+        LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION q3c_in_poly(real, real,
+				       polygon)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_in_poly1_real'
+        LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION q3c_poly_query_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_poly_query_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_poly_query(
+                double precision, double precision,
+                double precision[])
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_poly_query'
+        LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
+        SUPPORT q3c_poly_query_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_poly_query(
+                real, real,
+                double precision[])
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_poly_query_real'
+        LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
+        SUPPORT q3c_poly_query_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_poly_query(
+                double precision, double precision,
+                polygon)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_poly_query1'
+        LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
+        SUPPORT q3c_poly_query_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_poly_query(
+                real, real,
+                polygon)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_poly_query1_real'
+        LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
+        SUPPORT q3c_poly_query_support
+        COST 100;
