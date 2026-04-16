@@ -105,8 +105,6 @@ static Expr *q3c_build_radial_query_simplified_clause(PlannerInfo *root,
 													  Oid funcid, List *args);
 static bool q3c_estimate_float8_expr(PlannerInfo *root, Node *node,
 									 double *value);
-static bool q3c_estimate_radial_radius(PlannerInfo *root, Node *radius_node,
-									   double *radius);
 static bool q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec,
 								   q3c_coord_t ra_cen,
 								   q3c_coord_t dec_cen,
@@ -450,13 +448,6 @@ q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
 
 	*value = DatumGetFloat8(value_const->constvalue);
 	return isfinite(*value);
-}
-
-
-static bool
-q3c_estimate_radial_radius(PlannerInfo *root, Node *radius_node, double *radius)
-{
-	return q3c_estimate_float8_expr(root, radius_node, radius);
 }
 
 
@@ -1185,8 +1176,8 @@ Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS)
 		req = (SupportRequestSelectivity *) rawreq;
 
 		if (!req->is_join && list_length(req->args) == 5 &&
-			q3c_estimate_radial_radius(req->root, (Node *) llast(req->args),
-									   &radius))
+			q3c_estimate_float8_expr(req->root, (Node *) llast(req->args),
+									 &radius))
 		{
 			ratio = 3.14159265358979323846 * radius * radius / 41252.0;
 			CLAMP_PROBABILITY(ratio);
