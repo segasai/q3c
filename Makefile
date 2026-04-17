@@ -18,6 +18,7 @@ EXTRA_CLEAN = dump.c prepare prepare.o gen_data.o \
 			results/join.out results/cone.out results/ellipse.out \
 			results/version.out results/poly.out results/area.out \
 			results/support.out results/relocation_support.out \
+			results/real.out \
 			gen_data
 ifeq ($(Q3C_NOOPT),1)
 	OPT = -O0
@@ -107,12 +108,17 @@ test: gen_data
 	diff results/area.out expected/area.expected
 	cat sql/errors.sql | psql q3c_test > results/errors.out 2>&1
 	diff results/errors.out expected/errors.expected
+	cat sql/real.sql | psql q3c_test > results/real.out 2>&1
+	diff results/real.out expected/real.expected
 	cat sql/support.sql | psql q3c_test > results/support.out
 	grep -F "Bitmap Index Scan on q3c_idx" results/support.out
 	grep -F "q3c_radial_query_exact(test.ra, test.\"dec\", '11'::double precision" results/support.out
+	grep -F "q3c_radial_query_exact((test.ra)::real, (test.\"dec\")::real, '11'::double precision" results/support.out
 	grep -F "q3c_in_ellipse(test.ra, test.\"dec\", '171.89'::double precision, '-85.71'::double precision, '0.1'::double precision, '0.7'::double precision, '10'::double precision)" results/support.out
 	grep -F "q3c_in_poly(test.ra, test.\"dec\", '{167.124,20.711,177.5,32.598,169.53,34.745}'::double precision[])" results/support.out
+	grep -F "q3c_in_poly((test.ra)::real, (test.\"dec\")::real, '{167.124,20.711,177.5,32.598,169.53,34.745}'::double precision[])" results/support.out
 	grep -F "q3c_in_poly(test.ra, test.\"dec\", '((167.124,20.711),(177.5,32.598),(169.53,34.745))'::polygon)" results/support.out
+	grep -F "q3c_in_poly((test.ra)::real, (test.\"dec\")::real, '((167.124,20.711),(177.5,32.598),(169.53,34.745))'::polygon)" results/support.out
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c 'CREATE EXTENSION q3c VERSION "1.6.0"'
