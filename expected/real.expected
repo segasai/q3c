@@ -1,3 +1,38 @@
+ q3c_radial_query 
+------------------
+ t
+(1 row)
+
+ q3c_radial_query 
+------------------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
+ ?column? 
+----------
+ t
+(1 row)
+
  ?column? 
 ----------
  t
