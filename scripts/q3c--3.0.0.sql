@@ -172,6 +172,11 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_query_support(internal)
         RETURNS internal
         AS 'MODULE_PATHNAME', 'pgq3c_ellipse_query_support'
         LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_support'
+        LANGUAGE C IMMUTABLE;
 CREATE OR REPLACE FUNCTION q3c_in_poly(double precision, double precision,
 				       double precision[])
         RETURNS boolean
@@ -185,33 +190,6 @@ CREATE OR REPLACE FUNCTION q3c_in_poly(double precision, double precision,
         LANGUAGE C IMMUTABLE STRICT;
 
 
-CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
-				    rightra double precision, rightdec double precision,
-				    radius double precision)
-        RETURNS boolean AS
-'
-SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,1))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,3))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
-    AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
-' LANGUAGE SQL IMMUTABLE;
-
- 
-CREATE OR REPLACE FUNCTION q3c_join(leftra double precision, leftdec double precision,
-				    rightra real, rightdec real,
-				    radius double precision)
-        RETURNS boolean AS
-'
-SELECT (((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,1))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,3))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,5))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_nearby_it($1,$2,$5,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_nearby_it($1,$2,$5,7))))) 
-    AND q3c_sindist($1,$2,$3,$4)<POW(SIN(RADIANS($5)/2),2)
-    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type)
-
-' LANGUAGE SQL IMMUTABLE;
 
 
 
@@ -253,15 +231,11 @@ CREATE OR REPLACE FUNCTION q3c_ellipse_join(leftra double precision, leftdec dou
 				rightra double precision, rightdec double precision,
 				semimajoraxis double precision, axisratio double precision,
 				pa double precision)
-        RETURNS boolean AS
-'
-SELECT (((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,0))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,1))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,2))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,3))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,4))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,5))))
-    OR ((q3c_ang2ipix($3,$4)>=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,6))) AND (q3c_ang2ipix($3,$4)<=(q3c_ellipse_nearby_it($1,$2,$5,$6,$7,7))))) 
-    AND q3c_in_ellipse($3,$4,$1,$2,$5,$6,$7)
-    AND ($5::double precision ==<<>>== ($1,$2,$3,$4)::q3c_type) 
-' LANGUAGE SQL IMMUTABLE;
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_ellipse_join_support
+        COST 100;
 
 CREATE OR REPLACE FUNCTION q3c_radial_query(
                   real, real,
@@ -347,4 +321,62 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
         AS 'MODULE_PATHNAME', 'pgq3c_poly_query_polygon_real'
         LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
         SUPPORT q3c_poly_query_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_join_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_join_internal_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_join_internal_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_internal_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_internal_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_join_internal(
+                bigint, bigint,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, integer)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join_internal'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_internal_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_internal(
+                bigint,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, integer)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_internal'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_ellipse_join_internal_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join(
+                leftra double precision, leftdec double precision,
+                rightra double precision, rightdec double precision,
+                radius double precision)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join(
+                leftra double precision, leftdec double precision,
+                rightra real, rightdec real,
+                radius double precision)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join_real'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_support
         COST 100;

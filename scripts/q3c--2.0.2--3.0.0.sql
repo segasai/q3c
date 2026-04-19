@@ -124,3 +124,82 @@ CREATE OR REPLACE FUNCTION q3c_poly_query(
         LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE
         SUPPORT q3c_poly_query_support
         COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_join_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_join_internal_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_join_internal_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_internal_support(internal)
+        RETURNS internal
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_internal_support'
+        LANGUAGE C IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION q3c_join_internal(
+                bigint, bigint,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, integer)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join_internal'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_internal_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join_internal(
+                bigint,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, double precision,
+                double precision, integer)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join_internal'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_ellipse_join_internal_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join(
+                leftra double precision, leftdec double precision,
+                rightra double precision, rightdec double precision,
+                radius double precision)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_support
+        COST 100;
+
+DROP FUNCTION q3c_ellipse_join(double precision, double precision,
+                               double precision, double precision,
+                               double precision, double precision,
+                               double precision);
+
+CREATE OR REPLACE FUNCTION q3c_ellipse_join(
+                leftra double precision, leftdec double precision,
+                rightra double precision, rightdec double precision,
+                semimajoraxis double precision, axisratio double precision,
+                pa double precision)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_ellipse_join'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_ellipse_join_support
+        COST 100;
+
+CREATE OR REPLACE FUNCTION q3c_join(
+                leftra double precision, leftdec double precision,
+                rightra real, rightdec real,
+                radius double precision)
+        RETURNS boolean
+        AS 'MODULE_PATHNAME', 'pgq3c_join_real'
+        LANGUAGE C IMMUTABLE PARALLEL SAFE
+        SUPPORT q3c_join_support
+        COST 100;

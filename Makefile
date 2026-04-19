@@ -115,10 +115,14 @@ test: gen_data
 	grep -F "q3c_radial_query_exact(test.ra, test.\"dec\", '11'::double precision" results/support.out
 	grep -F "q3c_radial_query_exact((test.ra)::real, (test.\"dec\")::real, '11'::double precision" results/support.out
 	grep -F "q3c_in_ellipse(test.ra, test.\"dec\", '171.89'::double precision, '-85.71'::double precision, '0.1'::double precision, '0.7'::double precision, '10'::double precision)" results/support.out
+	grep -F "q3c_ellipse_join_internal(q3c_ang2ipix(test.ra, test.\"dec\"), '171.89'::double precision, '-85.71'::double precision, test.ra, test.\"dec\", '0.1'::double precision, '0.7'::double precision, '10'::double precision, 0)" results/support.out
 	grep -F "q3c_in_poly(test.ra, test.\"dec\", '{167.124,20.711,177.5,32.598,169.53,34.745}'::double precision[])" results/support.out
 	grep -F "q3c_in_poly((test.ra)::real, (test.\"dec\")::real, '{167.124,20.711,177.5,32.598,169.53,34.745}'::double precision[])" results/support.out
 	grep -F "q3c_in_poly(test.ra, test.\"dec\", '((167.124,20.711),(177.5,32.598),(169.53,34.745))'::polygon)" results/support.out
 	grep -F "q3c_in_poly((test.ra)::real, (test.\"dec\")::real, '((167.124,20.711),(177.5,32.598),(169.53,34.745))'::polygon)" results/support.out
+	grep -F "q3c_join_internal(q3c_ang2ipix('171.89'::double precision, '-85.71'::double precision), q3c_ang2ipix(test.ra, test.\"dec\"), '171.89'::double precision, '-85.71'::double precision, test.ra, test.\"dec\", '0.1'::double precision, 0)" results/support.out
+	grep -F "Bitmap Heap Scan on public.test b" results/support.out
+	grep -F "Bitmap Heap Scan on public.test_small b" results/support.out
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c 'CREATE EXTENSION q3c VERSION "1.6.0"'
@@ -147,6 +151,8 @@ test: gen_data
 	grep -F "Bitmap Index Scan on q3c_idx_reloc" results/relocation_support.out
 	grep -F "tests.q3c_radial_query_exact(" results/relocation_support.out
 	grep -F "tests.q3c_in_ellipse(" results/relocation_support.out
+	grep -F "tests.q3c_ellipse_join_internal(" results/relocation_support.out
 	grep -F "tests.q3c_in_poly(test.ra, test.\"dec\", '{167.124,20.711,177.5,32.598,169.53,34.745}'::double precision[])" results/relocation_support.out
 	grep -F "tests.q3c_in_poly(test.ra, test.\"dec\", '((167.124,20.711),(177.5,32.598),(169.53,34.745))'::polygon)" results/relocation_support.out
+	grep -F "tests.q3c_join_internal(" results/relocation_support.out
 	dropdb q3c_test
