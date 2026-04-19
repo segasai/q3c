@@ -137,8 +137,6 @@ static bool q3c_estimate_float8_expr(PlannerInfo *root, Node *node,
 static bool q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
 								   q3c_coord_t *ra, q3c_coord_t *dec,
 								   int *nvert);
-static double q3c_polygon_perimeter(const q3c_coord_t *ra,
-									const q3c_coord_t *dec, int nvert);
 static bool q3c_poly_query_array_match(FunctionCallInfo fcinfo,
 									   q3c_coord_t ra_cen,
 									   q3c_coord_t dec_cen,
@@ -691,28 +689,6 @@ q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
 	}
 
 	return false;
-}
-
-
-static double
-q3c_polygon_perimeter(const q3c_coord_t *ra, const q3c_coord_t *dec, int nvert)
-{
-	double perimeter = 0;
-	int i;
-
-	if (ra == NULL || dec == NULL || nvert < 3)
-	{
-		return 0;
-	}
-
-	for (i = 0; i < nvert; i++)
-	{
-		int next = (i + 1) % nvert;
-
-		perimeter += q3c_dist(ra[i], dec[i], ra[next], dec[next]);
-	}
-
-	return perimeter;
 }
 
 
@@ -1396,24 +1372,6 @@ Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS)
 		ret = (Node *) q3c_build_radial_query_simplified_clause(
 			req->root, req->fcall->funcid, req->fcall->args);
 	}
-	else if (IsA(rawreq, SupportRequestSelectivity))
-	{
-		SupportRequestSelectivity *req;
-		double radius;
-		double ratio;
-
-		req = (SupportRequestSelectivity *) rawreq;
-
-		if (!req->is_join && list_length(req->args) == 5 &&
-			q3c_estimate_float8_expr(req->root, (Node *) llast(req->args),
-									 &radius))
-		{
-			ratio = 3.14159265358979323846 * radius * radius / 41252.0;
-			CLAMP_PROBABILITY(ratio);
-			req->selectivity = ratio;
-			ret = (Node *) req;
-		}
-	}
 
 	PG_RETURN_POINTER(ret);
 }
@@ -1447,27 +1405,6 @@ Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS)
 
 		ret = (Node *) q3c_build_ellipse_query_simplified_clause(
 			req->root, req->fcall->funcid, req->fcall->args);
-	}
-	else if (IsA(rawreq, SupportRequestSelectivity))
-	{
-		SupportRequestSelectivity *req;
-		double semimajax;
-		double axis_ratio;
-		double ratio;
-
-		req = (SupportRequestSelectivity *) rawreq;
-
-		if (!req->is_join && list_length(req->args) == 7 &&
-			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 4),
-									 &semimajax) &&
-			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 5),
-									 &axis_ratio))
-		{
-			ratio = 3.14159265358979323846 * semimajax * semimajax * axis_ratio / 41252.0;
-			CLAMP_PROBABILITY(ratio);
-			req->selectivity = ratio;
-			ret = (Node *) req;
-		}
 	}
 
 	PG_RETURN_POINTER(ret);
@@ -1530,33 +1467,6 @@ Datum pgq3c_poly_query_support(PG_FUNCTION_ARGS)
 
 		ret = (Node *) q3c_build_poly_query_simplified_clause(
 			req->root, req->fcall->funcid, req->fcall->args);
-	}
-	else if (IsA(rawreq, SupportRequestSelectivity))
-	{
-		SupportRequestSelectivity *req;
-		q3c_coord_t poly_ra[Q3C_MAX_N_POLY_VERTEX];
-		q3c_coord_t poly_dec[Q3C_MAX_N_POLY_VERTEX];
-		double perimeter;
-		double ratio;
-		int nvert;
-		Oid polytype;
-
-		req = (SupportRequestSelectivity *) rawreq;
-
-		if (!req->is_join && list_length(req->args) == 3)
-		{
-			polytype = exprType((Node *) llast(req->args));
-			if (q3c_estimate_poly_expr(req->root, (Node *) llast(req->args),
-									   polytype, poly_ra, poly_dec, &nvert))
-			{
-				perimeter = q3c_polygon_perimeter(poly_ra, poly_dec, nvert);
-				ratio = perimeter * perimeter /
-					(4 * Q3C_PI * 41252.0);
-				CLAMP_PROBABILITY(ratio);
-				req->selectivity = ratio;
-				ret = (Node *) req;
-			}
-		}
 	}
 
 	PG_RETURN_POINTER(ret);
