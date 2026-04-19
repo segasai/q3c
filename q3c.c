@@ -25,7 +25,17 @@
 
 /* Postgres stuff */
 #include "postgres.h"
+#include "access/stratnum.h"
+#include "catalog/namespace.h"
+#include "catalog/pg_opfamily_d.h"
 #include "executor/spi.h"
+#include "nodes/makefuncs.h"
+#include "nodes/nodeFuncs.h"
+#include "nodes/supportnodes.h"
+#include "optimizer/clauses.h"
+#include "optimizer/optimizer.h"
+#include "parser/parse_func.h"
+#include "parser/parse_coerce.h"
 #include "utils/lsyscache.h"
 /* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
@@ -67,17 +77,115 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_array(PG_FUNCTION_ARGS);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_exact(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_exact_real(PG_FUNCTION_ARGS);
+Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_query(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_join(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_join_internal(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_join_support(PG_FUNCTION_ARGS);
+Datum pgq3c_ellipse_join_internal_support(PG_FUNCTION_ARGS);
+Datum pgq3c_join(PG_FUNCTION_ARGS);
+Datum pgq3c_join_real(PG_FUNCTION_ARGS);
+Datum pgq3c_join_internal(PG_FUNCTION_ARGS);
+Datum pgq3c_join_support(PG_FUNCTION_ARGS);
+Datum pgq3c_join_internal_support(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_array(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_array_real(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_polygon(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_polygon_real(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_support(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS);
 Datum pgq3c_in_poly1(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_exact_array(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_exact_array_real(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_exact_polygon(PG_FUNCTION_ARGS);
+Datum pgq3c_poly_query_exact_polygon_real(PG_FUNCTION_ARGS);
 
 Datum pgq3c_get_version(PG_FUNCTION_ARGS);
 Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_seloper(PG_FUNCTION_ARGS);
+
+static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra,
+								q3c_coord_t *in_dec, int *nvert);
+static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra,
+							   q3c_coord_t *dec, int *nvert);
+static Oid q3c_lookup_function_in_namespace(Oid reference_funcid,
+											const char *proname,
+											int nargs,
+											const Oid *argtypes);
+static Oid q3c_lookup_bigint_operator(StrategyNumber strategy);
+static Const *q3c_make_int8_const(int64 value);
+static FuncExpr *q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec);
+static Expr *q3c_make_float8_expr(Expr *expr);
+static void q3c_legacy_iterator_error(const char *proname);
+static Expr *q3c_build_range_or_clause(Oid ang2ipix_funcid, Oid ge_opid,
+									   Oid lt_opid, Expr *ra, Expr *dec,
+									   const q3c_ipix_t *ranges, int nranges);
+static Expr *q3c_build_ranged_query_clause(Oid funcid, Expr *ra, Expr *dec,
+										   const char *exact_name,
+										   const Oid *exact_argtypes,
+										   int exact_nargs, List *exact_args,
+										   const q3c_ipix_t *fulls,
+										   const q3c_ipix_t *partials);
+static Expr *q3c_build_radial_query_simplified_clause(PlannerInfo *root,
+													  Oid funcid, List *args);
+static Expr *q3c_build_ellipse_query_simplified_clause(PlannerInfo *root,
+													   Oid funcid, List *args);
+static Expr *q3c_build_ellipse_join_internal_call(Oid funcid, List *args);
+static List *q3c_build_ellipse_join_index_quals(PlannerInfo *root, Oid funcid,
+												List *args, int indexarg,
+												struct IndexOptInfo *index,
+												Oid opfamily);
+static Expr *q3c_build_join_internal_call(Oid funcid, List *args);
+static List *q3c_build_join_index_quals(PlannerInfo *root, Oid funcid,
+										List *args, int indexarg,
+										struct IndexOptInfo *index,
+										Oid opfamily);
+static Expr *q3c_build_poly_query_simplified_clause(PlannerInfo *root,
+													Oid funcid, List *args);
+static bool q3c_estimate_const_expr(PlannerInfo *root, Node *node,
+									Const **value_const);
+static bool q3c_estimate_float8_expr(PlannerInfo *root, Node *node,
+									 double *value);
+static bool q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
+								   q3c_coord_t *ra, q3c_coord_t *dec,
+								   int *nvert);
+static bool q3c_poly_query_array_match(FunctionCallInfo fcinfo,
+									   q3c_coord_t ra_cen,
+									   q3c_coord_t dec_cen,
+									   ArrayType *poly_arr);
+static bool q3c_poly_query_polygon_match(FunctionCallInfo fcinfo,
+										 q3c_coord_t ra_cen,
+										 q3c_coord_t dec_cen,
+										 POLYGON *poly);
+static double q3c_radius_selectivity(double radius);
+static bool q3c_join_match(q3c_coord_t leftra, q3c_coord_t leftdec,
+						   q3c_coord_t rightra, q3c_coord_t rightdec,
+						   q3c_coord_t radius);
+static bool q3c_ellipse_join_match(q3c_coord_t leftra, q3c_coord_t leftdec,
+								   q3c_coord_t rightra, q3c_coord_t rightdec,
+								   q3c_coord_t semimajax,
+								   q3c_coord_t axis_ratio,
+								   q3c_coord_t PA);
+static bool q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec,
+								   q3c_coord_t ra_cen,
+								   q3c_coord_t dec_cen,
+								   q3c_coord_t radius);
+static bool q3c_ellipse_query_match(q3c_coord_t ra, q3c_coord_t dec,
+									q3c_coord_t ra_cen,
+									q3c_coord_t dec_cen,
+									q3c_coord_t semimajax,
+									q3c_coord_t axis_ratio,
+									q3c_coord_t PA);
 
 
 /* Dummy function that implements the selectivity operator */
@@ -121,10 +229,7 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad / 41252.;  /* pi*r^2/whole_sky_area */
-
-	/* clamp at 0, 1*/
-	CLAMP_PROBABILITY(ratio);
+	ratio = q3c_radius_selectivity(rad);
 
 	//elog(WARNING, "HERE0.... %e", ratio);
 
@@ -165,15 +270,975 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 	{
 		rad = 0;
 	}
-	ratio = 3.14 * rad * rad / 41252.;  /* pi*r^2/whole_sky_area */
-
-	/* clamp at 0, 1*/
-	CLAMP_PROBABILITY(ratio);
+	ratio = q3c_radius_selectivity(rad);
 
 	PG_RETURN_FLOAT8(ratio);
 }
 
-static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert);
+
+static Oid
+q3c_lookup_function_in_namespace(Oid reference_funcid, const char *proname,
+								 int nargs, const Oid *argtypes)
+{
+	Oid nspid;
+	Oid funcid;
+	char *nspname;
+	List *qualified_name;
+
+	nspid = get_func_namespace(reference_funcid);
+	if (!OidIsValid(nspid))
+	{
+		elog(ERROR, "could not resolve namespace for function %u", reference_funcid);
+	}
+
+	nspname = get_namespace_name(nspid);
+	if (nspname == NULL)
+	{
+		elog(ERROR, "could not resolve namespace name for namespace %u", nspid);
+	}
+
+	qualified_name = list_make2(makeString(nspname),
+								makeString(pstrdup(proname)));
+	funcid = LookupFuncName(qualified_name, nargs, argtypes, false);
+
+	if (!OidIsValid(funcid))
+	{
+		elog(ERROR, "could not resolve function %s in namespace %s",
+			 proname, nspname);
+	}
+
+	return funcid;
+}
+
+
+static Oid
+q3c_lookup_bigint_operator(StrategyNumber strategy)
+{
+	Oid opid;
+
+	opid = get_opfamily_member(INTEGER_BTREE_FAM_OID, INT8OID, INT8OID,
+							   strategy);
+	if (!OidIsValid(opid))
+	{
+		elog(ERROR, "missing bigint operator for btree strategy %d",
+			 (int) strategy);
+	}
+
+	return opid;
+}
+
+
+static Const *
+q3c_make_int8_const(int64 value)
+{
+	static int16 typlen = 0;
+	static bool typbyval = false;
+	static char typalign = 0;
+
+	if (typlen == 0)
+	{
+		get_typlenbyvalalign(INT8OID, &typlen, &typbyval, &typalign);
+	}
+
+	return makeConst(INT8OID, -1, InvalidOid, typlen,
+					 Int64GetDatum(value), false, typbyval);
+}
+
+
+static FuncExpr *
+q3c_make_ang2ipix_call(Oid funcid, Expr *ra, Expr *dec)
+{
+	List *args;
+
+	args = list_make2(copyObject(ra), copyObject(dec));
+	return makeFuncExpr(funcid, INT8OID, args, InvalidOid, InvalidOid,
+						COERCE_EXPLICIT_CALL);
+}
+
+
+static Expr *
+q3c_make_float8_expr(Expr *expr)
+{
+	Node *coerced;
+	Oid exprtype;
+
+	exprtype = exprType((Node *) expr);
+	if (exprtype == FLOAT8OID)
+	{
+		return (Expr *) copyObject(expr);
+	}
+
+	coerced = coerce_to_target_type(NULL, copyObject((Node *) expr), exprtype,
+									FLOAT8OID, -1, COERCION_IMPLICIT,
+									COERCE_IMPLICIT_CAST, -1);
+	if (coerced == NULL)
+	{
+		elog(ERROR, "could not coerce join argument type %u to double precision",
+			 exprtype);
+	}
+
+	return (Expr *) coerced;
+}
+
+
+static Expr *
+q3c_build_range_or_clause(Oid ang2ipix_funcid, Oid ge_opid, Oid lt_opid,
+						  Expr *ra, Expr *dec, const q3c_ipix_t *ranges,
+						  int nranges)
+{
+	List *or_clauses = NIL;
+	int i;
+
+	for (i = 0; i < nranges; i += 2)
+	{
+		Expr *lower_cmp;
+		Expr *upper_cmp;
+
+		if (ranges[i] == 1 && ranges[i + 1] == -1)
+		{
+			break;
+		}
+
+		lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_int8_const(ranges[i]),
+								  InvalidOid, InvalidOid);
+		upper_cmp = make_opclause(lt_opid, BOOLOID, false,
+								  (Expr *) q3c_make_ang2ipix_call(ang2ipix_funcid,
+																  ra, dec),
+								  (Expr *) q3c_make_int8_const(ranges[i + 1]),
+								  InvalidOid, InvalidOid);
+		or_clauses = lappend(or_clauses,
+							 make_andclause(list_make2(lower_cmp, upper_cmp)));
+	}
+
+	if (or_clauses == NIL)
+	{
+		return NULL;
+	}
+
+	return make_orclause(or_clauses);
+}
+
+
+static Expr *
+q3c_build_ranged_query_clause(Oid funcid, Expr *ra, Expr *dec,
+							  const char *exact_name,
+							  const Oid *exact_argtypes,
+							  int exact_nargs, List *exact_args,
+							  const q3c_ipix_t *fulls,
+							  const q3c_ipix_t *partials)
+{
+	Oid ang2ipix_argtypes[2];
+	Oid ang2ipix_funcid;
+	Oid exact_funcid;
+	Oid ge_opid;
+	Oid lt_opid;
+	Expr *full_clause;
+	Expr *partial_clause;
+	Expr *exact_clause;
+	List *range_clauses = NIL;
+	Expr *range_clause;
+
+	ang2ipix_argtypes[0] = exprType((Node *) ra);
+	ang2ipix_argtypes[1] = exprType((Node *) dec);
+
+	ang2ipix_funcid = q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix",
+													   2, ang2ipix_argtypes);
+	exact_funcid =
+		q3c_lookup_function_in_namespace(funcid, exact_name, exact_nargs,
+										 exact_argtypes);
+	ge_opid = q3c_lookup_bigint_operator(BTGreaterEqualStrategyNumber);
+	lt_opid = q3c_lookup_bigint_operator(BTLessStrategyNumber);
+
+	full_clause = q3c_build_range_or_clause(ang2ipix_funcid, ge_opid, lt_opid,
+											ra, dec, fulls,
+											2 * Q3C_NFULLS);
+	partial_clause = q3c_build_range_or_clause(ang2ipix_funcid, ge_opid, lt_opid,
+											   ra, dec, partials,
+											   2 * Q3C_NPARTIALS);
+
+	if (full_clause != NULL)
+	{
+		range_clauses = lappend(range_clauses, full_clause);
+	}
+	if (partial_clause != NULL)
+	{
+		range_clauses = lappend(range_clauses, partial_clause);
+	}
+
+	exact_clause = (Expr *) makeFuncExpr(exact_funcid, BOOLOID,
+										 copyObject(exact_args),
+										 InvalidOid, InvalidOid,
+										 COERCE_EXPLICIT_CALL);
+
+	if (range_clauses == NIL)
+	{
+		return exact_clause;
+	}
+
+	if (list_length(range_clauses) == 1)
+	{
+		range_clause = (Expr *) linitial(range_clauses);
+	}
+	else
+	{
+		range_clause = make_orclause(range_clauses);
+	}
+
+	return make_andclause(list_make2(range_clause, exact_clause));
+}
+
+
+static Expr *
+q3c_build_radial_query_simplified_clause(PlannerInfo *root, Oid funcid,
+										 List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[5];
+	Expr *ra;
+	Expr *dec;
+	q3c_coord_t ra_cen_value;
+	q3c_coord_t dec_cen_value;
+	q3c_coord_t radius_value;
+	q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+
+	if (list_length(args) != 5)
+	{
+		return NULL;
+	}
+
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[2] = FLOAT8OID;
+	exact_argtypes[3] = FLOAT8OID;
+	exact_argtypes[4] = FLOAT8OID;
+
+	if (!q3c_estimate_float8_expr(root, (Node *) lthird(args), &ra_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) lfourth(args), &dec_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) llast(args), &radius_value))
+	{
+		return NULL;
+	}
+
+	q3c_radial_query(&hprm, ra_cen_value, dec_cen_value, radius_value,
+					 fulls, partials);
+
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_radial_query_exact",
+										 exact_argtypes, 5, args,
+										 fulls, partials);
+}
+
+
+static Expr *
+q3c_build_ellipse_query_simplified_clause(PlannerInfo *root, Oid funcid,
+										  List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[7];
+	Expr *ra;
+	Expr *dec;
+	double ra_cen_value;
+	double dec_cen_value;
+	double semimajax_value;
+	double axis_ratio_value;
+	double PA_value;
+	double ell_value;
+	q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+
+	if (list_length(args) != 7)
+	{
+		return NULL;
+	}
+
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[2] = FLOAT8OID;
+	exact_argtypes[3] = FLOAT8OID;
+	exact_argtypes[4] = FLOAT8OID;
+	exact_argtypes[5] = FLOAT8OID;
+	exact_argtypes[6] = FLOAT8OID;
+
+	if (!q3c_estimate_float8_expr(root, (Node *) lthird(args), &ra_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) lfourth(args), &dec_cen_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 4), &semimajax_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 5), &axis_ratio_value) ||
+		!q3c_estimate_float8_expr(root, (Node *) list_nth(args, 6), &PA_value))
+	{
+		return NULL;
+	}
+
+	ell_value = q3c_sqrt(1 - axis_ratio_value * axis_ratio_value);
+	q3c_ellipse_query(&hprm, ra_cen_value, dec_cen_value, semimajax_value,
+					  ell_value, PA_value, fulls, partials);
+
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_in_ellipse",
+										 exact_argtypes, 7, args,
+										 fulls, partials);
+}
+
+
+static Expr *
+q3c_build_join_internal_call(Oid funcid, List *args)
+{
+	Oid left_ang2ipix_argtypes[2];
+	Oid right_ang2ipix_argtypes[2];
+	Oid internal_argtypes[8];
+	Oid left_ang2ipix_funcid;
+	Oid right_ang2ipix_funcid;
+	Oid internal_funcid;
+	Expr *leftra;
+	Expr *leftdec;
+	Expr *rightra;
+	Expr *rightdec;
+	List *or_clauses = NIL;
+	ListCell *lc;
+	int slot;
+
+	if (list_length(args) != 5)
+	{
+		return NULL;
+	}
+
+	leftra = (Expr *) linitial(args);
+	leftdec = (Expr *) lsecond(args);
+	rightra = (Expr *) lthird(args);
+	rightdec = (Expr *) lfourth(args);
+
+	left_ang2ipix_argtypes[0] = exprType((Node *) leftra);
+	left_ang2ipix_argtypes[1] = exprType((Node *) leftdec);
+	right_ang2ipix_argtypes[0] = exprType((Node *) rightra);
+	right_ang2ipix_argtypes[1] = exprType((Node *) rightdec);
+
+	internal_argtypes[0] = INT8OID;
+	internal_argtypes[1] = INT8OID;
+	internal_argtypes[2] = FLOAT8OID;
+	internal_argtypes[3] = FLOAT8OID;
+	internal_argtypes[4] = FLOAT8OID;
+	internal_argtypes[5] = FLOAT8OID;
+	internal_argtypes[6] = FLOAT8OID;
+	internal_argtypes[7] = INT4OID;
+
+	left_ang2ipix_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix", 2,
+										 left_ang2ipix_argtypes);
+	right_ang2ipix_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix", 2,
+										 right_ang2ipix_argtypes);
+	internal_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_join_internal", 8,
+										 internal_argtypes);
+
+	/*
+	 * q3c_join_internal_support() can only return one range pair per supported
+	 * clause.  PostgreSQL rejected a single OR-of-ranges as an indexqual, so the
+	 * public q3c_join() support hook rewrites the predicate into four internal
+	 * calls, one for each [low, high] slot pair produced by q3c_nearby_it().
+	 * The planner then turns this OR into the expected BitmapOr over the index.
+	 */
+	for (slot = 0; slot < 8; slot += 2)
+	{
+		List *internal_args;
+
+		internal_args = list_make2(q3c_make_ang2ipix_call(left_ang2ipix_funcid,
+														  leftra, leftdec),
+								   q3c_make_ang2ipix_call(right_ang2ipix_funcid,
+														  rightra, rightdec));
+
+		foreach(lc, args)
+		{
+			internal_args = lappend(internal_args,
+									q3c_make_float8_expr((Expr *) lfirst(lc)));
+		}
+		internal_args = lappend(internal_args,
+								makeConst(INT4OID, -1, InvalidOid, 4,
+										  Int32GetDatum(slot), false, true));
+
+		or_clauses = lappend(or_clauses,
+							 makeFuncExpr(internal_funcid, BOOLOID,
+										  internal_args, InvalidOid,
+										  InvalidOid, COERCE_EXPLICIT_CALL));
+	}
+
+	return make_orclause(or_clauses);
+}
+
+
+static Expr *
+q3c_build_ellipse_join_internal_call(Oid funcid, List *args)
+{
+	Oid ang2ipix_argtypes[2];
+	Oid internal_argtypes[9];
+	Oid ang2ipix_funcid;
+	Oid internal_funcid;
+	Expr *rightra;
+	Expr *rightdec;
+	List *or_clauses = NIL;
+	ListCell *lc;
+	int slot;
+
+	if (list_length(args) != 7)
+	{
+		return NULL;
+	}
+
+	rightra = (Expr *) lthird(args);
+	rightdec = (Expr *) lfourth(args);
+
+	ang2ipix_argtypes[0] = exprType((Node *) rightra);
+	ang2ipix_argtypes[1] = exprType((Node *) rightdec);
+
+	internal_argtypes[0] = INT8OID;
+	internal_argtypes[1] = FLOAT8OID;
+	internal_argtypes[2] = FLOAT8OID;
+	internal_argtypes[3] = FLOAT8OID;
+	internal_argtypes[4] = FLOAT8OID;
+	internal_argtypes[5] = FLOAT8OID;
+	internal_argtypes[6] = FLOAT8OID;
+	internal_argtypes[7] = FLOAT8OID;
+	internal_argtypes[8] = INT4OID;
+
+	ang2ipix_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_ang2ipix", 2,
+										 ang2ipix_argtypes);
+	internal_funcid =
+		q3c_lookup_function_in_namespace(funcid, "q3c_ellipse_join_internal", 9,
+										 internal_argtypes);
+
+	/*
+	 * Ellipse join is directional, so only the tested point on the right-hand
+	 * side is exposed as q3c_ang2ipix(...).  As with q3c_join_internal(), each
+	 * internal clause carries one [low, high] slot pair so the planner can build
+	 * a BitmapOr instead of receiving one unsupported OR indexqual.
+	 */
+	for (slot = 0; slot < 8; slot += 2)
+	{
+		List *internal_args;
+
+		internal_args = list_make1(q3c_make_ang2ipix_call(ang2ipix_funcid,
+														  rightra, rightdec));
+
+		foreach(lc, args)
+		{
+			internal_args = lappend(internal_args,
+									q3c_make_float8_expr((Expr *) lfirst(lc)));
+		}
+		internal_args = lappend(internal_args,
+								makeConst(INT4OID, -1, InvalidOid, 4,
+										  Int32GetDatum(slot), false, true));
+
+		or_clauses = lappend(or_clauses,
+							 makeFuncExpr(internal_funcid, BOOLOID,
+										  internal_args, InvalidOid,
+										  InvalidOid, COERCE_EXPLICIT_CALL));
+	}
+
+	return make_orclause(or_clauses);
+}
+
+
+static List *
+q3c_build_join_index_quals(PlannerInfo *root, Oid funcid, List *args,
+						   int indexarg, struct IndexOptInfo *index,
+						   Oid opfamily)
+{
+	Oid nearby_argtypes[4];
+	Oid nearby_funcid;
+	Oid ge_opid;
+	Oid le_opid;
+	Expr *ipix_expr;
+	Expr *center_ra;
+	Expr *center_dec;
+	Expr *radius;
+	Expr *center_ra_f8;
+	Expr *center_dec_f8;
+	Expr *radius_f8;
+	Expr *sample_call;
+	Expr *lower_cmp;
+	Expr *upper_cmp;
+	List *nearby_args;
+	Const *slot_const;
+	int slot;
+
+	if (list_length(args) != 8 || (indexarg != 0 && indexarg != 1))
+	{
+		return NIL;
+	}
+
+	ge_opid = get_opfamily_member(opfamily, INT8OID, INT8OID,
+								  BTGreaterEqualStrategyNumber);
+	le_opid = get_opfamily_member(opfamily, INT8OID, INT8OID,
+								  BTLessEqualStrategyNumber);
+	if (!OidIsValid(ge_opid) || !OidIsValid(le_opid))
+	{
+		return NIL;
+	}
+
+	nearby_argtypes[0] = FLOAT8OID;
+	nearby_argtypes[1] = FLOAT8OID;
+	nearby_argtypes[2] = FLOAT8OID;
+	nearby_argtypes[3] = INT4OID;
+	nearby_funcid = q3c_lookup_function_in_namespace(funcid, "q3c_nearby_it", 4,
+													 nearby_argtypes);
+
+	/*
+	 * q3c_join_internal(ipix_left, ipix_right, leftra, leftdec, rightra,
+	 * rightdec, radius, slot) is symmetric.  indexarg tells us which synthetic
+	 * ipix argument matched the current q3c_ang2ipix(...) expression index, so
+	 * we build the search window from the coordinates on the opposite side.
+	 */
+	ipix_expr = (Expr *) list_nth(args, indexarg);
+	if (indexarg == 0)
+	{
+		center_ra = (Expr *) list_nth(args, 4);
+		center_dec = (Expr *) list_nth(args, 5);
+	}
+	else
+	{
+		center_ra = (Expr *) list_nth(args, 2);
+		center_dec = (Expr *) list_nth(args, 3);
+	}
+	radius = (Expr *) list_nth(args, 6);
+	if (!q3c_estimate_const_expr(root, (Node *) list_nth(args, 7), &slot_const) ||
+		slot_const->consttype != INT4OID)
+	{
+		return NIL;
+	}
+	slot = DatumGetInt32(slot_const->constvalue);
+	if (slot < 0 || slot > 6 || (slot % 2) != 0)
+	{
+		return NIL;
+	}
+
+	center_ra_f8 = q3c_make_float8_expr(center_ra);
+	center_dec_f8 = q3c_make_float8_expr(center_dec);
+	radius_f8 = q3c_make_float8_expr(radius);
+
+	/*
+	 * SupportRequestIndexCondition may only hand back index quals whose
+	 * non-index side is pseudo-constant for the chosen index relation.  The
+	 * nearby_it() probe checks exactly that for this join direction before we
+	 * build the real lower/upper bound clauses for the requested slot.
+	 */
+	sample_call = (Expr *) makeFuncExpr(
+		nearby_funcid, INT8OID,
+		list_make4(copyObject(center_ra_f8), copyObject(center_dec_f8),
+				   copyObject(radius_f8),
+				   makeConst(INT4OID, -1, InvalidOid, 4, Int32GetDatum(0),
+							 false, true)),
+		InvalidOid, InvalidOid, COERCE_EXPLICIT_CALL);
+	if (!is_pseudo_constant_for_index(root, (Node *) sample_call, index))
+	{
+		return NIL;
+	}
+
+	nearby_args = list_make4(copyObject(center_ra_f8),
+							 copyObject(center_dec_f8),
+							 copyObject(radius_f8),
+							 makeConst(INT4OID, -1, InvalidOid, 4,
+									   Int32GetDatum(slot), false, true));
+	lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+							  (Expr *) copyObject(ipix_expr),
+							  (Expr *) makeFuncExpr(nearby_funcid, INT8OID,
+													 nearby_args,
+													 InvalidOid, InvalidOid,
+													 COERCE_EXPLICIT_CALL),
+							  InvalidOid, InvalidOid);
+
+	nearby_args = list_make4(copyObject(center_ra_f8),
+							 copyObject(center_dec_f8),
+							 copyObject(radius_f8),
+							 makeConst(INT4OID, -1, InvalidOid, 4,
+									   Int32GetDatum(slot + 1), false, true));
+	upper_cmp = make_opclause(le_opid, BOOLOID, false,
+							  (Expr *) copyObject(ipix_expr),
+							  (Expr *) makeFuncExpr(nearby_funcid, INT8OID,
+													 nearby_args,
+													 InvalidOid, InvalidOid,
+													 COERCE_EXPLICIT_CALL),
+							  InvalidOid, InvalidOid);
+
+	return list_make2(lower_cmp, upper_cmp);
+}
+
+
+static List *
+q3c_build_ellipse_join_index_quals(PlannerInfo *root, Oid funcid, List *args,
+								   int indexarg, struct IndexOptInfo *index,
+								   Oid opfamily)
+{
+	Oid nearby_argtypes[6];
+	Oid nearby_funcid;
+	Oid ge_opid;
+	Oid le_opid;
+	Expr *ipix_expr;
+	Expr *center_ra_f8;
+	Expr *center_dec_f8;
+	Expr *semimajax_f8;
+	Expr *axis_ratio_f8;
+	Expr *pa_f8;
+	Expr *sample_call;
+	Expr *lower_cmp;
+	Expr *upper_cmp;
+	List *nearby_args;
+	Const *slot_const;
+	int slot;
+
+	if (list_length(args) != 9 || indexarg != 0)
+	{
+		return NIL;
+	}
+
+	ge_opid = get_opfamily_member(opfamily, INT8OID, INT8OID,
+								  BTGreaterEqualStrategyNumber);
+	le_opid = get_opfamily_member(opfamily, INT8OID, INT8OID,
+								  BTLessEqualStrategyNumber);
+	if (!OidIsValid(ge_opid) || !OidIsValid(le_opid))
+	{
+		return NIL;
+	}
+
+	nearby_argtypes[0] = FLOAT8OID;
+	nearby_argtypes[1] = FLOAT8OID;
+	nearby_argtypes[2] = FLOAT8OID;
+	nearby_argtypes[3] = FLOAT8OID;
+	nearby_argtypes[4] = FLOAT8OID;
+	nearby_argtypes[5] = INT4OID;
+	nearby_funcid = q3c_lookup_function_in_namespace(funcid,
+													 "q3c_ellipse_nearby_it", 6,
+													 nearby_argtypes);
+
+	ipix_expr = (Expr *) linitial(args);
+	if (!q3c_estimate_const_expr(root, (Node *) list_nth(args, 8), &slot_const) ||
+		slot_const->consttype != INT4OID)
+	{
+		return NIL;
+	}
+	slot = DatumGetInt32(slot_const->constvalue);
+	if (slot < 0 || slot > 6 || (slot % 2) != 0)
+	{
+		return NIL;
+	}
+
+	center_ra_f8 = q3c_make_float8_expr((Expr *) lsecond(args));
+	center_dec_f8 = q3c_make_float8_expr((Expr *) lthird(args));
+	semimajax_f8 = q3c_make_float8_expr((Expr *) list_nth(args, 5));
+	axis_ratio_f8 = q3c_make_float8_expr((Expr *) list_nth(args, 6));
+	pa_f8 = q3c_make_float8_expr((Expr *) list_nth(args, 7));
+
+	sample_call = (Expr *) makeFuncExpr(
+		nearby_funcid, INT8OID,
+		lappend(list_make5(copyObject(center_ra_f8), copyObject(center_dec_f8),
+						   copyObject(semimajax_f8), copyObject(axis_ratio_f8),
+						   copyObject(pa_f8)),
+				makeConst(INT4OID, -1, InvalidOid, 4, Int32GetDatum(0),
+						  false, true)),
+		InvalidOid, InvalidOid, COERCE_EXPLICIT_CALL);
+	if (!is_pseudo_constant_for_index(root, (Node *) sample_call, index))
+	{
+		return NIL;
+	}
+
+	nearby_args = lappend(list_make5(copyObject(center_ra_f8),
+									 copyObject(center_dec_f8),
+									 copyObject(semimajax_f8),
+									 copyObject(axis_ratio_f8),
+									 copyObject(pa_f8)),
+						  makeConst(INT4OID, -1, InvalidOid, 4,
+									Int32GetDatum(slot), false, true));
+	lower_cmp = make_opclause(ge_opid, BOOLOID, false,
+							  (Expr *) copyObject(ipix_expr),
+							  (Expr *) makeFuncExpr(nearby_funcid, INT8OID,
+													 nearby_args,
+													 InvalidOid, InvalidOid,
+													 COERCE_EXPLICIT_CALL),
+							  InvalidOid, InvalidOid);
+
+	nearby_args = lappend(list_make5(copyObject(center_ra_f8),
+									 copyObject(center_dec_f8),
+									 copyObject(semimajax_f8),
+									 copyObject(axis_ratio_f8),
+									 copyObject(pa_f8)),
+						  makeConst(INT4OID, -1, InvalidOid, 4,
+									Int32GetDatum(slot + 1), false, true));
+	upper_cmp = make_opclause(le_opid, BOOLOID, false,
+							  (Expr *) copyObject(ipix_expr),
+							  (Expr *) makeFuncExpr(nearby_funcid, INT8OID,
+													 nearby_args,
+													 InvalidOid, InvalidOid,
+													 COERCE_EXPLICIT_CALL),
+							  InvalidOid, InvalidOid);
+
+	return list_make2(lower_cmp, upper_cmp);
+}
+
+
+static bool
+q3c_estimate_const_expr(PlannerInfo *root, Node *node, Const **value_const)
+{
+	Node *estimated;
+
+	if (value_const == NULL || node == NULL)
+	{
+		return false;
+	}
+
+	estimated = node;
+	if (root != NULL)
+	{
+		estimated = estimate_expression_value(root, node);
+	}
+
+	if (estimated == NULL || !IsA(estimated, Const))
+	{
+		return false;
+	}
+
+	*value_const = (Const *) estimated;
+	return !(*value_const)->constisnull;
+}
+
+
+static void
+q3c_legacy_iterator_error(const char *proname)
+{
+	ereport(ERROR,
+			(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+			 errmsg("%s() is only kept as a compatibility stub for old extension versions", proname)));
+}
+
+
+static Expr *
+q3c_build_poly_query_simplified_clause(PlannerInfo *root, Oid funcid,
+									   List *args)
+{
+	extern struct q3c_prm hprm;
+	Oid exact_argtypes[3];
+	Oid polytype;
+	Expr *ra;
+	Expr *dec;
+	Expr *poly_expr;
+	q3c_coord_t poly_ra[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_dec[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_x[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_y[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_ax[Q3C_MAX_N_POLY_VERTEX];
+	q3c_coord_t poly_ay[Q3C_MAX_N_POLY_VERTEX];
+	q3c_poly qp;
+	q3c_ipix_t fulls[2 * Q3C_NFULLS];
+	q3c_ipix_t partials[2 * Q3C_NPARTIALS];
+	int nvert;
+	char too_large = 0;
+
+	if (list_length(args) != 3)
+	{
+		return NULL;
+	}
+
+	ra = (Expr *) linitial(args);
+	dec = (Expr *) lsecond(args);
+	poly_expr = (Expr *) llast(args);
+	polytype = exprType((Node *) poly_expr);
+
+	exact_argtypes[0] = exprType((Node *) ra);
+	exact_argtypes[1] = exprType((Node *) dec);
+	exact_argtypes[2] = polytype;
+
+	if (!q3c_estimate_poly_expr(root, (Node *) poly_expr, polytype,
+								poly_ra, poly_dec, &nvert))
+	{
+		return NULL;
+	}
+
+	qp.n = nvert;
+	qp.ra = poly_ra;
+	qp.dec = poly_dec;
+	qp.x = poly_x;
+	qp.y = poly_y;
+	qp.ax = poly_ax;
+	qp.ay = poly_ay;
+
+	q3c_poly_query(&hprm, &qp, fulls, partials, &too_large);
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+
+	return q3c_build_ranged_query_clause(funcid, ra, dec,
+										 "q3c_in_poly",
+										 exact_argtypes, 3, args,
+										 fulls, partials);
+}
+
+
+static bool
+q3c_estimate_float8_expr(PlannerInfo *root, Node *node, double *value)
+{
+	Const *value_const;
+
+	if (value == NULL || !q3c_estimate_const_expr(root, node, &value_const))
+	{
+		return false;
+	}
+
+	if (value_const->consttype != FLOAT8OID)
+	{
+		return false;
+	}
+
+	*value = DatumGetFloat8(value_const->constvalue);
+	return isfinite(*value);
+}
+
+
+static bool
+q3c_estimate_poly_expr(PlannerInfo *root, Node *node, Oid polytype,
+					   q3c_coord_t *ra, q3c_coord_t *dec, int *nvert)
+{
+	Const *value_const;
+
+	if (ra == NULL || dec == NULL || nvert == NULL ||
+		!q3c_estimate_const_expr(root, node, &value_const))
+	{
+		return false;
+	}
+
+	if (value_const->consttype != polytype)
+	{
+		return false;
+	}
+
+	if (polytype == get_array_type(FLOAT8OID))
+	{
+		convert_pgarray2poly(DatumGetArrayTypeP(value_const->constvalue),
+							 ra, dec, nvert);
+		return true;
+	}
+
+	if (polytype == POLYGONOID)
+	{
+		convert_pgpoly2poly(DatumGetPolygonP(value_const->constvalue),
+							ra, dec, nvert);
+		return true;
+	}
+
+	return false;
+}
+
+
+static double
+q3c_radius_selectivity(double radius)
+{
+	double ratio;
+
+	if (!isfinite(radius))
+	{
+		return 0;
+	}
+
+	ratio = 3.14 * radius * radius / 41252.;
+	CLAMP_PROBABILITY(ratio);
+	return ratio;
+}
+
+
+static bool
+q3c_join_match(q3c_coord_t leftra, q3c_coord_t leftdec,
+			   q3c_coord_t rightra, q3c_coord_t rightdec,
+			   q3c_coord_t radius)
+{
+	q3c_coord_t threshold;
+	q3c_coord_t distance;
+
+	if ((!isfinite(leftra)) || (!isfinite(leftdec)) ||
+		(!isfinite(rightra)) || (!isfinite(rightdec)) ||
+		(!isfinite(radius)))
+	{
+		return false;
+	}
+
+	threshold = sin(radius * Q3C_DEGRA / 2);
+	threshold *= threshold;
+	distance = q3c_sindist(leftra, leftdec, rightra, rightdec);
+
+	return distance < threshold;
+}
+
+
+static bool
+q3c_ellipse_join_match(q3c_coord_t leftra, q3c_coord_t leftdec,
+					   q3c_coord_t rightra, q3c_coord_t rightdec,
+					   q3c_coord_t semimajax, q3c_coord_t axis_ratio,
+					   q3c_coord_t PA)
+{
+	return q3c_ellipse_query_match(rightra, rightdec, leftra, leftdec,
+								   semimajax, axis_ratio, PA);
+}
+
+
+static bool
+q3c_radial_query_match(q3c_coord_t ra, q3c_coord_t dec, q3c_coord_t ra_cen,
+					   q3c_coord_t dec_cen, q3c_coord_t radius)
+{
+	q3c_coord_t threshold;
+	q3c_coord_t distance;
+
+	if ((!isfinite(ra)) || (!isfinite(dec)) ||
+		(!isfinite(ra_cen)) || (!isfinite(dec_cen)) ||
+		(!isfinite(radius)))
+	{
+		return false;
+	}
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen) > 90)
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
+	threshold = sin(radius * Q3C_DEGRA / 2);
+	threshold *= threshold;
+	distance = q3c_sindist(ra, dec, ra_cen, dec_cen);
+
+	return distance < threshold;
+}
+
+
+static bool
+q3c_ellipse_query_match(q3c_coord_t ra, q3c_coord_t dec, q3c_coord_t ra_cen,
+						q3c_coord_t dec_cen, q3c_coord_t semimajax,
+						q3c_coord_t axis_ratio, q3c_coord_t PA)
+{
+	q3c_coord_t e;
+
+	if ((!isfinite(ra)) || (!isfinite(dec)) ||
+		(!isfinite(ra_cen)) || (!isfinite(dec_cen)) ||
+		(!isfinite(semimajax)) || (!isfinite(axis_ratio)) ||
+		(!isfinite(PA)))
+	{
+		return false;
+	}
+
+	ra_cen = UNWRAP_RA(ra_cen);
+	if (q3c_fabs(dec_cen) > 90)
+	{
+		elog(ERROR, "The absolute value of declination > 90!");
+	}
+
+	e = q3c_sqrt(1 - axis_ratio * axis_ratio);
+	return q3c_in_ellipse(ra_cen, dec_cen, ra, dec, semimajax, e, PA);
+}
 
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
@@ -732,144 +1797,466 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_radial_query_it);
 Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 {
-	extern struct q3c_prm hprm;
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0);
-	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
-	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* error radius */
-	int iteration = PG_GETARG_INT32(3); /* iteration */
-	int full_flag = PG_GETARG_INT32(4); /* full_flag */
-	/* 1 means full, 0 means partial */
+	q3c_legacy_iterator_error("q3c_radial_query_it");
+	PG_RETURN_NULL();
+}
 
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 
-	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
-	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_exact);
+Datum pgq3c_radial_query_exact(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
 
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
-	 * So we should have the array with the size twice bigger
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_exact_real);
+Datum pgq3c_radial_query_exact_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query);
+Datum pgq3c_radial_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_real);
+Datum pgq3c_radial_query_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_radial_query_match(ra, dec, ra_cen, dec_cen, radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_radial_query_support);
+Datum pgq3c_radial_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_radial_query_simplified_clause(
+			req->root, req->fcall->funcid, req->fcall->args);
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_join);
+Datum pgq3c_ellipse_join(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t leftra;
+	q3c_coord_t leftdec;
+	q3c_coord_t rightra;
+	q3c_coord_t rightdec;
+	q3c_coord_t semimajax;
+	q3c_coord_t axis_ratio;
+	q3c_coord_t PA;
+
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2) ||
+		PG_ARGISNULL(3) || PG_ARGISNULL(4) || PG_ARGISNULL(5) ||
+		PG_ARGISNULL(6))
+	{
+		PG_RETURN_NULL();
+	}
+
+	leftra = PG_GETARG_FLOAT8(0);
+	leftdec = PG_GETARG_FLOAT8(1);
+	rightra = PG_GETARG_FLOAT8(2);
+	rightdec = PG_GETARG_FLOAT8(3);
+	semimajax = PG_GETARG_FLOAT8(4);
+	axis_ratio = PG_GETARG_FLOAT8(5);
+	PA = PG_GETARG_FLOAT8(6);
+
+	PG_RETURN_BOOL(q3c_ellipse_join_match(leftra, leftdec, rightra, rightdec,
+										  semimajax, axis_ratio, PA));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_join_internal);
+Datum pgq3c_ellipse_join_internal(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t leftra;
+	q3c_coord_t leftdec;
+	q3c_coord_t rightra;
+	q3c_coord_t rightdec;
+	q3c_coord_t semimajax;
+	q3c_coord_t axis_ratio;
+	q3c_coord_t PA;
+
+	if (PG_ARGISNULL(1) || PG_ARGISNULL(2) || PG_ARGISNULL(3) ||
+		PG_ARGISNULL(4) || PG_ARGISNULL(5) || PG_ARGISNULL(6) ||
+		PG_ARGISNULL(7))
+	{
+		PG_RETURN_NULL();
+	}
+
+	/*
+	 * Argument 0 is only present so the support hook can match the indexed
+	 * q3c_ang2ipix(rightra,rightdec) expression.  The exact predicate remains
+	 * the directional "right point inside ellipse centered on left point" test.
 	 */
-	static int invocation;
+	leftra = PG_GETARG_FLOAT8(1);
+	leftdec = PG_GETARG_FLOAT8(2);
+	rightra = PG_GETARG_FLOAT8(3);
+	rightdec = PG_GETARG_FLOAT8(4);
+	semimajax = PG_GETARG_FLOAT8(5);
+	axis_ratio = PG_GETARG_FLOAT8(6);
+	PA = PG_GETARG_FLOAT8(7);
 
-	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen) > 90)
+	PG_RETURN_BOOL(q3c_ellipse_join_match(leftra, leftdec, rightra, rightdec,
+										  semimajax, axis_ratio, PA));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_join_support);
+Datum pgq3c_ellipse_join_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	/*
+	 * Ellipse join is one-sided, so the simplified form only exposes the right
+	 * point's q3c_ang2ipix(...) expression together with one nearby slot.
+	 */
+	if (IsA(rawreq, SupportRequestSimplify))
 	{
-		elog(ERROR, "The absolute value of declination > 90!");
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_ellipse_join_internal_call(req->fcall->funcid,
+															req->fcall->args);
 	}
 
+	PG_RETURN_POINTER(ret);
+}
 
-	if (invocation == 0)
-	/* If this is the first invocation of the function */
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_join_internal_support);
+Datum pgq3c_ellipse_join_internal_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestIndexCondition))
 	{
-		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-		 * ipix_buf. Because if the program will be canceled or crashed
-		 * for some reason the invocation should be == 0
-		 */
-	}
-	else
-	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		SupportRequestIndexCondition *req =
+			(SupportRequestIndexCondition *) rawreq;
+
+		if (IsA(req->node, FuncExpr))
 		{
-			if (full_flag)
-			{
-				PG_RETURN_INT64(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT64(partials[iteration]);
-			}
+			FuncExpr *fcall = (FuncExpr *) req->node;
+
+			ret = (Node *) q3c_build_ellipse_join_index_quals(req->root,
+															  req->funcid,
+															  fcall->args,
+															  req->indexarg,
+															  req->index,
+															  req->opfamily);
+		}
+	}
+	else if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req =
+			(SupportRequestSelectivity *) rawreq;
+		double semimajax;
+
+		if (list_length(req->args) == 9 &&
+			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 5),
+									 &semimajax))
+		{
+			req->selectivity = q3c_radius_selectivity(semimajax) / 4.0;
+			ret = (Node *) req;
 		}
 	}
 
-	q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+	PG_RETURN_POINTER(ret);
+}
 
-	ra_cen_buf = ra_cen;
-	dec_cen_buf = dec_cen;
-	radius_buf = radius;
-	invocation = 1;
 
-	if (full_flag)
+PG_FUNCTION_INFO_V1(pgq3c_join);
+Datum pgq3c_join(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t leftra;
+	q3c_coord_t leftdec;
+	q3c_coord_t rightra;
+	q3c_coord_t rightdec;
+	q3c_coord_t radius;
+
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2) ||
+		PG_ARGISNULL(3) || PG_ARGISNULL(4))
 	{
-		PG_RETURN_INT64(fulls[iteration]);
+		PG_RETURN_NULL();
 	}
-	else
+
+	leftra = PG_GETARG_FLOAT8(0);
+	leftdec = PG_GETARG_FLOAT8(1);
+	rightra = PG_GETARG_FLOAT8(2);
+	rightdec = PG_GETARG_FLOAT8(3);
+	radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_join_match(leftra, leftdec, rightra, rightdec,
+								  radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_join_real);
+Datum pgq3c_join_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t leftra;
+	q3c_coord_t leftdec;
+	q3c_coord_t rightra;
+	q3c_coord_t rightdec;
+	q3c_coord_t radius;
+
+	if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2) ||
+		PG_ARGISNULL(3) || PG_ARGISNULL(4))
 	{
-		PG_RETURN_INT64(partials[iteration]);
+		PG_RETURN_NULL();
 	}
+
+	leftra = PG_GETARG_FLOAT8(0);
+	leftdec = PG_GETARG_FLOAT8(1);
+	rightra = PG_GETARG_FLOAT4(2);
+	rightdec = PG_GETARG_FLOAT4(3);
+	radius = PG_GETARG_FLOAT8(4);
+
+	PG_RETURN_BOOL(q3c_join_match(leftra, leftdec, rightra, rightdec,
+								  radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_join_internal);
+Datum pgq3c_join_internal(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t leftra;
+	q3c_coord_t leftdec;
+	q3c_coord_t rightra;
+	q3c_coord_t rightdec;
+	q3c_coord_t radius;
+
+	if (PG_ARGISNULL(2) || PG_ARGISNULL(3) || PG_ARGISNULL(4) ||
+		PG_ARGISNULL(5) || PG_ARGISNULL(6))
+	{
+		PG_RETURN_NULL();
+	}
+
+	/*
+	 * Arguments 0 and 1 are only present so the support hook can match either
+	 * side of the join to q3c_ang2ipix(...) indexes.  The exact predicate is the
+	 * ordinary spherical-distance test on the original coordinates.
+	 */
+	leftra = PG_GETARG_FLOAT8(2);
+	leftdec = PG_GETARG_FLOAT8(3);
+	rightra = PG_GETARG_FLOAT8(4);
+	rightdec = PG_GETARG_FLOAT8(5);
+	radius = PG_GETARG_FLOAT8(6);
+
+	PG_RETURN_BOOL(q3c_join_match(leftra, leftdec, rightra, rightdec,
+								  radius));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_join_support);
+Datum pgq3c_join_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	/*
+	 * The public function only exposes planner-friendly structure: an OR of
+	 * q3c_join_internal(...) clauses, each carrying one nearby_it() slot.
+	 */
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_join_internal_call(req->fcall->funcid,
+													req->fcall->args);
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_join_internal_support);
+Datum pgq3c_join_internal_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	/*
+	 * q3c_join_internal() owns the actual planner integration: index bounds come
+	 * from SupportRequestIndexCondition, while SupportRequestSelectivity costs a
+	 * single slot clause as one quarter of the full nearby window.
+	 */
+	if (IsA(rawreq, SupportRequestIndexCondition))
+	{
+		SupportRequestIndexCondition *req =
+			(SupportRequestIndexCondition *) rawreq;
+
+		if (IsA(req->node, FuncExpr))
+		{
+			FuncExpr *fcall = (FuncExpr *) req->node;
+
+			ret = (Node *) q3c_build_join_index_quals(req->root, req->funcid,
+													  fcall->args,
+													  req->indexarg,
+													  req->index,
+													  req->opfamily);
+		}
+	}
+	else if (IsA(rawreq, SupportRequestSelectivity))
+	{
+		SupportRequestSelectivity *req =
+			(SupportRequestSelectivity *) rawreq;
+		double radius;
+
+		if (list_length(req->args) == 8 &&
+			q3c_estimate_float8_expr(req->root, (Node *) list_nth(req->args, 6),
+									 &radius))
+		{
+			req->selectivity = q3c_radius_selectivity(radius) / 4.0;
+			ret = (Node *) req;
+		}
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_query);
+Datum pgq3c_ellipse_query(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2);
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3);
+	q3c_coord_t semimajax = PG_GETARG_FLOAT8(4);
+	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5);
+	q3c_coord_t PA = PG_GETARG_FLOAT8(6);
+
+	PG_RETURN_BOOL(q3c_ellipse_query_match(ra, dec, ra_cen, dec_cen,
+										   semimajax, axis_ratio, PA));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_support);
+Datum pgq3c_ellipse_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_ellipse_query_simplified_clause(
+			req->root, req->fcall->funcid, req->fcall->args);
+	}
+
+	PG_RETURN_POINTER(ret);
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_array);
+Datum pgq3c_poly_query_array(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra, dec, poly_arr));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_array_real);
+Datum pgq3c_poly_query_array_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra, dec, poly_arr));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_polygon);
+Datum pgq3c_poly_query_polygon(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT8(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT8(1);
+	POLYGON *poly = PG_GETARG_POLYGON_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra, dec, poly));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_polygon_real);
+Datum pgq3c_poly_query_polygon_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra = PG_GETARG_FLOAT4(0);
+	q3c_coord_t dec = PG_GETARG_FLOAT4(1);
+	POLYGON *poly = PG_GETARG_POLYGON_P(2);
+
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra, dec, poly));
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_support);
+Datum pgq3c_poly_query_support(PG_FUNCTION_ARGS)
+{
+	Node *rawreq = (Node *) PG_GETARG_POINTER(0);
+	Node *ret = NULL;
+
+	if (IsA(rawreq, SupportRequestSimplify))
+	{
+		SupportRequestSimplify *req = (SupportRequestSimplify *) rawreq;
+
+		ret = (Node *) q3c_build_poly_query_simplified_clause(
+			req->root, req->fcall->funcid, req->fcall->args);
+	}
+
+	PG_RETURN_POINTER(ret);
 }
 
 
 PG_FUNCTION_INFO_V1(pgq3c_ellipse_query_it);
 Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 {
-	extern struct q3c_prm hprm;
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0);
-	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1);
-	q3c_coord_t radius = PG_GETARG_FLOAT8(2); /* Major axis */
-	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* Axis ratio */
-	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
-	int iteration = PG_GETARG_INT32(5); /* iteration */
-	int full_flag = PG_GETARG_INT32(6); /* full_flag */
-	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
-	/* 1 means full, 0 means partial */
-
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
-	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
-	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
-	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
-	 * Here the Q3C_NPARTIALS and Q3C_NFULLS is the number of pairs !!! of ranges
-	 * So we should have the array with the size twice bigger
-	 */
-
-	static int invocation;
-
-	ra_cen = UNWRAP_RA(ra_cen);
-	if (q3c_fabs(dec_cen) > 90)
-	{
-		elog(ERROR, "The absolute value of declination > 90!");
-	}
-
-
-	if (invocation == 0)
-	/* If this is the first invocation of the function */
-	{
-		/* I should set invocation=1 ONLY!!! after setting ra_cen_buf, dec_cen_buf and
-		 * ipix_buf. Because if the program will be canceled or crashed
-		 * for some reason the invocation should be == 0
-		 */
-	}
-	else
-	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
-		{
-			if (full_flag)
-			{
-				PG_RETURN_INT64(fulls[iteration]);
-			}
-			else
-			{
-				PG_RETURN_INT64(partials[iteration]);
-			}
-		}
-	}
-
-	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
-	                  partials);
-
-	ra_cen_buf = ra_cen;
-	dec_cen_buf = dec_cen;
-	radius_buf = radius;
-	invocation = 1;
-
-	if (full_flag)
-	{
-		PG_RETURN_INT64(fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT64(partials[iteration]);
-	}
+	q3c_legacy_iterator_error("q3c_ellipse_query_it");
+	PG_RETURN_NULL();
 }
+
 
 static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool typbyval,
                                    char typalign, int16 typlen)
@@ -1002,233 +2389,130 @@ typedef struct q3c_poly_info_type {
 	/* IF YOU MAKE CHANGES MAKE SURE YOU CHANGE THE COPY() FUNCTION */
 } q3c_poly_info_type;
 
-static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b)
+static bool
+q3c_poly_query_array_match(FunctionCallInfo fcinfo, q3c_coord_t ra_cen,
+						   q3c_coord_t dec_cen, ArrayType *poly_arr)
 {
-	int i,j;
-	for (i = 0; i < (2 * Q3C_NPARTIALS); i++)
-	{
-		b->partials[i] = a->partials[i];
-	}
-	for (i = 0; i < (2 * Q3C_NFULLS); i++)
-	{
-		b->fulls[i] = a->fulls[i];
-	}
-	for (i = 0; i < Q3C_MAX_N_POLY_VERTEX; i++)
-	{
-		b->ra[i] = a->ra[i];
-		b->dec[i] = a->dec[i];
-		b->x[i] = a->x[i];
-		b->y[i] = a->y[i];
-		b->ax[i] = a->ax[i];
-		b->ay[i] = a->ay[i];
-		for (j = 0; j < 3; j++)
-		{
-			b->axpj[j][i] = a->axpj[j][i];
-			b->aypj[j][i] = a->aypj[j][i];
-			b->xpj[j][i] = a->xpj[j][i];
-			b->ypj[j][i] = a->ypj[j][i];
-
-		}
-
-	}
-	for (i = 0; i < 6; i++)
-	{
-		b->faces[i] = a->faces[i];
-	}
-	b->multi_flag = a->multi_flag;
-}
-
-
-/* Cache logic here is the following
-   when the function is called for the first time with iteration =0
-   I compute everything allocate memory and store computations in the static variable
-   and locally allocated q3c_poly_info_table
-   when the function is called for the first time and iteration  !=0
-   I allocate new memory, copy stuff from static variable into locally allocated stuff
-   I make no checks of the data
-   If the function is called for the second time (i.e. fn_extra is not null)
-   I blindly assume everything is EXACTLY the same and do not recompute anything
-   as the q3c_poly_query_it() is the internal function and is ONLY supposed
-   to be called with the constant polygon
- */
-PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
-Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
-{
-	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(0);
-	int iteration = PG_GETARG_INT32(1); /* iteration */
-	int full_flag = PG_GETARG_INT32(2); /* full_flag */
-	/* 1 means full, 0 means partial*/
 	extern struct q3c_prm hprm;
-
 	char too_large = 0;
+	int nvert;
+	int identical;
 	q3c_poly_info_type *qpit;
-	q3c_poly qp;
-	static int good_cache;
-	int first_call;
-	int identical = 0;
-	static q3c_poly_info_type lqpit;
 
 	if (fcinfo->flinfo->fn_extra == 0)
 	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		first_call = 1;
-	}
-	else
-	{
-		first_call = 0;
+		fcinfo->flinfo->fn_extra =
+			MemoryContextAlloc(fcinfo->flinfo->fn_mcxt,
+							 sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type *) fcinfo->flinfo->fn_extra)->ready = 0;
 	}
 
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
+	qpit = (q3c_poly_info_type *) fcinfo->flinfo->fn_extra;
+	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) &&
+		qpit->ready;
 
-	/* if second call it is easy */
-	if (!first_call)
+	if (q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
+									   ra_cen, dec_cen, &too_large, identical,
+									   qpit->xpj, qpit->ypj,
+									   qpit->axpj, qpit->aypj,
+									   qpit->faces,
+									   &(qpit->multi_flag)) == Q3C_DISJUNCT)
 	{
-		if (full_flag)
-		{
-			PG_RETURN_INT64(qpit->fulls[iteration]);
-		}
-		else
-		{
-			PG_RETURN_INT64(qpit->partials[iteration]);
-		}
-	}
-
-	if (iteration > 0)
-	{
-		copy_q3c_poly_info_type(&lqpit, qpit);
-	}
-	qp.ra = qpit->ra;
-	qp.dec = qpit->dec;
-	qp.x = qpit->x;
-	qp.y = qpit->y;
-	qp.ax = qpit->ax;
-	qp.ay = qpit->ay;
-
-	identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
-	/* We fill the arrays and check if it matches what we had before */
-
-	if (!identical || !good_cache)
-	{
-		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
 		if (too_large)
 		{
 			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 		}
-	}
-	if (iteration == 0)
-	{
-		good_cache = 0;
-		copy_q3c_poly_info_type(qpit, &lqpit);
-		good_cache = 1;
+
+		qpit->ready = 1;
+		return false;
 	}
 
-	if (full_flag)
+	if (too_large)
 	{
-		PG_RETURN_INT64(qpit->fulls[iteration]);
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
 	}
-	else
+	qpit->ready = 1;
+	return true;
+}
+
+
+static bool
+q3c_poly_query_polygon_match(FunctionCallInfo fcinfo, q3c_coord_t ra_cen,
+							 q3c_coord_t dec_cen, POLYGON *poly)
+{
+	extern struct q3c_prm hprm;
+	char too_large = 0;
+	int nvert;
+	int identical;
+	q3c_poly_info_type *qpit;
+
+	if (fcinfo->flinfo->fn_extra == 0)
 	{
-		PG_RETURN_INT64(qpit->partials[iteration]);
+		fcinfo->flinfo->fn_extra =
+			MemoryContextAlloc(fcinfo->flinfo->fn_mcxt,
+							 sizeof(q3c_poly_info_type));
+		((q3c_poly_info_type *) fcinfo->flinfo->fn_extra)->ready = 0;
 	}
+
+	qpit = (q3c_poly_info_type *) fcinfo->flinfo->fn_extra;
+	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) &&
+		qpit->ready;
+
+	if (q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
+									   ra_cen, dec_cen, &too_large, identical,
+									   qpit->xpj, qpit->ypj,
+									   qpit->axpj, qpit->aypj,
+									   qpit->faces,
+									   &(qpit->multi_flag)) == Q3C_DISJUNCT)
+	{
+		if (too_large)
+		{
+			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+		}
+
+		qpit->ready = 1;
+		return false;
+	}
+
+	qpit->ready = 1;
+	if (too_large)
+	{
+		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
+	}
+
+	return true;
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
+Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
+{
+	q3c_legacy_iterator_error("q3c_poly_query_it");
+	PG_RETURN_NULL();
 }
 
 
 PG_FUNCTION_INFO_V1(pgq3c_poly_query1_it);
 Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 {
-	POLYGON *poly_arr = PG_GETARG_POLYGON_P(0);
-	int iteration = PG_GETARG_INT32(1); /* iteration */
-	int full_flag = PG_GETARG_INT32(2); /* full_flag */
-	/* 1 means full, 0 means partial*/
-	extern struct q3c_prm hprm;
-	char too_large = 0;
-	q3c_poly_info_type *qpit;
-	q3c_poly qp;
-	static int good_cache;
-	int first_call;
-	int identical = 0;
-	static q3c_poly_info_type lqpit;
-
-	if (fcinfo->flinfo->fn_extra == 0)
-	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		first_call = 1;
-	}
-	else
-	{
-		first_call = 0;
-	}
-
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
-
-	/* if second call it is easy */
-	if (!first_call)
-	{
-		if (full_flag)
-		{
-			PG_RETURN_INT64(qpit->fulls[iteration]);
-		}
-		else
-		{
-			PG_RETURN_INT64(qpit->partials[iteration]);
-		}
-	}
-
-	if (iteration > 0)
-	{
-		copy_q3c_poly_info_type(&lqpit, qpit);
-	}
-	qp.ra = qpit->ra;
-	qp.dec = qpit->dec;
-	qp.x = qpit->x;
-	qp.y = qpit->y;
-	qp.ax = qpit->ax;
-	qp.ay = qpit->ay;
-
-	identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
-	/* We fill the arrays and check if it matches what we had before */
-
-	if (!identical || !good_cache)
-	{
-		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
-		if (too_large)
-		{
-			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-		}
-	}
-	if (iteration == 0)
-	{
-		good_cache = 0;
-		copy_q3c_poly_info_type(qpit, &lqpit);
-		good_cache = 1;
-	}
-
-	if (full_flag)
-	{
-		PG_RETURN_INT64(qpit->fulls[iteration]);
-	}
-	else
-	{
-		PG_RETURN_INT64(qpit->partials[iteration]);
-	}
+	q3c_legacy_iterator_error("q3c_poly_query_it");
+	PG_RETURN_NULL();
 }
+
 
 PG_FUNCTION_INFO_V1(pgq3c_in_ellipse);
 Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
 {
-
 	q3c_coord_t ra = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(2); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(3); // dec_cen
-	q3c_coord_t radius = PG_GETARG_FLOAT8(4); // error radius
+	q3c_coord_t semimajax = PG_GETARG_FLOAT8(4); // semi-major axis
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(5); // axis_ratio
 	q3c_coord_t PA = PG_GETARG_FLOAT8(6); // PA
-	q3c_coord_t e = q3c_sqrt(1 - axis_ratio * axis_ratio);
-	bool result = q3c_in_ellipse(ra_cen, dec_cen, ra,dec, radius, e, PA);
-	PG_RETURN_BOOL(result);
+
+	PG_RETURN_BOOL(q3c_ellipse_query_match(ra, dec, ra_cen, dec_cen,
+										   semimajax, axis_ratio, PA));
 }
 
 
@@ -1239,78 +2523,62 @@ Datum pgq3c_in_ellipse(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_in_poly);
 Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 {
+	q3c_legacy_iterator_error("q3c_in_poly");
+	PG_RETURN_NULL();
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_exact_array);
+Datum pgq3c_poly_query_exact_array(PG_FUNCTION_ARGS)
+{
 	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
-	extern struct q3c_prm hprm;
-	char too_large = 0;
-	int nvert;
-	bool result;
-	int identical;
-	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra == 0)
-	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
-	}
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra_cen, dec_cen,
+											  poly_arr));
+}
 
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
 
-	identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_exact_array_real);
+Datum pgq3c_poly_query_exact_array_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT4(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT4(1); // dec_cen
+	ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
 
-	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-	                                        ra_cen, dec_cen, &too_large, identical,
-	                                        qpit->xpj, qpit->ypj,
-	                                        qpit->axpj, qpit->aypj,
-	                                        qpit->faces, &(qpit->multi_flag)
-	                                        ) !=    Q3C_DISJUNCT;
-	if (too_large)
-	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-	}
-	qpit->ready = 1;
+	PG_RETURN_BOOL(q3c_poly_query_array_match(fcinfo, ra_cen, dec_cen,
+											  poly_arr));
+}
 
-	PG_RETURN_BOOL(result);
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_exact_polygon);
+Datum pgq3c_poly_query_exact_polygon(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
+
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra_cen, dec_cen,
+													poly));
 }
 
 
 PG_FUNCTION_INFO_V1(pgq3c_in_poly1);
 Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 {
-	q3c_coord_t ra_cen = PG_GETARG_FLOAT8(0); // ra_cen
-	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
+	q3c_legacy_iterator_error("q3c_in_poly");
+	PG_RETURN_NULL();
+}
+
+
+PG_FUNCTION_INFO_V1(pgq3c_poly_query_exact_polygon_real);
+Datum pgq3c_poly_query_exact_polygon_real(PG_FUNCTION_ARGS)
+{
+	q3c_coord_t ra_cen = PG_GETARG_FLOAT4(0); // ra_cen
+	q3c_coord_t dec_cen = PG_GETARG_FLOAT4(1); // dec_cen
 	POLYGON *poly = PG_GETARG_POLYGON_P(2); // ra_cen
-	extern struct q3c_prm hprm;
-	char too_large = 0;
-	int nvert;
-	bool result;
-	int identical;
-	q3c_poly_info_type *qpit;
 
-	if (fcinfo->flinfo->fn_extra == 0)
-	{
-		// allocate memory where we are going to store converted info
-		fcinfo->flinfo->fn_extra = MemoryContextAlloc(fcinfo->flinfo->fn_mcxt, sizeof(q3c_poly_info_type));
-		((q3c_poly_info_type*) (fcinfo->flinfo->fn_extra))->ready = 0;
-	}
-
-	qpit = (q3c_poly_info_type*) (fcinfo->flinfo->fn_extra);
-
-	identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
-
-	result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec,
-	                                        ra_cen, dec_cen, &too_large, identical,
-	                                        qpit->xpj, qpit->ypj,
-	                                        qpit->axpj, qpit->aypj,
-	                                        qpit->faces, &(qpit->multi_flag)
-	                                        ) !=    Q3C_DISJUNCT;
-	qpit->ready = 1;
-	if (too_large)
-	{
-		elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
-	}
-
-	PG_RETURN_BOOL(result);
+	PG_RETURN_BOOL(q3c_poly_query_polygon_match(fcinfo, ra_cen, dec_cen,
+												poly));
 }
