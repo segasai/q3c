@@ -79,6 +79,24 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS);
 Datum pgq3c_seljoin(PG_FUNCTION_ARGS);
 Datum pgq3c_seloper(PG_FUNCTION_ARGS);
 
+static void q3c_check_iteration(const char *funcname, int iteration, int nitems)
+{
+	if ((iteration < 0) || (iteration >= nitems))
+	{
+		elog(ERROR, "%s: invalid iteration %d; valid range is 0..%d",
+		     funcname, iteration, nitems - 1);
+	}
+}
+
+static void q3c_check_full_flag(const char *funcname, int full_flag)
+{
+	if ((full_flag != 0) && (full_flag != 1))
+	{
+		elog(ERROR, "%s: invalid full_flag %d; valid values are 0 and 1",
+		     funcname, full_flag);
+	}
+}
+
 
 /* Dummy function that implements the selectivity operator */
 PG_FUNCTION_INFO_V1(pgq3c_seloper);
@@ -487,8 +505,8 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_nearby_it);
 Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 {
-	q3c_ipix_t ipix_array[8];
-	static q3c_ipix_t ipix_array_buf[8];
+	q3c_ipix_t ipix_array[Q3C_NNEARBY];
+	static q3c_ipix_t ipix_array_buf[Q3C_NNEARBY];
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 	static int invocation;
 	int i;
@@ -499,6 +517,8 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t dec_cen = PG_GETARG_FLOAT8(1); // dec_cen
 	q3c_coord_t radius = PG_GETARG_FLOAT8(2); // error radius
 	int iteration = PG_GETARG_INT32(3); // iteration
+
+	q3c_check_iteration("q3c_nearby_it", iteration, Q3C_NNEARBY);
 
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
 	{
@@ -528,7 +548,7 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	circle.rad = radius;
 	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
 
-	for(i = 0; i < 8; i++)
+	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
 		ipix_array_buf[i] = ipix_array[i];
 	}
@@ -545,8 +565,8 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_nearby_pm_it);
 Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 {
-	q3c_ipix_t ipix_array[8];
-	static q3c_ipix_t ipix_array_buf[8];
+	q3c_ipix_t ipix_array[Q3C_NNEARBY];
+	static q3c_ipix_t ipix_array_buf[Q3C_NNEARBY];
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
 	static q3c_coord_t pmra_buf, pmdec_buf, max_epoch_delta_buf;
 	static int invocation;
@@ -561,9 +581,11 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	const int ra_arg_pos = 0, dec_arg_pos = 1, pmra_arg_pos = 2, pmdec_arg_pos = 3,
 	          cosdec_arg_pos = 4, maxepochdelta_arg_pos = 5, radius_arg_pos = 6, iteration_arg_pos = 7;
 
-	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(radius_arg_pos))
+	if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) ||
+	    PG_ARGISNULL(cosdec_arg_pos) || PG_ARGISNULL(radius_arg_pos) ||
+	    PG_ARGISNULL(iteration_arg_pos))
 	{
-		elog(ERROR, "Right Ascensions and raddii must be not null");
+		elog(ERROR, "Right Ascension, Declination, cosdec_flag, radius, and iteration must be not null");
 	}
 
 	ra_cen = PG_GETARG_FLOAT8(ra_arg_pos); // ra_cen
@@ -588,6 +610,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	radius = PG_GETARG_FLOAT8(radius_arg_pos); // error radius
 
 	iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
+	q3c_check_iteration("q3c_nearby_pm_it", iteration, Q3C_NNEARBY);
 
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) )
 	{
@@ -640,7 +663,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 
 	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
 
-	for(i = 0; i < 8; i++)
+	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
 		ipix_array_buf[i] = ipix_array[i];
 	}
@@ -660,8 +683,8 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(pgq3c_ellipse_nearby_it);
 Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 {
-	q3c_ipix_t ipix_array[8];
-	static q3c_ipix_t ipix_array_buf[8];
+	q3c_ipix_t ipix_array[Q3C_NNEARBY];
+	static q3c_ipix_t ipix_array_buf[Q3C_NNEARBY];
 	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf, axis_ratio_buf, PA_buf;
 	static int invocation;
 	int i;
@@ -674,6 +697,8 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	q3c_coord_t axis_ratio = PG_GETARG_FLOAT8(3); /* axis_ratio */
 	q3c_coord_t PA = PG_GETARG_FLOAT8(4); /* PA */
 	int iteration = PG_GETARG_INT32(5); /* iteration */
+
+	q3c_check_iteration("q3c_ellipse_nearby_it", iteration, Q3C_NNEARBY);
 
 	if ( (!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)) )
 	{
@@ -709,7 +734,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 
 	q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
 
-	for(i = 0; i < 8; i++)
+	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
 		ipix_array_buf[i] = ipix_array[i];
 	}
@@ -750,6 +775,10 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 	 * So we should have the array with the size twice bigger
 	 */
 	static int invocation;
+
+	q3c_check_full_flag("q3c_radial_query_it", full_flag);
+	q3c_check_iteration("q3c_radial_query_it", iteration,
+	                    full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
 
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen) > 90)
@@ -822,6 +851,10 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	 */
 
 	static int invocation;
+
+	q3c_check_full_flag("q3c_ellipse_query_it", full_flag);
+	q3c_check_iteration("q3c_ellipse_query_it", iteration,
+	                    full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
 
 	ra_cen = UNWRAP_RA(ra_cen);
 	if (q3c_fabs(dec_cen) > 90)
@@ -1068,6 +1101,10 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 	int identical = 0;
 	static q3c_poly_info_type lqpit;
 
+	q3c_check_full_flag("q3c_poly_query_it", full_flag);
+	q3c_check_iteration("q3c_poly_query_it", iteration,
+	                    full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
+
 	if (fcinfo->flinfo->fn_extra == 0)
 	{
 		// allocate memory where we are going to store converted info
@@ -1149,6 +1186,10 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 	int first_call;
 	int identical = 0;
 	static q3c_poly_info_type lqpit;
+
+	q3c_check_full_flag("q3c_poly_query_it", full_flag);
+	q3c_check_iteration("q3c_poly_query_it", iteration,
+	                    full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
 
 	if (fcinfo->flinfo->fn_extra == 0)
 	{
