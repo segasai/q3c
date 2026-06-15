@@ -106,6 +106,8 @@ SELECT * FROM test_small WHERE q3c_poly_query(ra, dec,
 (0.998210,-0.059804))'::polygon);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4,5,6,7]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4]);
+SELECT q3c_in_poly(0, 0, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
+SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((1,2),(3,4))'::polygon);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((0,0),(90,0),(45,89))'::polygon);
 SELECT q3c_nearby_it(0, 0, 1, -1);

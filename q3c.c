@@ -904,7 +904,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 }
 
-static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool typbyval,
+static q3c_coord_t read_from_array(char **p, bits8 **bitmap, int *bitmask, bool typbyval,
                                    char typalign, int16 typlen)
 {
 	q3c_coord_t val;
@@ -912,7 +912,7 @@ static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool t
 	/* Taken from /pgsql/src/backend/utils/adt/arrayfuncs.c
 	 * function deconstruct_array
 	 */
-	if (bitmap && (*bitmap & *bitmask) == 0)
+	if (*bitmap && (**bitmap & *bitmask) == 0)
 	{
 		ereport(ERROR,
 		        (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
@@ -921,12 +921,12 @@ static q3c_coord_t read_from_array(char **p, bits8 *bitmap, int *bitmask, bool t
 	val = DatumGetFloat8(fetch_att(*p, typbyval, typlen));
 	*p = att_addlength_pointer(*p, typlen, PointerGetDatum(p));
 	*p = (char *) att_align_nominal(*p, typalign);
-	if (bitmap)
+	if (*bitmap)
 	{
 		*bitmask <<= 1;
 		if (*bitmask == 0x100)
 		{
-			bitmap++;
+			(*bitmap)++;
 			*bitmask = 1;
 		}
 	}
@@ -974,8 +974,8 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 
 	for (i = 0; i < poly_nitems; i++)
 	{
-		ra_cur = read_from_array(&p, bitmap, &bitmask, typbyval, typalign, typlen);
-		dec_cur = read_from_array(&p, bitmap, &bitmask, typbyval, typalign, typlen);
+		ra_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
+		dec_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
 
 		if ((in_ra[i] != ra_cur) || (in_dec[i] != dec_cur))
 		{
