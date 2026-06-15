@@ -15,7 +15,7 @@ CONTEXT:  SQL function "q3c_poly_query" during inlining
 ERROR:  q3c_nearby_it: invalid iteration -1; valid range is 0..7
 ERROR:  q3c_nearby_it: invalid iteration 8; valid range is 0..7
 ERROR:  q3c_nearby_pm_it: invalid iteration 8; valid range is 0..7
-ERROR:  Right Ascension, Declination, cosdec_flag, radius, and iteration must be not null
+ERROR:  Right Ascension, Declination, cosdec_flag, radius, and iteration must not be null
 ERROR:  q3c_ellipse_nearby_it: invalid iteration 8; valid range is 0..7
 ERROR:  q3c_radial_query_it: invalid iteration 100; valid range is 0..99
 ERROR:  q3c_radial_query_it: invalid full_flag 2; valid values are 0 and 1
