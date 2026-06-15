@@ -585,7 +585,7 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	    PG_ARGISNULL(cosdec_arg_pos) || PG_ARGISNULL(radius_arg_pos) ||
 	    PG_ARGISNULL(iteration_arg_pos))
 	{
-		elog(ERROR, "Right Ascension, Declination, cosdec_flag, radius, and iteration must be not null");
+		elog(ERROR, "Right Ascension, Declination, cosdec_flag, radius, and iteration must not be null");
 	}
 
 	ra_cen = PG_GETARG_FLOAT8(ra_arg_pos); // ra_cen
