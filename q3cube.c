@@ -571,6 +571,19 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	int i, nistack = 0;
 	const q3c_coord_t q3c_lg2 = Q3C_LG2;
 
+	if (((region == Q3C_CIRCLE) &&
+	     (((q3c_circle_region *)region_data)->rad < 0)) ||
+	    ((region == Q3C_ELLIPSE) &&
+	     (((q3c_ellipse_region *)region_data)->rad < 0)))
+	{
+		for(i = 0; i < 4; i++ )
+		{
+			*(ipix_cur++) = 1;
+			*(ipix_cur++) = -1;
+		}
+		return;
+	}
+
 	if (q3c_too_big_check(region, region_data))
 	{
 		/* the whole sky */
@@ -2477,6 +2490,12 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
+	if (rad < 0)
+	{
+		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
+		return;
+	}
+
 	/* 35 degrees is a magic size above which the cone from the search can
 	 * produce a hyperbola or a parabola on a main face and where a lot of
 	 * code will start to break.
@@ -2872,6 +2891,12 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
+	if (majax < 0)
+	{
+		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
+		return;
+	}
+
 	/* 35 degrees is a magic size above which the cone from the search can
 	 * produce a hyperbola or a parabola on a main face and where a lot of
 	 * code will start to break.
@@ -3040,4 +3065,3 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
 } /* End of q3c_ellipse_query() */
-

@@ -106,6 +106,17 @@ SELECT * FROM test_small WHERE q3c_poly_query(ra, dec,
 (0.998210,-0.059804))'::polygon);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4,5,6,7]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4]);
+SELECT q3c_in_poly(0, 0, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
+SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((1,2),(3,4))'::polygon);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((0,0),(90,0),(45,89))'::polygon);
-
+SELECT q3c_nearby_it(0, 0, 1, -1);
+SELECT q3c_nearby_it(0, 0, 1, 8);
+SELECT q3c_nearby_pm_it(0, 0, NULL, NULL, 0, NULL, 1, 8);
+SELECT q3c_nearby_pm_it(0, 0, NULL, NULL, 0, NULL, 1, NULL);
+SELECT q3c_ellipse_nearby_it(0, 0, 1, 1, 0, 8);
+SELECT q3c_radial_query_it(0, 0, 1, 100, 1);
+SELECT q3c_radial_query_it(0, 0, 1, 0, 2);
+SELECT q3c_ellipse_query_it(0, 0, 1, 1, 0, 100, 0);
+SELECT q3c_poly_query_it(ARRAY[0,0,1,0,0,1]::double precision[], 100, 1);
+SELECT q3c_poly_query_it('((0,0),(1,0),(0,1))'::polygon, -1, 0);

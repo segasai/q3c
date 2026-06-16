@@ -180,6 +180,9 @@ typedef long double q3c_coord_t;
 #define Q3C_NFULLS 50
 /*length of the list of the fully covered ipix ranges*/
 
+#define Q3C_NNEARBY 8
+/*length of the list of nearby ipix range bounds*/
+
 #define Q3C_MAX_DEPTH 4
 /*the maximum depth of going down the quadtree when doing spatial searches */
 
