@@ -2377,7 +2377,7 @@ void q3c_output_stack( struct q3c_prm *hprm,
                        q3c_ipix_t *out_ipix_arr_partials,
                        int *out_ipix_arr_partials_pos)
 {
-	int i, j;
+	int i;
 	q3c_ipix_t xi, yi, ipix_tmp1, ipix_tmp2, ntmp1;
 	const q3c_ipix_t  *xbits = hprm->xbits, *ybits = hprm->ybits;
 
@@ -2415,13 +2415,11 @@ void q3c_output_stack( struct q3c_prm *hprm,
 	/* Run through partly covered squares (we take them from work_stack where
 	 * the cur_square->status == Q3C_PARTIAL)
 	 */
-	for(i = 0, j = -1; i < work_nstack; i++)
+	for(i = 0; i < work_nstack; i++)
 	{
 		cur_square = work_stack + i;
 		if (cur_square->status != Q3C_PARTIAL)
 			continue;
-		else
-			j += 1;
 		ntmp1 = (nside / cur_square->nside0);
 		//fprintf(stdout, "XX%lld\n", ntmp1);
 		xi = cur_square->x0 * ntmp1;
