@@ -96,7 +96,7 @@ jobs:
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coveralls
         uses: coverallsapp/github-action@v2
-	continue-on-error: true
+        continue-on-error: true
         with:
           file: lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
