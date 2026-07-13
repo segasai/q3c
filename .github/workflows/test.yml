@@ -29,7 +29,7 @@ jobs:
             compiler: 'clang'
     steps:
       - name: Checkout 
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: PG cleanup
         run: |
           sudo apt-get update
@@ -83,6 +83,8 @@ jobs:
           psql -c "create extension q3c version '2.0.0'" exttest
           psql -c "alter extension q3c update to '2.0.1'" exttest 
           psql -c "alter extension q3c update to '2.0.2'" exttest 
+          psql -c "alter extension q3c update to '2.0.3'" exttest 
+          psql -c "alter extension q3c update to '2.0.4'" exttest 
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Generate Coverage Report
         run: |
@@ -94,6 +96,7 @@ jobs:
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Coveralls
         uses: coverallsapp/github-action@v2
+	continue-on-error: true
         with:
           file: lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
