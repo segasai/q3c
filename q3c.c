@@ -904,7 +904,7 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 }
 
-static q3c_coord_t read_from_array(char **p, bits8 **bitmap, int *bitmask, bool typbyval,
+static q3c_coord_t read_from_array(char **p, uint8 **bitmap, int *bitmask, bool typbyval,
                                    char typalign, int16 typlen)
 {
 	q3c_coord_t val;
@@ -919,7 +919,7 @@ static q3c_coord_t read_from_array(char **p, bits8 **bitmap, int *bitmask, bool 
 		         errmsg("null array element not allowed in this context")));
 	}
 	val = DatumGetFloat8(fetch_att(*p, typbyval, typlen));
-	*p = att_addlength_pointer(*p, typlen, PointerGetDatum(p));
+	*p = att_addlength_pointer(*p, typlen, *p);
 	*p = (char *) att_align_nominal(*p, typalign);
 	if (*bitmap)
 	{
@@ -944,7 +944,7 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
 	int i;
 	q3c_coord_t ra_cur, dec_cur;
 	char *p;
-	bits8 *bitmap;
+	uint8 *bitmap;
 	int bitmask;
 	get_typlenbyvalalign(element_type, &typlen, &typbyval, &typalign);
 
