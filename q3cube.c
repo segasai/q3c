@@ -34,14 +34,16 @@ static int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
 static void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
                              struct q3c_square* out_stack, int *out_nstack,
                              int cur_depth, int res_depth);
-static void q3c_output_stack( struct q3c_prm *hprm,
-                              struct q3c_square *out_stack, int out_nstack,
-                              struct q3c_square *work_stack, int work_nstack,
-                              int face_num, int nside,
-                              q3c_ipix_t *out_ipix_arr_fulls,
-                              int *out_ipix_arr_fulls_pos,
-                              q3c_ipix_t *out_ipix_arr_partials,
-                              int *out_ipix_arr_partials_pos);
+static int q3c_output_stack( struct q3c_prm *hprm,
+                             struct q3c_square *out_stack, int out_nstack,
+                             struct q3c_square *work_stack, int work_nstack,
+                             int face_num, int nside,
+                             q3c_ipix_t *out_ipix_arr_fulls,
+                             int *out_ipix_arr_fulls_pos,
+                             q3c_ipix_t *out_ipix_arr_partials,
+                             int *out_ipix_arr_partials_pos);
+static void q3c_all_sky_ranges(q3c_ipix_t nside, q3c_ipix_t *out_ipix_arr_fulls,
+                               q3c_ipix_t *out_ipix_arr_partials);
 
 
 static void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
@@ -2366,16 +2368,20 @@ void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
 
 /* This function processes the stack of quad-tree squares and puts the
  * fully covered and partially covered squares in the appropriate output
- * lists
+ * lists.
+ * It returns 0 on success and 1 if the ranges did not fit in the output
+ * arrays, which hold Q3C_NFULLS/Q3C_NPARTIALS pairs each. In the latter case
+ * the caller is expected to redo the decomposition with a smaller res_depth,
+ * which produces fewer and coarser ranges.
  */
-void q3c_output_stack( struct q3c_prm *hprm,
-                       struct q3c_square *out_stack, int out_nstack,
-                       struct q3c_square *work_stack, int work_nstack,
-                       int face_num, int nside,
-                       q3c_ipix_t *out_ipix_arr_fulls,
-                       int *out_ipix_arr_fulls_pos,
-                       q3c_ipix_t *out_ipix_arr_partials,
-                       int *out_ipix_arr_partials_pos)
+int q3c_output_stack( struct q3c_prm *hprm,
+                      struct q3c_square *out_stack, int out_nstack,
+                      struct q3c_square *work_stack, int work_nstack,
+                      int face_num, int nside,
+                      q3c_ipix_t *out_ipix_arr_fulls,
+                      int *out_ipix_arr_fulls_pos,
+                      q3c_ipix_t *out_ipix_arr_partials,
+                      int *out_ipix_arr_partials_pos)
 {
 	int i;
 	q3c_ipix_t xi, yi, ipix_tmp1, ipix_tmp2, ntmp1;
@@ -2400,6 +2406,10 @@ void q3c_output_stack( struct q3c_prm *hprm,
 		 * The query should be     ipix_tmp1 =< II < ipix_tmp2
 		 */
 
+		if ((*out_ipix_arr_fulls_pos + 2) > (2 * Q3C_NFULLS))
+		{
+			return 1;
+		}
 		out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp1;
 		out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp2;
 
@@ -2434,12 +2444,17 @@ void q3c_output_stack( struct q3c_prm *hprm,
 		 * The query should be     ipix_tmp1 =< II < ipix_tmp2
 		 */
 
+		if ((*out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+		{
+			return 1;
+		}
 		out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp1;
 		out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp2;
 
 
 	} /* End of output run through partly covered squares */
 
+	return 0;
 }
 
 static void array_filler(q3c_ipix_t *fulls, int fullpos,
@@ -2466,11 +2481,50 @@ static void array_filler(q3c_ipix_t *fulls, int fullpos,
 }
 
 
-/* Main radial query function */
-void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                      q3c_coord_t dec0, q3c_coord_t rad,
-                      q3c_ipix_t *out_ipix_arr_fulls,
-                      q3c_ipix_t *out_ipix_arr_partials)
+/* Declare the whole sphere partially covered. Used for the regions that are
+ * too large for the quadtree decomposition to describe with the number of
+ * ranges we have at our disposal.
+ */
+void q3c_all_sky_ranges(q3c_ipix_t nside, q3c_ipix_t *out_ipix_arr_fulls,
+                        q3c_ipix_t *out_ipix_arr_partials)
+{
+	q3c_ipix_t maxval = 6 * (nside * nside);
+	int i;
+
+	for(i = 0; i < (2 * Q3C_NFULLS);)
+	{
+		/* don't have any fully covered squares*/
+		out_ipix_arr_fulls[i++] = 1;
+		out_ipix_arr_fulls[i++] = -1;
+	}
+
+	i = 0;
+	out_ipix_arr_partials[i++] = -1;
+	out_ipix_arr_partials[i++] = maxval;
+	/* everything is partially covered */
+	for(; i < (2 * Q3C_NPARTIALS);)
+	{
+		/* fill with dummy ranges the rest*/
+		out_ipix_arr_partials[i++] = 1;
+		out_ipix_arr_partials[i++] = -1;
+	}
+}
+
+
+/* A single attempt at the radial query decomposition, with the depth of the
+ * descent down the quadtree limited to depth_cap.
+ * On success it returns 0 and reports the number of produced range boundaries
+ * through out_ipix_arr_fulls_pos_out/out_ipix_arr_partials_pos_out.
+ * It returns 1 if the region needed more ranges than the output arrays hold.
+ */
+static int q3c_radial_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
+                                q3c_coord_t dec0, q3c_coord_t rad, int depth_cap,
+                                q3c_ipix_t *out_ipix_arr_fulls,
+                                int *out_ipix_arr_fulls_pos_out,
+                                q3c_ipix_t *out_ipix_arr_partials,
+                                int *out_ipix_arr_partials_pos_out,
+                                struct q3c_square *work_stack,
+                                struct q3c_square *out_stack)
 {
 	q3c_coord_t axx, ayy, axy, ax, ay, a, xmin, xmax, ymin, ymax,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
@@ -2486,45 +2540,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	int work_nstack = 0, i, j, out_nstack = 0,
 	    res_depth;
 
-	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
-
-	if (rad < 0)
-	{
-		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
-		return;
-	}
-
-	/* 35 degrees is a magic size above which the cone from the search can
-	 * produce a hyperbola or a parabola on a main face and where a lot of
-	 * code will start to break.
-	 * So if the query is that large, I just query the whole sphere
-	 */
-	/* TODO
-	 * I can instead of querying the whole sphere, just query the appropriate
-	 * faces
-	 */
-	if (rad >= Q3C_MAXRAD)
-	{
-		q3c_ipix_t maxval = 6 * (nside * nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
-		{
-			/* don't have any fully covered squares*/
-			out_ipix_arr_fulls[i++] = 1;
-			out_ipix_arr_fulls[i++] = -1;
-		}
-
-		i = out_ipix_arr_partials_pos;
-		out_ipix_arr_partials[i++] = -1;
-		out_ipix_arr_partials[i++] = maxval;
-		/* everything is partially covered */
-		for(; i < (2 * Q3C_NPARTIALS);)
-		{
-			/* fill with dummy ranges the rest*/
-			out_ipix_arr_partials[i++] = 1;
-			out_ipix_arr_partials[i++] = -1;
-		}
-		return;
-	}
+	struct q3c_square *cur_square;
 
 	face_num = q3c_get_facenum(ra0, dec0);
 
@@ -2581,6 +2597,10 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #ifdef Q3C_DEBUG
 			fprintf(stdout, "FULL_FLAG\n");
 #endif
+			if ((out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+			{
+				return 1;
+			}
 			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmin;
 			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmax;
 			continue;
@@ -2611,6 +2631,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		 * are limited by nside depth
 		 */
 		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+		res_depth = depth_cap > res_depth ? res_depth : depth_cap;
 
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -2665,17 +2686,92 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
-		                  work_stack, work_nstack,
-		                  face_num, nside,
-		                  out_ipix_arr_fulls,
-		                  &out_ipix_arr_fulls_pos,
-		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
+		                      work_stack, work_nstack,
+		                      face_num, nside,
+		                      out_ipix_arr_fulls,
+		                      &out_ipix_arr_fulls_pos,
+		                      out_ipix_arr_partials,
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
 
+
+	*out_ipix_arr_fulls_pos_out = out_ipix_arr_fulls_pos;
+	*out_ipix_arr_partials_pos_out = out_ipix_arr_partials_pos;
+
+	return 0;
+
+} /* End of q3c_radial_query_run() */
+
+
+/* Main radial query function */
+void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+                      q3c_coord_t dec0, q3c_coord_t rad,
+                      q3c_ipix_t *out_ipix_arr_fulls,
+                      q3c_ipix_t *out_ipix_arr_partials)
+{
+	const q3c_ipix_t nside = hprm->nside;
+	int out_ipix_arr_fulls_pos = 0;
+	int out_ipix_arr_partials_pos = 0;
+	int depth_cap;
+
+	/* The stacks are big, so we keep a single copy here and lend them to
+	 * every attempt below */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE];
+
+	if (rad < 0)
+	{
+		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
+		return;
+	}
+
+	/* 35 degrees is a magic size above which the cone from the search can
+	 * produce a hyperbola or a parabola on a main face and where a lot of
+	 * code will start to break.
+	 * So if the query is that large, I just query the whole sphere
+	 */
+	/* TODO
+	 * I can instead of querying the whole sphere, just query the appropriate
+	 * faces
+	 */
+	if (rad >= Q3C_MAXRAD)
+	{
+		q3c_all_sky_ranges(nside, out_ipix_arr_fulls, out_ipix_arr_partials);
+		return;
+	}
+
+	/* If the region needed more ranges than the output arrays can hold, we
+	 * redo the decomposition one quadtree level higher. That gives fewer and
+	 * coarser ranges and is still correct, because the partially covered
+	 * ranges are verified against the exact predicate anyway.
+	 * depth_cap == 1 produces at most 4 ranges per face, i.e. 12 in total,
+	 * so the loop always terminates.
+	 */
+	for (depth_cap = Q3C_MAX_DEPTH; depth_cap >= 1; depth_cap--)
+	{
+		if (!q3c_radial_query_run(hprm, ra0, dec0, rad, depth_cap,
+		                          out_ipix_arr_fulls, &out_ipix_arr_fulls_pos,
+		                          out_ipix_arr_partials, &out_ipix_arr_partials_pos,
+		                          work_stack, out_stack))
+		{
+			break;
+		}
+	}
+
+	if (depth_cap < 1)
+	{
+		/* Not reachable with the current Q3C_NFULLS/Q3C_NPARTIALS, because
+		 * depth_cap == 1 yields at most 4 ranges per face. It is here so that
+		 * shrinking those constants can never bring the overflow back
+		 */
+		q3c_all_sky_ranges(nside, out_ipix_arr_fulls, out_ipix_arr_partials);
+		return;
+	}
 
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
@@ -2684,10 +2780,17 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 
 
-void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
-                    q3c_ipix_t *out_ipix_arr_fulls,
-                    q3c_ipix_t *out_ipix_arr_partials,
-                    char *too_large)
+/* A single attempt at the polygon query decomposition. See
+ * q3c_radial_query_run() for the meaning of depth_cap and the return value.
+ */
+static int q3c_poly_query_run(struct q3c_prm *hprm, q3c_poly *qp, int depth_cap,
+                              q3c_ipix_t *out_ipix_arr_fulls,
+                              int *out_ipix_arr_fulls_pos_out,
+                              q3c_ipix_t *out_ipix_arr_partials,
+                              int *out_ipix_arr_partials_pos_out,
+                              char *too_large,
+                              struct q3c_square *work_stack,
+                              struct q3c_square *out_stack)
 {
 
 
@@ -2704,7 +2807,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 
 	int work_nstack = 0, i, j, out_nstack = 0, res_depth;
 
-	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
+	struct q3c_square *cur_square;
 
 	face_num = q3c_get_region_facenum(Q3C_POLYGON, qp);
 
@@ -2712,7 +2815,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	if (large_flag)
 	{
 		*too_large = 1;
-		return;
+		return 0;
 	}
 	q3c_prepare_poly(qp);
 
@@ -2738,7 +2841,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			if (large_flag)
 			{
 				*too_large = 1;
-				return;
+				return 0;
 			}
 
 			q3c_prepare_poly(qp);
@@ -2789,6 +2892,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		 * are limited by nside depth
 		 */
 		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+		res_depth = depth_cap > res_depth ? res_depth : depth_cap;
 
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -2847,31 +2951,98 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
-		                  work_stack, work_nstack,
-		                  face_num, nside,
-		                  out_ipix_arr_fulls,
-		                  &out_ipix_arr_fulls_pos,
-		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
+		                      work_stack, work_nstack,
+		                      face_num, nside,
+		                      out_ipix_arr_fulls,
+		                      &out_ipix_arr_fulls_pos,
+		                      out_ipix_arr_partials,
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
 
 
+	*out_ipix_arr_fulls_pos_out = out_ipix_arr_fulls_pos;
+	*out_ipix_arr_partials_pos_out = out_ipix_arr_partials_pos;
+
+	return 0;
+
+} /* End of q3c_poly_query_run() */
+
+
+/* Main polygonal query function */
+void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
+                    q3c_ipix_t *out_ipix_arr_fulls,
+                    q3c_ipix_t *out_ipix_arr_partials,
+                    char *too_large)
+{
+	const q3c_ipix_t nside = hprm->nside;
+	int out_ipix_arr_fulls_pos = 0;
+	int out_ipix_arr_partials_pos = 0;
+	int depth_cap;
+
+	/* The stacks are big, so we keep a single copy here and lend them to
+	 * every attempt below */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE];
+
+	/* If the region needed more ranges than the output arrays can hold, we
+	 * redo the decomposition one quadtree level higher. That gives fewer and
+	 * coarser ranges and is still correct, because the partially covered
+	 * ranges are verified against the exact predicate anyway.
+	 * depth_cap == 1 produces at most 4 ranges per face, i.e. 12 in total,
+	 * so the loop always terminates.
+	 */
+	for (depth_cap = Q3C_MAX_DEPTH; depth_cap >= 1; depth_cap--)
+	{
+		if (!q3c_poly_query_run(hprm, qp, depth_cap,
+		                        out_ipix_arr_fulls, &out_ipix_arr_fulls_pos,
+		                        out_ipix_arr_partials, &out_ipix_arr_partials_pos,
+		                        too_large, work_stack, out_stack))
+		{
+			break;
+		}
+	}
+
+	if (depth_cap < 1)
+	{
+		/* Not reachable with the current Q3C_NFULLS/Q3C_NPARTIALS, because
+		 * depth_cap == 1 yields at most 4 ranges per face. It is here so that
+		 * shrinking those constants can never bring the overflow back
+		 */
+		q3c_all_sky_ranges(nside, out_ipix_arr_fulls, out_ipix_arr_partials);
+		return;
+	}
+
+	if (*too_large)
+	{
+		return;
+	}
+
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
-} /* End of radial_query() */
+} /* End of q3c_poly_query() */
 
 
 
 
 
-void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                       q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
-                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
-                       q3c_ipix_t *out_ipix_arr_partials)
+/* A single attempt at the elliptical query decomposition. See
+ * q3c_radial_query_run() for the meaning of depth_cap and the return value.
+ */
+static int q3c_ellipse_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
+                                 q3c_coord_t dec0, q3c_coord_t majax,
+                                 q3c_coord_t ell, q3c_coord_t PA, int depth_cap,
+                                 q3c_ipix_t *out_ipix_arr_fulls,
+                                 int *out_ipix_arr_fulls_pos_out,
+                                 q3c_ipix_t *out_ipix_arr_partials,
+                                 int *out_ipix_arr_partials_pos_out,
+                                 struct q3c_square *work_stack,
+                                 struct q3c_square *out_stack)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0,
 	            yc_cur = 0, cur_size, xesize, yesize,
@@ -2887,45 +3058,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	int work_nstack = 0, i, j, out_nstack = 0,
 	    res_depth;
 
-	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
-
-	if (majax < 0)
-	{
-		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
-		return;
-	}
-
-	/* 35 degrees is a magic size above which the cone from the search can
-	 * produce a hyperbola or a parabola on a main face and where a lot of
-	 * code will start to break.
-	 * So if the query is that large, I just query the whole sphere
-	 */
-	/* TODO
-	 * I can instead of querying the whole sphere, just query the appropriate
-	 * faces
-	 */
-	if (majax >= Q3C_MAXRAD)
-	{
-		q3c_ipix_t maxval = 6 * (nside * nside);
-		for(i = out_ipix_arr_fulls_pos; i < (2 * Q3C_NFULLS);)
-		{
-			/* don't have any fully covered squares*/
-			out_ipix_arr_fulls[i++] = 1;
-			out_ipix_arr_fulls[i++] = -1;
-		}
-
-		i = out_ipix_arr_partials_pos;
-		out_ipix_arr_partials[i++] = -1;
-		out_ipix_arr_partials[i++] = maxval;
-		/* everything is partially covered */
-		for(; i < (2 * Q3C_NPARTIALS);)
-		{
-			/* fill with dummy ranges the rest*/
-			out_ipix_arr_partials[i++] = 1;
-			out_ipix_arr_partials[i++] = -1;
-		}
-		return;
-	}
+	struct q3c_square *cur_square;
 
 	face_num = q3c_get_facenum(ra0, dec0);
 
@@ -2990,6 +3123,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		 * are limited by nside depth
 		 */
 		res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+		res_depth = depth_cap > res_depth ? res_depth : depth_cap;
 
 		for(i = 1; i <= res_depth; i++)
 		{
@@ -3047,17 +3181,92 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
-		                  work_stack, work_nstack,
-		                  face_num, nside,
-		                  out_ipix_arr_fulls,
-		                  &out_ipix_arr_fulls_pos,
-		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
+		                      work_stack, work_nstack,
+		                      face_num, nside,
+		                      out_ipix_arr_fulls,
+		                      &out_ipix_arr_fulls_pos,
+		                      out_ipix_arr_partials,
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
 
+
+	*out_ipix_arr_fulls_pos_out = out_ipix_arr_fulls_pos;
+	*out_ipix_arr_partials_pos_out = out_ipix_arr_partials_pos;
+
+	return 0;
+
+} /* End of q3c_ellipse_query_run() */
+
+
+/* Main elliptical query function */
+void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+                       q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
+                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
+                       q3c_ipix_t *out_ipix_arr_partials)
+{
+	const q3c_ipix_t nside = hprm->nside;
+	int out_ipix_arr_fulls_pos = 0;
+	int out_ipix_arr_partials_pos = 0;
+	int depth_cap;
+
+	/* The stacks are big, so we keep a single copy here and lend them to
+	 * every attempt below */
+	struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE];
+
+	if (majax < 0)
+	{
+		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
+		return;
+	}
+
+	/* 35 degrees is a magic size above which the cone from the search can
+	 * produce a hyperbola or a parabola on a main face and where a lot of
+	 * code will start to break.
+	 * So if the query is that large, I just query the whole sphere
+	 */
+	/* TODO
+	 * I can instead of querying the whole sphere, just query the appropriate
+	 * faces
+	 */
+	if (majax >= Q3C_MAXRAD)
+	{
+		q3c_all_sky_ranges(nside, out_ipix_arr_fulls, out_ipix_arr_partials);
+		return;
+	}
+
+	/* If the region needed more ranges than the output arrays can hold, we
+	 * redo the decomposition one quadtree level higher. That gives fewer and
+	 * coarser ranges and is still correct, because the partially covered
+	 * ranges are verified against the exact predicate anyway.
+	 * depth_cap == 1 produces at most 4 ranges per face, i.e. 12 in total,
+	 * so the loop always terminates.
+	 */
+	for (depth_cap = Q3C_MAX_DEPTH; depth_cap >= 1; depth_cap--)
+	{
+		if (!q3c_ellipse_query_run(hprm, ra0, dec0, majax, ell, PA, depth_cap,
+		                           out_ipix_arr_fulls, &out_ipix_arr_fulls_pos,
+		                           out_ipix_arr_partials, &out_ipix_arr_partials_pos,
+		                           work_stack, out_stack))
+		{
+			break;
+		}
+	}
+
+	if (depth_cap < 1)
+	{
+		/* Not reachable with the current Q3C_NFULLS/Q3C_NPARTIALS, because
+		 * depth_cap == 1 yields at most 4 ranges per face. It is here so that
+		 * shrinking those constants can never bring the overflow back
+		 */
+		q3c_all_sky_ranges(nside, out_ipix_arr_fulls, out_ipix_arr_partials);
+		return;
+	}
 
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
