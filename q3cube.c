@@ -99,7 +99,8 @@ static void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
                                                           q3c_coord_t *ayz,
                                                           q3c_coord_t *ay,
                                                           q3c_coord_t *az,
-                                                          q3c_coord_t *a);
+                                                          q3c_coord_t *a,
+                                                          char *full_flag);
 
 static void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
                                                  q3c_coord_t delta, q3c_coord_t d,
@@ -2029,7 +2030,8 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
                                                    q3c_coord_t *ayz,
                                                    q3c_coord_t *ay,
                                                    q3c_coord_t *az,
-                                                   q3c_coord_t *a)
+                                                   q3c_coord_t *a,
+                                                   char *full_flag)
 {
 	q3c_coord_t ra1, dec1 = dec0 * Q3C_DEGRA, d1 = d0 * Q3C_DEGRA,
 	            PA1 = PA0 * Q3C_DEGRA, tmpx;
@@ -2057,6 +2059,25 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 			*ayz = -*ayz;
 
 		}
+	}
+
+	/* The min/max values above were obtained assuming that the curve produced
+	 * on the face is an ellipse. If the discriminant of the curve tells us that
+	 * it is (or is close to) a parabola or a hyperbola, those formulae divide
+	 * by a negative or a nearly zero quantity and return a meaningless, often
+	 * inverted box. In that case we do the same thing as q3c_get_xy_minmax()
+	 * does for the cone search and include the whole face.
+	 * The check of the box itself is a safety net, in case the min/max come out
+	 * inverted for any other reason.
+	 */
+	if (((4 * (*ayy) * (*azz) - (*ayz) * (*ayz)) < Q3C_MINDISCR) ||
+	    (*ymin > *ymax) || (*zmin > *zmax))
+	{
+		*ymax = 2 * Q3C_HALF;
+		*zmax = 2 * Q3C_HALF;
+		*ymin = -2 * Q3C_HALF;
+		*zmin = -2 * Q3C_HALF;
+		*full_flag = 1;
 	}
 }
 
@@ -3051,7 +3072,7 @@ static int q3c_ellipse_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
 	q3c_ipix_t n0;
 	const q3c_ipix_t nside = hprm->nside;
 
-	char face_num, multi_flag = 0, face_count, face_num0;
+	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3] = {0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 
@@ -3063,7 +3084,8 @@ static int q3c_ellipse_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
 	face_num = q3c_get_facenum(ra0, dec0);
 
 	q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(face_num, ra0, dec0, majax,
-	                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a);
+	                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a,
+	                                              full_flags);
 
 	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
@@ -3079,7 +3101,8 @@ static int q3c_ellipse_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
 			                          2 * points[2 * (face_count - 1) + 1], face_num0);
 
 			q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(face_num, ra0, dec0, majax,
-			                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a);
+			                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a,
+			                                              full_flags + face_count);
 
 			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
 			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
@@ -3098,6 +3121,24 @@ static int q3c_ellipse_query_run(struct q3c_prm *hprm, q3c_coord_t ra0,
 		/* If the region is too small */
 		{
 			xesize = 1 / (q3c_coord_t)nside;
+		}
+
+		if (full_flags[(int)face_count])
+		/* Take the whole face */
+		{
+
+			q3c_ipix_t tmpmin = face_num * nside * nside;
+			q3c_ipix_t tmpmax = (face_num + 1) * nside * nside;
+#ifdef Q3C_DEBUG
+			fprintf(stdout, "FULL_FLAG\n");
+#endif
+			if ((out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+			{
+				return 1;
+			}
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmin;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmax;
+			continue;
 		}
 
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
