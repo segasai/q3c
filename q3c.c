@@ -845,7 +845,8 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	/* 1 means full, 0 means partial */
 
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf, axis_ratio_buf,
+	                   PA_buf;
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
@@ -876,7 +877,9 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
+		    (radius == radius_buf) && (axis_ratio == axis_ratio_buf) &&
+		    (PA == PA_buf))
 		{
 			if (full_flag)
 			{
@@ -898,6 +901,8 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
+	axis_ratio_buf = axis_ratio;
+	PA_buf = PA;
 	invocation = 1;
 
 	if (full_flag)
