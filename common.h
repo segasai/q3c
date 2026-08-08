@@ -324,13 +324,13 @@ q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
  * must be reported by the caller as an internal error
  */
 int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                     q3c_coord_t dec0, q3c_coord_t rad,
-                     q3c_ipix_t *out_ipix_arr_fulls,
-                     q3c_ipix_t *out_ipix_arr_partials);
+                      q3c_coord_t dec0, q3c_coord_t rad,
+                      q3c_ipix_t *out_ipix_arr_fulls,
+                      q3c_ipix_t *out_ipix_arr_partials);
 int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                       q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
-                      q3c_ipix_t *out_ipix_arr_partials);
+                       q3c_ipix_t *out_ipix_arr_partials);
 
 void q3c_init_poly(q3c_poly *qp, int n);
 
@@ -349,9 +349,9 @@ void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax,
                          q3c_coord_t *ymin, q3c_coord_t *ymax);
 
 int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
-                   q3c_ipix_t *out_ipix_arr_fulls,
-                   q3c_ipix_t *out_ipix_arr_partials,
-                   char *too_large);
+                    q3c_ipix_t *out_ipix_arr_fulls,
+                    q3c_ipix_t *out_ipix_arr_partials,
+                    char *too_large);
 
 int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n,
                                    q3c_coord_t in_ra[], q3c_coord_t in_dec[],

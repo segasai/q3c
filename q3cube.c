@@ -35,13 +35,13 @@ static void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
                              struct q3c_square* out_stack, int *out_nstack,
                              int cur_depth, int res_depth);
 static int q3c_output_stack( struct q3c_prm *hprm,
-                             struct q3c_square *out_stack, int out_nstack,
-                             struct q3c_square *work_stack, int work_nstack,
-                             int face_num, int nside,
-                             q3c_ipix_t *out_ipix_arr_fulls,
-                             int *out_ipix_arr_fulls_pos,
-                             q3c_ipix_t *out_ipix_arr_partials,
-                             int *out_ipix_arr_partials_pos);
+                              struct q3c_square *out_stack, int out_nstack,
+                              struct q3c_square *work_stack, int work_nstack,
+                              int face_num, int nside,
+                              q3c_ipix_t *out_ipix_arr_fulls,
+                              int *out_ipix_arr_fulls_pos,
+                              q3c_ipix_t *out_ipix_arr_partials,
+                              int *out_ipix_arr_partials_pos);
 
 static void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
                                                       q3c_coord_t delta,
@@ -565,7 +565,7 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
  * be reported by the caller as an internal error.
  */
 int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
-                   q3c_ipix_t *ipix)
+                    q3c_ipix_t *ipix)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[8];
 	const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits;
@@ -897,8 +897,8 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			{
 				face_num = q3c_xy2facenum(2 * points[2 * i],
 				                          2 * points[2 * i + 1], face_num0);
-				q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
-				                       &xmax, &ymin, &ymax);
+			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
+			                       &xmax, &ymin, &ymax);
 
 				if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
 				/* the region does not really touch this face */
@@ -907,25 +907,25 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 				}
 
 				q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
-				xesize = xmax - xmin;
-				yesize = ymax - ymin;
-				xesize = xesize > yesize ? xesize : yesize;
+			xesize = xmax - xmin;
+			yesize = ymax - ymin;
+			xesize = xesize > yesize ? xesize : yesize;
 
-				if (xesize * nside < 1)
-				/* If the region is too small */
-				{
-					xesize = 1 / (q3c_coord_t)nside;
-				}
+			if (xesize * nside < 1)
+			/* If the region is too small */
+			{
+				xesize = 1 / (q3c_coord_t)nside;
+			}
 
-				n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-				/* n0 is now the level of quadtree for which the minimal
-				 * element is >~ our ellipse
-				 */
+			n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
+			/* n0 is now the level of quadtree for which the minimal
+			 * element is >~ our ellipse
+			 */
 
-				ixmin = (Q3C_HALF + xmin) * n0;
-				iymin = (Q3C_HALF + ymin) * n0;
+			ixmin = (Q3C_HALF + xmin) * n0;
+			iymin = (Q3C_HALF + ymin) * n0;
 
-				n1 = nside / n0;
+			n1 = nside / n0;
 
 				xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
 				yistack[nistack] = (q3c_ipix_t)(iymin * n1);
@@ -2396,13 +2396,13 @@ void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
  * which produces fewer and coarser ranges.
  */
 int q3c_output_stack( struct q3c_prm *hprm,
-                      struct q3c_square *out_stack, int out_nstack,
-                      struct q3c_square *work_stack, int work_nstack,
-                      int face_num, int nside,
-                      q3c_ipix_t *out_ipix_arr_fulls,
-                      int *out_ipix_arr_fulls_pos,
-                      q3c_ipix_t *out_ipix_arr_partials,
-                      int *out_ipix_arr_partials_pos)
+                       struct q3c_square *out_stack, int out_nstack,
+                       struct q3c_square *work_stack, int work_nstack,
+                       int face_num, int nside,
+                       q3c_ipix_t *out_ipix_arr_fulls,
+                       int *out_ipix_arr_fulls_pos,
+                       q3c_ipix_t *out_ipix_arr_partials,
+                       int *out_ipix_arr_partials_pos)
 {
 	int i;
 	q3c_ipix_t xi, yi, ipix_tmp1, ipix_tmp2, ntmp1;
@@ -2512,9 +2512,9 @@ static void array_filler(q3c_ipix_t *fulls, int fullpos,
  * caller as an internal error.
  */
 int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                     q3c_coord_t dec0, q3c_coord_t rad,
-                     q3c_ipix_t *out_ipix_arr_fulls,
-                     q3c_ipix_t *out_ipix_arr_partials)
+                      q3c_coord_t dec0, q3c_coord_t rad,
+                      q3c_ipix_t *out_ipix_arr_fulls,
+                      q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t axx, ayy, axy, ax, ay, a, xmin, xmax, ymin, ymax,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
@@ -2601,7 +2601,7 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			/* the region does not really touch this face */
 			{
 				continue;
-			}
+		}
 		}
 		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 
@@ -2716,11 +2716,11 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #endif
 
 		if (q3c_output_stack( hprm, out_stack, out_nstack,
-		                      work_stack, work_nstack,
-		                      face_num, nside,
-		                      out_ipix_arr_fulls,
-		                      &out_ipix_arr_fulls_pos,
-		                      out_ipix_arr_partials,
+		                  work_stack, work_nstack,
+		                  face_num, nside,
+		                  out_ipix_arr_fulls,
+		                  &out_ipix_arr_fulls_pos,
+		                  out_ipix_arr_partials,
 		                      &out_ipix_arr_partials_pos))
 		{
 			return 1;
@@ -2745,9 +2745,9 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
  * caller as an internal error.
  */
 int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
-                   q3c_ipix_t *out_ipix_arr_fulls,
-                   q3c_ipix_t *out_ipix_arr_partials,
-                   char *too_large)
+                    q3c_ipix_t *out_ipix_arr_fulls,
+                    q3c_ipix_t *out_ipix_arr_partials,
+                    char *too_large)
 {
 
 
@@ -2807,7 +2807,7 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			/* the region does not really touch this face */
 			{
 				continue;
-			}
+		}
 		}
 		/* clamp the box of every face, including the main one */
 		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
@@ -2909,11 +2909,11 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 #endif
 
 		if (q3c_output_stack( hprm, out_stack, out_nstack,
-		                      work_stack, work_nstack,
-		                      face_num, nside,
-		                      out_ipix_arr_fulls,
-		                      &out_ipix_arr_fulls_pos,
-		                      out_ipix_arr_partials,
+		                  work_stack, work_nstack,
+		                  face_num, nside,
+		                  out_ipix_arr_fulls,
+		                  &out_ipix_arr_fulls_pos,
+		                  out_ipix_arr_partials,
 		                      &out_ipix_arr_partials_pos))
 		{
 			return 1;
@@ -2945,9 +2945,9 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
  * caller as an internal error.
  */
 int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                      q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
-                      q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
-                      q3c_ipix_t *out_ipix_arr_partials)
+                       q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
+                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
+                       q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0,
 	            yc_cur = 0, cur_size, xesize, yesize,
@@ -3029,7 +3029,7 @@ int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			/* the region does not really touch this face */
 			{
 				continue;
-			}
+		}
 		}
 		/* clamp the box of every face, including the main one */
 		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
@@ -3146,11 +3146,11 @@ int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #endif
 
 		if (q3c_output_stack( hprm, out_stack, out_nstack,
-		                      work_stack, work_nstack,
-		                      face_num, nside,
-		                      out_ipix_arr_fulls,
-		                      &out_ipix_arr_fulls_pos,
-		                      out_ipix_arr_partials,
+		                  work_stack, work_nstack,
+		                  face_num, nside,
+		                  out_ipix_arr_fulls,
+		                  &out_ipix_arr_fulls_pos,
+		                  out_ipix_arr_partials,
 		                      &out_ipix_arr_partials_pos))
 		{
 			return 1;
