@@ -34,7 +34,7 @@ static int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin,
 static void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
                              struct q3c_square* out_stack, int *out_nstack,
                              int cur_depth, int res_depth);
-static void q3c_output_stack( struct q3c_prm *hprm,
+static int q3c_output_stack( struct q3c_prm *hprm,
                               struct q3c_square *out_stack, int out_nstack,
                               struct q3c_square *work_stack, int work_nstack,
                               int face_num, int nside,
@@ -42,7 +42,6 @@ static void q3c_output_stack( struct q3c_prm *hprm,
                               int *out_ipix_arr_fulls_pos,
                               q3c_ipix_t *out_ipix_arr_partials,
                               int *out_ipix_arr_partials_pos);
-
 
 static void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
                                                       q3c_coord_t delta,
@@ -97,7 +96,8 @@ static void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
                                                           q3c_coord_t *ayz,
                                                           q3c_coord_t *ay,
                                                           q3c_coord_t *az,
-                                                          q3c_coord_t *a);
+                                                          q3c_coord_t *a,
+                                                          char *full_flag);
 
 static void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha,
                                                  q3c_coord_t delta, q3c_coord_t d,
@@ -439,12 +439,69 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0,
 }
 
 
+/* Clamp the box (xmin,xmax,ymin,ymax) to the face, i.e. [-0.5,0.5] in
+ * both coordinates. A degenerate (inverted) or NaN box is replaced by the
+ * whole face, so that regions with degenerate projections still cover all
+ * their pixels rather than losing them. Every bound is clamped from both
+ * sides, so a box lying entirely outside the face becomes a zero-size box
+ * on the face border rather than an inverted one.
+ */
+static void q3c_clip_facebox(q3c_coord_t *xmin, q3c_coord_t *xmax,
+                             q3c_coord_t *ymin, q3c_coord_t *ymax)
+{
+	if (!((*xmin <= *xmax) && (*ymin <= *ymax)))
+	/* the check is written this way to catch NaNs as well */
+	{
+		*xmin = -Q3C_HALF;
+		*ymin = -Q3C_HALF;
+		*xmax = Q3C_HALF;
+		*ymax = Q3C_HALF;
+		return;
+	}
+	*xmax = (*xmax > Q3C_HALF ? Q3C_HALF : (*xmax < -Q3C_HALF ? -Q3C_HALF : *xmax));
+	*xmin = (*xmin < -Q3C_HALF ? -Q3C_HALF : (*xmin > Q3C_HALF ? Q3C_HALF : *xmin));
+	*ymax = (*ymax > Q3C_HALF ? Q3C_HALF : (*ymax < -Q3C_HALF ? -Q3C_HALF : *ymax));
+	*ymin = (*ymin < -Q3C_HALF ? -Q3C_HALF : (*ymin > Q3C_HALF ? Q3C_HALF : *ymin));
+}
+
+
+/* Returns 1 when the box does not overlap the face at all. Since the box
+ * contains the projection of the region, this means the region does not
+ * really touch this face and it can be skipped; this happens when a side
+ * of the main-face box overflows because of the projection stretch rather
+ * than because the region continues onto the neighbouring face.
+ * (NaN-safe: returns 0 for NaN boxes.)
+ */
+static char q3c_facebox_disjoint(q3c_coord_t xmin, q3c_coord_t xmax,
+                                 q3c_coord_t ymin, q3c_coord_t ymax)
+{
+	return (xmin > Q3C_HALF) || (xmax < -Q3C_HALF) ||
+	       (ymin > Q3C_HALF) || (ymax < -Q3C_HALF);
+}
+
+
 /* Checking whether the box (xmin,ymin,xmax,ymax) intersects other faces or
  * not. If yes, I setup the array "points" designed to help us work on
  * other faces ( points array will then have the coordinates on a main face
  * which should be mapped to other faces
  * !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * !!!!!!! It does change the arguments (xmin,xmax, ymin, ymax) !!!!!!!!
+ * !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * It only clamps the sides it detects as overflowing, so the callers must
+ * clamp the resulting box themselves (see q3c_clip_facebox()).
+ * A region bounded by Q3C_MAXRAD degrees in radius can really touch at
+ * most three faces (the fourth-nearest face is always more than
+ * Q3C_MAXRAD degrees away), but its *projection* on the main face can
+ * spill beyond up to four sides of the face, because the gnomonic
+ * projection stretches the parts of the region that are far from the
+ * face. We cannot tell here which of the overflowing sides the region
+ * really crosses on the sphere, so we report the neighbour behind every
+ * overflowing side (up to four, so points[] must hold up to four points
+ * and *multi_flag can be up to 4). The callers should drop the faces
+ * which the region does not really touch with q3c_facebox_disjoint()
+ * once they compute the box on each reported face; the callers that
+ * cannot describe more than three extra faces must fall back to
+ * searching the whole sky when *multi_flag == 4.
  */
 void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
                           q3c_coord_t *xmax0, q3c_coord_t *ymax0,
@@ -454,99 +511,45 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
 	                  xmax = *xmax0,
 	                  ymin = *ymin0,
 	                  ymax = *ymax0;
-	if (xmin < -Q3C_HALF)
+	const char ovxmin = (xmin < -Q3C_HALF), ovxmax = (xmax > Q3C_HALF),
+	           ovymin = (ymin < -Q3C_HALF), ovymax = (ymax > Q3C_HALF);
+
+	/* The probe points lie behind the middle of each overflowing side;
+	 * the box always intersects the face (the projection of the region
+	 * centre is inside both), so the clamped midpoints are within the
+	 * face and each probe maps to the neighbour behind its side.
+	 */
+	const q3c_coord_t xc = ((ovxmin ? -Q3C_HALF : xmin) +
+	                        (ovxmax ? Q3C_HALF : xmax)) / 2;
+	const q3c_coord_t yc = ((ovymin ? -Q3C_HALF : ymin) +
+	                        (ovymax ? Q3C_HALF : ymax)) / 2;
+	int np = 0;
+
+	if (ovxmin)
 	{
-		if (ymin < -Q3C_HALF)
-		{
-			points[0] = xmax;
-			points[1] = ymin;
-			points[2] = xmin;
-			points[3] = ymax;
-			*multi_flag = 2;
-			*xmin0 = -Q3C_HALF;
-			*ymin0 = -Q3C_HALF;
-		}
-		else
-		{
-			if (ymax > Q3C_HALF)
-			{
-				points[0] = xmax;
-				points[1] = ymax;
-				points[2] = xmin;
-				points[3] = ymin;
-				*multi_flag = 2;
-				*xmin0 = -Q3C_HALF;
-				*ymax0 = Q3C_HALF;
-			}
-			else
-			{
-				points[0] = xmin;
-				points[1] = (ymin + ymax) / 2;
-				*multi_flag = 1;
-				*xmin0 = -Q3C_HALF;
-			}
-		}
+		points[np++] = xmin;
+		points[np++] = yc;
+		*xmin0 = -Q3C_HALF;
 	}
-	else
+	if (ovxmax)
 	{
-		if (xmax > Q3C_HALF)
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = xmin;
-				points[1] = ymin;
-				points[2] = xmax;
-				points[3] = ymax;
-				*multi_flag = 2;
-				*xmax0 = Q3C_HALF;
-				*ymin0 = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = xmin;
-					points[1] = ymax;
-					points[2] = xmax;
-					points[3] = ymin;
-					*multi_flag = 2;
-					*xmax0 = Q3C_HALF;
-					*ymax0 = Q3C_HALF;
-				}
-				else
-				{
-					points[0] = xmax;
-					points[1] = (ymin + ymax) / 2;
-					*multi_flag = 1;
-					*xmax0 = Q3C_HALF;
-				}
-			}
-		}
-		else
-		{
-			if (ymin < -Q3C_HALF)
-			{
-				points[0] = (xmin + xmax) / 2;
-				points[1] = ymin;
-				*multi_flag = 1;
-				*ymin0 = -Q3C_HALF;
-			}
-			else
-			{
-				if (ymax > Q3C_HALF)
-				{
-					points[0] = (xmin + xmax) / 2;
-					points[1] = ymax;
-					*multi_flag = 1;
-					*ymax0 = Q3C_HALF;
-				}
-				else
-				{
-					*multi_flag = 0;
-				}
-			}
-		}
+		points[np++] = xmax;
+		points[np++] = yc;
+		*xmax0 = Q3C_HALF;
 	}
+	if (ovymin)
+	{
+		points[np++] = xc;
+		points[np++] = ymin;
+		*ymin0 = -Q3C_HALF;
+	}
+	if (ovymax)
+	{
+		points[np++] = xc;
+		points[np++] = ymax;
+		*ymax0 = Q3C_HALF;
+	}
+	*multi_flag = np / 2;
 }
 
 
@@ -557,11 +560,14 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
  * specified by q3c_region
  * ra in degrees, dec in degrees, radius in degrees
  * strictly 0<=ra<360 and -90<=dec<=90
+ * Returns 0 on success and 1 when the region touches more faces than the
+ * four output ranges can describe; the latter should never happen and must
+ * be reported by the caller as an internal error.
  */
-void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
+int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
                     q3c_ipix_t *ipix)
 {
-	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[4];
+	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[8];
 	const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits;
 	
 	q3c_ipix_t *ipix_cur = ipix, ipix0, xi, yi, n0, n1, ixmin,
@@ -581,7 +587,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			*(ipix_cur++) = 1;
 			*(ipix_cur++) = -1;
 		}
-		return;
+		return 0;
 	}
 
 	if (q3c_too_big_check(region, region_data))
@@ -595,7 +601,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			*(ipix_cur++) = 1;
 			*(ipix_cur++) = -1;
 		}
-		return;
+		return 0;
 	}
 
 	face_num = q3c_get_region_facenum(region, region_data);
@@ -610,6 +616,29 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 #endif
 
 	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
+	/* q3c_multi_face_check() may leave some sides unclamped, so the
+	 * main-face box must be clamped here; otherwise a box wider than the
+	 * face gives xesize > 1 and a negative shift count below
+	 */
+	q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
+
+	if (multi_flag > 3)
+	{
+		/* The main face and four neighbours do not fit in the four output
+		 * ranges. multi_flag == 4 requires the bounding box to spill over
+		 * all four sides of the main face at once, and the regions that
+		 * reach this point (circles/ellipses with rad <= Q3C_MAXRAD;
+		 * larger ones were sent to the whole-sky scan by
+		 * q3c_too_big_check() above) cannot do that: even the largest
+		 * allowed circle centred on the face only reaches
+		 * |x|,|y| = tan(Q3C_MAXRAD)/2 ~ 0.35, and any allowed ellipse is
+		 * contained in such a circle, so its box is smaller still
+		 * (verified numerically over all centres, radii and ellipse
+		 * shapes). Therefore this must never be reached and is reported
+		 * as an internal error.
+		 */
+		return 1;
+	}
 
 	if (multi_flag == 0)
 	{
@@ -766,10 +795,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
 			                       &xmax, &ymin, &ymax);
 
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+			q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 			xesize = xmax - xmin;
 			yesize = ymax - ymin;
 			xesize = xesize > yesize ? xesize : yesize;
@@ -861,14 +887,26 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			nstack[0] = n1;
 			nistack = 1;
 
-			face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
+			/* two or three secondary faces; multi_flag == 3 does happen
+			 * for circles/ellipses with radii close to Q3C_MAXRAD centred
+			 * near the midpoint of a face edge, and the region then
+			 * genuinely covers all three neighbours; the main face plus
+			 * three neighbours still fit in the four output ranges
+			 */
+			for(i = 0; i < multi_flag; i++)
+			{
+				face_num = q3c_xy2facenum(2 * points[2 * i],
+				                          2 * points[2 * i + 1], face_num0);
 			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
 			                       &xmax, &ymin, &ymax);
 
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+				if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
+				/* the region does not really touch this face */
+				{
+					continue;
+				}
+
+				q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 			xesize = xmax - xmin;
 			yesize = ymax - ymin;
 			xesize = xesize > yesize ? xesize : yesize;
@@ -885,60 +923,16 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			 */
 
 			ixmin = (Q3C_HALF + xmin) * n0;
-			ixmax = (Q3C_HALF + xmax) * n0;
 			iymin = (Q3C_HALF + ymin) * n0;
-			iymax = (Q3C_HALF + ymax) * n0;
-
-			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-			iymax = (iymax == n0 ? n0 - 1 : iymax);
 
 			n1 = nside / n0;
 
-			xistack[1] = (q3c_ipix_t)(ixmin * n1);
-			yistack[1] = (q3c_ipix_t)(iymin * n1);
-			facestack[1] = face_num;
-			nstack[1] = n1;
-			nistack = 2;
-
-
-			face_num = q3c_xy2facenum(2 * points[2], 2 * points[3], face_num0);
-			q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin,
-			                       &xmax, &ymin, &ymax);
-
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
-			xesize = xmax - xmin;
-			yesize = ymax - ymin;
-			xesize = xesize > yesize ? xesize : yesize;
-
-			if (xesize * nside < 1)
-			/* If the region is too small */
-			{
-				xesize = 1 / (q3c_coord_t)nside;
+				xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
+				yistack[nistack] = (q3c_ipix_t)(iymin * n1);
+				facestack[nistack] = face_num;
+				nstack[nistack] = n1;
+				nistack++;
 			}
-
-			n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-			/* n0 is now the level of quadtree for which the minimal
-			 * element is >~ our ellipse
-			 */
-
-			ixmin = (Q3C_HALF + xmin) * n0;
-			ixmax = (Q3C_HALF + xmax) * n0;
-			iymin = (Q3C_HALF + ymin) * n0;
-			iymax = (Q3C_HALF + ymax) * n0;
-
-			ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-			iymax = (iymax == n0 ? n0 - 1 : iymax);
-
-			n1 = nside / n0;
-
-			xistack[2] = (q3c_ipix_t)(ixmin * n1);
-			yistack[2] = (q3c_ipix_t)(iymin * n1);
-			facestack[2] = face_num;
-			nstack[2] = n1;
-			nistack = 3;
 		}
 	}
 
@@ -972,6 +966,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		*(ipix_cur++) = -1;
 	}
 
+	return 0;
 }
 
 
@@ -1697,11 +1692,15 @@ void q3c_fast_get_equatorial_ellipse_xy_minmax(q3c_coord_t alpha,
 	tmpy2 = (2 * tmpy2);
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
+	/* Checking only tmpy2 is enough, since tmpz2 == tmpy2 here.
+	 * When the projected curve is degenerate (a parabola/hyperbola)
+	 * we cover the whole face, as in q3c_fast_get_circle_xy_minmax()
+	 */
 	if (tmpy2 < Q3C_MINDISCR)
 	{
 		*ymin = -Q3C_HALF;
-		*ymax = -Q3C_HALF;
-		*zmin = Q3C_HALF;
+		*ymax = Q3C_HALF;
+		*zmin = -Q3C_HALF;
 		*zmax = Q3C_HALF;
 		return;
 	}
@@ -1769,11 +1768,15 @@ void q3c_fast_get_polar_ellipse_xy_minmax(q3c_coord_t alpha, q3c_coord_t delta,
 	tmpz1 = q3c_sqrt(tmpz1);
 	tmpz2 = (2 * tmpz2);
 
+	/* Checking only tmpy2 is enough, since tmpz2 == tmpy2 here.
+	 * When the projected curve is degenerate (a parabola/hyperbola)
+	 * we cover the whole face, as in q3c_fast_get_circle_xy_minmax()
+	 */
 	if (tmpy2 < Q3C_MINDISCR)
 	{
 		*ymin = -Q3C_HALF;
-		*ymax = -Q3C_HALF;
-		*zmin = Q3C_HALF;
+		*ymax = Q3C_HALF;
+		*zmin = -Q3C_HALF;
 		*zmax = Q3C_HALF;
 		return;
 	}
@@ -2027,7 +2030,8 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
                                                    q3c_coord_t *ayz,
                                                    q3c_coord_t *ay,
                                                    q3c_coord_t *az,
-                                                   q3c_coord_t *a)
+                                                   q3c_coord_t *a,
+                                                   char *full_flag)
 {
 	q3c_coord_t ra1, dec1 = dec0 * Q3C_DEGRA, d1 = d0 * Q3C_DEGRA,
 	            PA1 = PA0 * Q3C_DEGRA, tmpx;
@@ -2055,6 +2059,25 @@ void q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(char face_num,
 			*ayz = -*ayz;
 
 		}
+	}
+
+	/* The min/max values above were obtained assuming that the curve produced
+	 * on the face is an ellipse. If the discriminant of the curve tells us that
+	 * it is (or is close to) a parabola or a hyperbola, those formulae divide
+	 * by a negative or a nearly zero quantity and return a meaningless, often
+	 * inverted box. In that case we do the same thing as q3c_get_xy_minmax()
+	 * does for the cone search and include the whole face.
+	 * The check of the box itself is a safety net, in case the min/max come out
+	 * inverted for any other reason.
+	 */
+	if (((4 * (*ayy) * (*azz) - (*ayz) * (*ayz)) < Q3C_MINDISCR) ||
+	    (*ymin > *ymax) || (*zmin > *zmax))
+	{
+		*ymax = 2 * Q3C_HALF;
+		*zmax = 2 * Q3C_HALF;
+		*ymin = -2 * Q3C_HALF;
+		*zmin = -2 * Q3C_HALF;
+		*full_flag = 1;
 	}
 }
 
@@ -2366,9 +2389,13 @@ void q3c_stack_expand(struct q3c_square* work_stack, int *work_nstack,
 
 /* This function processes the stack of quad-tree squares and puts the
  * fully covered and partially covered squares in the appropriate output
- * lists
+ * lists.
+ * It returns 0 on success and 1 if the ranges did not fit in the output
+ * arrays, which hold Q3C_NFULLS/Q3C_NPARTIALS pairs each. In the latter case
+ * the caller is expected to redo the decomposition with a smaller res_depth,
+ * which produces fewer and coarser ranges.
  */
-void q3c_output_stack( struct q3c_prm *hprm,
+int q3c_output_stack( struct q3c_prm *hprm,
                        struct q3c_square *out_stack, int out_nstack,
                        struct q3c_square *work_stack, int work_nstack,
                        int face_num, int nside,
@@ -2400,6 +2427,10 @@ void q3c_output_stack( struct q3c_prm *hprm,
 		 * The query should be     ipix_tmp1 =< II < ipix_tmp2
 		 */
 
+		if ((*out_ipix_arr_fulls_pos + 2) > (2 * Q3C_NFULLS))
+		{
+			return 1;
+		}
 		out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp1;
 		out_ipix_arr_fulls[(*out_ipix_arr_fulls_pos)++] = ipix_tmp2;
 
@@ -2434,12 +2465,17 @@ void q3c_output_stack( struct q3c_prm *hprm,
 		 * The query should be     ipix_tmp1 =< II < ipix_tmp2
 		 */
 
+		if ((*out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+		{
+			return 1;
+		}
 		out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp1;
 		out_ipix_arr_partials[(*out_ipix_arr_partials_pos)++] = ipix_tmp2;
 
 
 	} /* End of output run through partly covered squares */
 
+	return 0;
 }
 
 static void array_filler(q3c_ipix_t *fulls, int fullpos,
@@ -2466,20 +2502,28 @@ static void array_filler(q3c_ipix_t *fulls, int fullpos,
 }
 
 
-/* Main radial query function */
-void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+/* Declare the whole sphere partially covered. Used for the regions that are
+ * too large for the quadtree decomposition to describe with the number of
+ * ranges we have at our disposal.
+ */
+/* Main radial query function.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays; the latter should never happen and must be reported by the
+ * caller as an internal error.
+ */
+int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                       q3c_coord_t dec0, q3c_coord_t rad,
                       q3c_ipix_t *out_ipix_arr_fulls,
                       q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t axx, ayy, axy, ax, ay, a, xmin, xmax, ymin, ymax,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
-	            points[4];
+	            points[8];
 
 	q3c_ipix_t n0;
 	const q3c_ipix_t nside = hprm->nside;
 
-	char face_num, multi_flag = 0, face_count, face_num0, full_flags[3] = {0,0,0};
+	char face_num, multi_flag = 0, face_count, face_num0, full_flags[5] = {0,0,0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 
@@ -2491,7 +2535,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	if (rad < 0)
 	{
 		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
-		return;
+		return 0;
 	}
 
 	/* 35 degrees is a magic size above which the cone from the search can
@@ -2523,7 +2567,7 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			out_ipix_arr_partials[i++] = 1;
 			out_ipix_arr_partials[i++] = -1;
 		}
-		return;
+		return 0;
 	}
 
 	face_num = q3c_get_facenum(ra0, dec0);
@@ -2553,11 +2597,13 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			                   &ax, &ay, &a);
 			q3c_get_xy_minmax(axx, ayy, axy, ax, ay, a, &xmin, &xmax, &ymin,
 			                  &ymax, full_flags + face_count);
+			if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
+			/* the region does not really touch this face */
+			{
+				continue;
 		}
-		xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-		xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-		ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-		ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+		}
+		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 
 #ifdef Q3C_DEBUG
 		fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
@@ -2581,6 +2627,10 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 #ifdef Q3C_DEBUG
 			fprintf(stdout, "FULL_FLAG\n");
 #endif
+			if ((out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+			{
+				return 1;
+			}
 			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmin;
 			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmax;
 			continue;
@@ -2665,13 +2715,16 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
 		                  work_stack, work_nstack,
 		                  face_num, nside,
 		                  out_ipix_arr_fulls,
 		                  &out_ipix_arr_fulls_pos,
 		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
@@ -2680,11 +2733,18 @@ void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
+	return 0;
+
 } /* End of q3c_radial_query() */
 
 
 
-void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
+/* Main polygonal query function.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays; the latter should never happen and must be reported by the
+ * caller as an internal error.
+ */
+int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
                     q3c_ipix_t *out_ipix_arr_fulls,
                     q3c_ipix_t *out_ipix_arr_partials,
                     char *too_large)
@@ -2693,7 +2753,7 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 
 	q3c_coord_t xmin, xmax, ymin, ymax,
 	            xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
-	            points[4];
+	            points[8];
 
 	q3c_ipix_t n0;
 	const q3c_ipix_t nside = hprm->nside;
@@ -2712,12 +2772,11 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 	if (large_flag)
 	{
 		*too_large = 1;
-		return;
+		return 0;
 	}
 	q3c_prepare_poly(qp);
 
 	q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
-
 
 	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
@@ -2738,18 +2797,20 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 			if (large_flag)
 			{
 				*too_large = 1;
-				return;
+				return 0;
 			}
 
 			q3c_prepare_poly(qp);
 
 			q3c_get_minmax_poly(qp, &xmin, &xmax, &ymin, &ymax);
-
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+			if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
+			/* the region does not really touch this face */
+			{
+				continue;
 		}
+		}
+		/* clamp the box of every face, including the main one */
+		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 
 #ifdef Q3C_DEBUG
 		fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
@@ -2847,40 +2908,55 @@ void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
 		                  work_stack, work_nstack,
 		                  face_num, nside,
 		                  out_ipix_arr_fulls,
 		                  &out_ipix_arr_fulls_pos,
 		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
 
 
+	if (*too_large)
+	{
+		return 0;
+	}
+
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
 
-} /* End of radial_query() */
+	return 0;
+
+} /* End of q3c_poly_query() */
 
 
 
 
 
-void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+/* Main elliptical query function.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays; the latter should never happen and must be reported by the
+ * caller as an internal error.
+ */
+int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                        q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
                        q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
                        q3c_ipix_t *out_ipix_arr_partials)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0,
 	            yc_cur = 0, cur_size, xesize, yesize,
-	            points[4], axx, ayy, axy, ax, ay, a;
+	            points[8], axx, ayy, axy, ax, ay, a;
 
 	q3c_ipix_t n0;
 	const q3c_ipix_t nside = hprm->nside;
 
-	char face_num, multi_flag = 0, face_count, face_num0;
+	char face_num, multi_flag = 0, face_count, face_num0, full_flags[5] = {0,0,0,0,0};
 	int out_ipix_arr_fulls_pos = 0;
 	int out_ipix_arr_partials_pos = 0;
 
@@ -2892,7 +2968,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 	if (majax < 0)
 	{
 		array_filler(out_ipix_arr_fulls, 0, out_ipix_arr_partials, 0);
-		return;
+		return 0;
 	}
 
 	/* 35 degrees is a magic size above which the cone from the search can
@@ -2924,13 +3000,14 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			out_ipix_arr_partials[i++] = 1;
 			out_ipix_arr_partials[i++] = -1;
 		}
-		return;
+		return 0;
 	}
 
 	face_num = q3c_get_facenum(ra0, dec0);
 
 	q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(face_num, ra0, dec0, majax,
-	                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a);
+	                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a,
+	                                              full_flags);
 
 	q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
 
@@ -2946,13 +3023,16 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 			                          2 * points[2 * (face_count - 1) + 1], face_num0);
 
 			q3c_fast_get_ellipse_xy_minmax_and_poly_coefs(face_num, ra0, dec0, majax,
-			                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a);
-
-			xmax = (xmax > Q3C_HALF ? Q3C_HALF : xmax);
-			xmin = (xmin < -Q3C_HALF ? -Q3C_HALF : xmin);
-			ymax = (ymax > Q3C_HALF ? Q3C_HALF : ymax);
-			ymin = (ymin < -Q3C_HALF ? -Q3C_HALF : ymin);
+			                                              ell, PA, &xmin, &xmax, &ymin, &ymax, &axx, &ayy, &axy, &ax, &ay, &a,
+			                                              full_flags + face_count);
+			if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
+			/* the region does not really touch this face */
+			{
+				continue;
 		}
+		}
+		/* clamp the box of every face, including the main one */
+		q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 #ifdef Q3C_DEBUG
 		fprintf(stdout,"FACE RUN: %d FACE_NUM: %d\n", face_count, face_num);
 #endif
@@ -2965,6 +3045,24 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		/* If the region is too small */
 		{
 			xesize = 1 / (q3c_coord_t)nside;
+		}
+
+		if (full_flags[(int)face_count])
+		/* Take the whole face */
+		{
+
+			q3c_ipix_t tmpmin = face_num * nside * nside;
+			q3c_ipix_t tmpmax = (face_num + 1) * nside * nside;
+#ifdef Q3C_DEBUG
+			fprintf(stdout, "FULL_FLAG\n");
+#endif
+			if ((out_ipix_arr_partials_pos + 2) > (2 * Q3C_NPARTIALS))
+			{
+				return 1;
+			}
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmin;
+			out_ipix_arr_partials[out_ipix_arr_partials_pos++] = tmpmax;
+			continue;
 		}
 
 		n0 = 1 << ((q3c_ipix_t)(-q3c_ceil((q3c_log(xesize) / q3c_log(2)))));
@@ -3047,13 +3145,16 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 		}
 #endif
 
-		q3c_output_stack( hprm, out_stack, out_nstack,
+		if (q3c_output_stack( hprm, out_stack, out_nstack,
 		                  work_stack, work_nstack,
 		                  face_num, nside,
 		                  out_ipix_arr_fulls,
 		                  &out_ipix_arr_fulls_pos,
 		                  out_ipix_arr_partials,
-		                  &out_ipix_arr_partials_pos);
+		                      &out_ipix_arr_partials_pos))
+		{
+			return 1;
+		}
 
 
 	} /* End of the mega-loop over the faces */
@@ -3061,5 +3162,7 @@ void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
 
 	array_filler(out_ipix_arr_fulls, out_ipix_arr_fulls_pos,
 	             out_ipix_arr_partials, out_ipix_arr_partials_pos);
+
+	return 0;
 
 } /* End of q3c_ellipse_query() */

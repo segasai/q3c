@@ -731,3 +731,32 @@ select count(*) from test where q3c_ellipse_query(ra,dec,314,-37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,316,-37,6,1,0);
 select count(*) from test where  q3c_ellipse_query(ra,dec,-45,-6,1,1,0);
+-- Ellipse searches that cover more than one cube face and where the curve
+-- produced by the ellipse on one of the faces is a hyperbola rather than an
+-- ellipse. The bounding box of such a face used to be returned inverted
+-- (xmin>xmax), no ipix ranges were generated for that face at all, and every
+-- row located on it was silently missing from the result of q3c_ellipse_query().
+-- For each ellipse below we print the number of rows inside it, followed by the
+-- number of those rows that q3c_ellipse_query() does not return.
+-- The second number must always be zero.
+select count(*) from test where q3c_in_ellipse(ra,dec,62.091000,27.288000,30.669000,0.343000,270.434000);
+select count(*) from test where q3c_in_ellipse(ra,dec,62.091000,27.288000,30.669000,0.343000,270.434000) and not q3c_ellipse_query(ra,dec,62.091000,27.288000,30.669000,0.343000,270.434000);
+select count(*) from test where q3c_in_ellipse(ra,dec,245.704000,66.952000,32.352000,0.186000,326.020000);
+select count(*) from test where q3c_in_ellipse(ra,dec,245.704000,66.952000,32.352000,0.186000,326.020000) and not q3c_ellipse_query(ra,dec,245.704000,66.952000,32.352000,0.186000,326.020000);
+select count(*) from test where q3c_in_ellipse(ra,dec,43.733000,63.760000,32.854000,0.285000,65.188000);
+select count(*) from test where q3c_in_ellipse(ra,dec,43.733000,63.760000,32.854000,0.285000,65.188000) and not q3c_ellipse_query(ra,dec,43.733000,63.760000,32.854000,0.285000,65.188000);
+select count(*) from test where q3c_in_ellipse(ra,dec,267.460000,-24.755000,32.795000,0.069000,33.933000);
+select count(*) from test where q3c_in_ellipse(ra,dec,267.460000,-24.755000,32.795000,0.069000,33.933000) and not q3c_ellipse_query(ra,dec,267.460000,-24.755000,32.795000,0.069000,33.933000);
+select count(*) from test where q3c_in_ellipse(ra,dec,69.871000,-33.860000,31.642000,0.075000,291.857000);
+select count(*) from test where q3c_in_ellipse(ra,dec,69.871000,-33.860000,31.642000,0.075000,291.857000) and not q3c_ellipse_query(ra,dec,69.871000,-33.860000,31.642000,0.075000,291.857000);
+select count(*) from test where q3c_in_ellipse(ra,dec,219.898000,-11.506000,30.688000,0.053000,359.022000);
+select count(*) from test where q3c_in_ellipse(ra,dec,219.898000,-11.506000,30.688000,0.053000,359.022000) and not q3c_ellipse_query(ra,dec,219.898000,-11.506000,30.688000,0.053000,359.022000);
+-- Regression test for the q3c_ellipse_query_it() range cache: the cached
+-- ipix ranges must be keyed on the centre, major axis, axis ratio AND
+-- position angle. The searches below share the centre and the major axis and
+-- differ only in the position angle (or only in the axis ratio); the counts
+-- of rows missed by q3c_ellipse_query() must all be zero.
+select count(*) from test where q3c_ellipse_query(ra,dec,11,45,5,0.15,20);
+select count(*) from test where q3c_in_ellipse(ra,dec,11,45,5,0.15,110) and not q3c_ellipse_query(ra,dec,11,45,5,0.15,110);
+select count(*) from test where q3c_ellipse_query(ra,dec,11,45,5,0.15,110);
+select count(*) from test where q3c_in_ellipse(ra,dec,11,45,5,0.9,110) and not q3c_ellipse_query(ra,dec,11,45,5,0.9,110);

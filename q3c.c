@@ -546,7 +546,10 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = radius;
-	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array))
+	{
+		elog(ERROR, "q3c_nearby_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
@@ -661,7 +664,10 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	circle.dec = dec_cen;
 	circle.rad = new_radius;
 
-	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array))
+	{
+		elog(ERROR, "q3c_nearby_pm_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
@@ -732,7 +738,10 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	ellipse.PA = PA;
 
-	q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array))
+	{
+		elog(ERROR, "q3c_ellipse_nearby_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
@@ -810,7 +819,10 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials);
+	if (q3c_radial_query(&hprm, ra_cen, dec_cen, radius, fulls, partials))
+	{
+		elog(ERROR, "q3c_radial_query_it: too many ipix ranges. This is a bug in q3c, please report it");
+	}
 
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
@@ -842,7 +854,8 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	q3c_coord_t ell = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	/* 1 means full, 0 means partial */
 
-	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf;
+	static q3c_coord_t ra_cen_buf, dec_cen_buf, radius_buf, axis_ratio_buf,
+	                   PA_buf;
 	static q3c_ipix_t partials[2 * Q3C_NPARTIALS];
 	static q3c_ipix_t fulls[2 * Q3C_NFULLS];
 	/*  !!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!
@@ -873,7 +886,9 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) && (radius == radius_buf))
+		if ((ra_cen == ra_cen_buf) && (dec_cen == dec_cen_buf) &&
+		    (radius == radius_buf) && (axis_ratio == axis_ratio_buf) &&
+		    (PA == PA_buf))
 		{
 			if (full_flag)
 			{
@@ -886,12 +901,17 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 		}
 	}
 
-	q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
-	                  partials);
+	if (q3c_ellipse_query(&hprm, ra_cen, dec_cen, radius, ell, PA, fulls,
+	                      partials))
+	{
+		elog(ERROR, "q3c_ellipse_query_it: too many ipix ranges. This is a bug in q3c, please report it");
+	}
 
 	ra_cen_buf = ra_cen;
 	dec_cen_buf = dec_cen;
 	radius_buf = radius;
+	axis_ratio_buf = axis_ratio;
+	PA_buf = PA;
 	invocation = 1;
 
 	if (full_flag)
@@ -1147,7 +1167,10 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
 	if (!identical || !good_cache)
 	{
-		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
+		if (q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large))
+		{
+			elog(ERROR, "q3c_poly_query_it: too many ipix ranges. This is a bug in q3c, please report it");
+		}
 		if (too_large)
 		{
 			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
@@ -1233,7 +1256,10 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 
 	if (!identical || !good_cache)
 	{
-		q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large);
+		if (q3c_poly_query(&hprm, &qp, qpit->fulls, qpit->partials, &too_large))
+		{
+			elog(ERROR, "q3c_poly_query_it: too many ipix ranges. This is a bug in q3c, please report it");
+		}
 		if (too_large)
 		{
 			elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");

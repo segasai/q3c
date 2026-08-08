@@ -293,7 +293,7 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth);
 void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
                           q3c_coord_t, q3c_ipix_t *, int);
 
-void q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
+int q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
 
 void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
                        q3c_coord_t, q3c_coord_t, q3c_coord_t *, q3c_coord_t *,
@@ -319,13 +319,17 @@ q3c_coord_t q3c_dist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 
 q3c_coord_t q3c_sindist(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t);
 
-void q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+/* The query functions return 0 on success and 1 when the produced ranges
+ * could not fit in the output arrays; the latter should never happen and
+ * must be reported by the caller as an internal error
+ */
+int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0,
                       q3c_coord_t dec0, q3c_coord_t rad,
                       q3c_ipix_t *out_ipix_arr_fulls,
                       q3c_ipix_t *out_ipix_arr_partials);
-void q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
-                       q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t PA,
-                       q3c_coord_t ell, q3c_ipix_t *out_ipix_arr_fulls,
+int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0,
+                      q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
+                      q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
                        q3c_ipix_t *out_ipix_arr_partials);
 
 void q3c_init_poly(q3c_poly *qp, int n);
@@ -344,7 +348,7 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur,
 void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax,
                          q3c_coord_t *ymin, q3c_coord_t *ymax);
 
-void q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
+int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp,
                     q3c_ipix_t *out_ipix_arr_fulls,
                     q3c_ipix_t *out_ipix_arr_partials,
                     char *too_large);

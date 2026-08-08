@@ -92,6 +92,8 @@ test: gen_data
 	diff results/join.out expected/join.expected
 	cat sql/join_ellipse.sql | psql q3c_test > results/join_ellipse.out
 	diff results/join_ellipse.out expected/join.expected
+	cat sql/large_query.sql | psql q3c_test > results/large_query.out
+	diff results/large_query.out expected/large_query.expected
 	cat sql/join_pm1.sql | psql q3c_test > results/join_pm1.out
 	diff results/join_pm1.out expected/join_pm1.expected
 	cat sql/join_pm2.sql | psql q3c_test > results/join_pm2.out
