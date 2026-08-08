@@ -20,17 +20,16 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "common.h"
+#include <stdio.h>
+#include <stdlib.h>
 int main()
 {
-	struct q3c_prm_write hprm1;
+    struct q3c_prm_write hprm1;
 
-	init_q3c1(&hprm1, 1073741824);
+    init_q3c1(&hprm1, 1073741824);
 
-	q3c_dump_prm(&hprm1, "dump.c");
+    q3c_dump_prm(&hprm1, "dump.c");
 
-	return 0;
-
+    return 0;
 }

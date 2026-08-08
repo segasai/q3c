@@ -20,11 +20,10 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int64_t rand_state = 1;
@@ -34,8 +33,8 @@ static const int64_t a = 1103515245;
 
 int64_t get_rand()
 {
-	rand_state = ( a * rand_state + c ) % m;
-	return rand_state;
+    rand_state = (a * rand_state + c) % m;
+    return rand_state;
 }
 
 /* Run as
@@ -55,93 +54,95 @@ int64_t get_rand()
  */
 int main(int argc, char *argv[])
 {
-	const int nrabins = 36000;
-	const int ndecbins = 18000;
-	const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
-	double corrections[ndecbins], total = 0, pmra, pmdec, pmscale = 1;
-	int npoints;
-	bool random_epoch = false;
-	double epoch, cur_epoch;
-	int i, extraarg;
-	char parsing_error = 1;
-	bool withpm = false;
-	// first argument is the seed and then number of points to generate
-	if (argc >= 3)
-	{
-		rand_state = atoi(argv[1]);
-		get_rand(); // advance one step
-		npoints = atoi(argv[2]);
-		parsing_error = 0;
-		for (extraarg = 0; extraarg < (argc - 3); extraarg++)
-		{
-			char *curarg = argv[3 + extraarg];
-			if (strncmp(curarg,"--randomepoch", 13) == 0) {random_epoch = true;}
-			if (strncmp(curarg,"--withpm", 9) == 0) {withpm = true;}
-			if (strncmp(curarg,"--pmscale=", 10) == 0)
-			{
-				if (sscanf(curarg, "--pmscale=%lf", &pmscale) == 0)
-				{
-					fprintf(stderr, "Formatting error of pmscale\n");
-					exit(1);
-				}
-			}
+    const int nrabins = 36000;
+    const int ndecbins = 18000;
+    const int ntotbins = nrabins * ndecbins; /* 2^x*3^y*5^z */
+    double corrections[ndecbins], total = 0, pmra, pmdec, pmscale = 1;
+    int npoints;
+    bool random_epoch = false;
+    double epoch, cur_epoch;
+    int i, extraarg;
+    char parsing_error = 1;
+    bool withpm = false;
+    // first argument is the seed and then number of points to generate
+    if (argc >= 3)
+    {
+        rand_state = atoi(argv[1]);
+        get_rand(); // advance one step
+        npoints = atoi(argv[2]);
+        parsing_error = 0;
+        for (extraarg = 0; extraarg < (argc - 3); extraarg++)
+        {
+            char *curarg = argv[3 + extraarg];
+            if (strncmp(curarg, "--randomepoch", 13) == 0)
+            {
+                random_epoch = true;
+            }
+            if (strncmp(curarg, "--withpm", 9) == 0)
+            {
+                withpm = true;
+            }
+            if (strncmp(curarg, "--pmscale=", 10) == 0)
+            {
+                if (sscanf(curarg, "--pmscale=%lf", &pmscale) == 0)
+                {
+                    fprintf(stderr, "Formatting error of pmscale\n");
+                    exit(1);
+                }
+            }
 
-			if (strncmp(curarg,"--epoch=",8) == 0)
-			{
-				sscanf(curarg, "--epoch=%lf", &epoch);
-			}
-		}
-	}
+            if (strncmp(curarg, "--epoch=", 8) == 0)
+            {
+                sscanf(curarg, "--epoch=%lf", &epoch);
+            }
+        }
+    }
 
-	if (parsing_error)
-	{
-		fprintf(stderr, "Wrong arguments!\n"
-		        "MUST be ./gen_data [RANDOM SEED] [NPOINTS] [PROPERMOTIONSCALE(optional)]");
-		exit(1);
-	}
+    if (parsing_error)
+    {
+        fprintf(stderr, "Wrong arguments!\n"
+                        "MUST be ./gen_data [RANDOM SEED] [NPOINTS] [PROPERMOTIONSCALE(optional)]");
+        exit(1);
+    }
 
-	for (i = 0; i < ndecbins; i++)
-	/* weights in order to have cosine distribution of declinations
-	 * corresponding to uniform distribution on the sky */
-	{
-		corrections[i] = cos((-90. + (180. / ndecbins) * (i + 0.5)) *
-		                     M_PI / 180.);
-	}
+    for (i = 0; i < ndecbins; i++)
+    /* weights in order to have cosine distribution of declinations
+     * corresponding to uniform distribution on the sky */
+    {
+        corrections[i] = cos((-90. + (180. / ndecbins) * (i + 0.5)) * M_PI / 180.);
+    }
 
-	int npointsleft = npoints;
-	while (npointsleft)
-	{
-		int64_t ra = (int64_t)(get_rand() * 1. / m * nrabins);
-		int64_t dec = (int64_t)(get_rand() * 1. / m * ndecbins);
-		if (withpm )
-		{
-			pmra = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
-			pmdec = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
-			if (random_epoch)
-			{
-				cur_epoch = ((get_rand() * 1. / m) ) * 20 + 1980;
-			}
-			else
-			{
-				cur_epoch = epoch;
-			}
-		}
+    int npointsleft = npoints;
+    while (npointsleft)
+    {
+        int64_t ra = (int64_t)(get_rand() * 1. / m * nrabins);
+        int64_t dec = (int64_t)(get_rand() * 1. / m * ndecbins);
+        if (withpm)
+        {
+            pmra = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
+            pmdec = ((get_rand() * 1. / m) * 2 - 1) * pmscale;
+            if (random_epoch)
+            {
+                cur_epoch = ((get_rand() * 1. / m)) * 20 + 1980;
+            }
+            else
+            {
+                cur_epoch = epoch;
+            }
+        }
 
-		if (get_rand() < (corrections[dec] * m))
-		{
-			if (withpm)
-			{
-				printf("%f %f %f %f %f\n", ra * (360. / nrabins),
-				       -90 + dec * (180. / ndecbins), pmra, pmdec, cur_epoch);
-
-			}
-			else
-			{
-				printf("%f %f\n", ra * (360. / nrabins),
-				       -90 + dec * (180. / ndecbins));
-			}
-			npointsleft--;
-		}
-	}
-
+        if (get_rand() < (corrections[dec] * m))
+        {
+            if (withpm)
+            {
+                printf("%f %f %f %f %f\n", ra * (360. / nrabins), -90 + dec * (180. / ndecbins), pmra, pmdec,
+                       cur_epoch);
+            }
+            else
+            {
+                printf("%f %f\n", ra * (360. / nrabins), -90 + dec * (180. / ndecbins));
+            }
+            npointsleft--;
+        }
+    }
 }
