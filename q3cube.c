@@ -560,9 +560,12 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0,
  * specified by q3c_region
  * ra in degrees, dec in degrees, radius in degrees
  * strictly 0<=ra<360 and -90<=dec<=90
+ * Returns 0 on success and 1 when the region touches more faces than the
+ * four output ranges can describe; the latter should never happen and must
+ * be reported by the caller as an internal error.
  */
-void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
-                    q3c_ipix_t *ipix)
+int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
+                   q3c_ipix_t *ipix)
 {
 	q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[8];
 	const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits;
@@ -584,7 +587,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			*(ipix_cur++) = 1;
 			*(ipix_cur++) = -1;
 		}
-		return;
+		return 0;
 	}
 
 	if (q3c_too_big_check(region, region_data))
@@ -598,7 +601,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			*(ipix_cur++) = 1;
 			*(ipix_cur++) = -1;
 		}
-		return;
+		return 0;
 	}
 
 	face_num = q3c_get_region_facenum(region, region_data);
@@ -622,20 +625,19 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 	if (multi_flag > 3)
 	{
 		/* The main face and four neighbours do not fit in the four output
-		 * ranges, so query the whole sky. Only reachable when the
-		 * projection spills beyond all four sides of the face, which for
-		 * the regions bounded by Q3C_MAXRAD is mostly projection stretch
-		 * rather than real coverage.
+		 * ranges. multi_flag == 4 requires the bounding box to spill over
+		 * all four sides of the main face at once, and the regions that
+		 * reach this point (circles/ellipses with rad <= Q3C_MAXRAD;
+		 * larger ones were sent to the whole-sky scan by
+		 * q3c_too_big_check() above) cannot do that: even the largest
+		 * allowed circle centred on the face only reaches
+		 * |x|,|y| = tan(Q3C_MAXRAD)/2 ~ 0.35, and any allowed ellipse is
+		 * contained in such a circle, so its box is smaller still
+		 * (verified numerically over all centres, radii and ellipse
+		 * shapes). Therefore this must never be reached and is reported
+		 * as an internal error.
 		 */
-		q3c_ipix_t maxval = 6 * (nside * nside);
-		*(ipix_cur++) = -1;
-		*(ipix_cur++) = maxval;
-		for(i = 1; i < 4; i++ )
-		{
-			*(ipix_cur++) = 1;
-			*(ipix_cur++) = -1;
-		}
-		return;
+		return 1;
 	}
 
 	if (multi_flag == 0)
@@ -885,10 +887,11 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 			nstack[0] = n1;
 			nistack = 1;
 
-			/* two or three secondary faces (multi_flag can be 3 when the
-			 * projection spills beyond three sides of the main face); the
-			 * main face plus three neighbours still fit in the four output
-			 * ranges
+			/* two or three secondary faces; multi_flag == 3 does happen
+			 * for circles/ellipses with radii close to Q3C_MAXRAD centred
+			 * near the midpoint of a face edge, and the region then
+			 * genuinely covers all three neighbours; the main face plus
+			 * three neighbours still fit in the four output ranges
 			 */
 			for(i = 0; i < multi_flag; i++)
 			{
@@ -963,6 +966,7 @@ void q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data,
 		*(ipix_cur++) = -1;
 	}
 
+	return 0;
 }
 
 

@@ -546,7 +546,10 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 	circle.ra = ra_cen;
 	circle.dec = dec_cen;
 	circle.rad = radius;
-	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array))
+	{
+		elog(ERROR, "q3c_nearby_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
@@ -661,7 +664,10 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
 	circle.dec = dec_cen;
 	circle.rad = new_radius;
 
-	q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_CIRCLE, &circle, ipix_array))
+	{
+		elog(ERROR, "q3c_nearby_pm_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{
@@ -732,7 +738,10 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 	ellipse.e = q3c_sqrt ( 1 - axis_ratio * axis_ratio );
 	ellipse.PA = PA;
 
-	q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array);
+	if (q3c_get_nearby(&hprm, Q3C_ELLIPSE, &ellipse, ipix_array))
+	{
+		elog(ERROR, "q3c_ellipse_nearby_it: too many neighbouring faces. This is a bug in q3c, please report it");
+	}
 
 	for(i = 0; i < Q3C_NNEARBY; i++)
 	{

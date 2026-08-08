@@ -293,7 +293,7 @@ q3c_coord_t q3c_pixarea(struct q3c_prm *hprm, q3c_ipix_t ipix, int depth);
 void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t,
                           q3c_coord_t, q3c_ipix_t *, int);
 
-void q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
+int q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
 
 void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t,
                        q3c_coord_t, q3c_coord_t, q3c_coord_t *, q3c_coord_t *,
