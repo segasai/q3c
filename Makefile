@@ -118,6 +118,7 @@ test: gen_data
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.2"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.3"'
 	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.4"'
+	psql q3c_test -c 'ALTER EXTENSION q3c UPDATE TO "2.0.5"'
 	dropdb q3c_test
 	createdb q3c_test
 	psql q3c_test -c "CREATE TABLE test (ra double precision, dec double precision)"

@@ -23,16 +23,17 @@
 #include <string.h>
 
 /* Postgres stuff */
-#include "executor/spi.h"
+/* postgres.h must be included before any other PostgreSQL header */
 #include "postgres.h"
+#include "executor/spi.h"
 #include "utils/lsyscache.h"
 /* I included that just to remove the gcc warning
  * q3c.c:128: warning: implicit declaration of function `get_typlenbyvalalign'
  */
-#include "catalog/pg_type.h"
-#include "fmgr.h"
 #include "utils/array.h"
 #include "utils/geo_decls.h"
+#include "catalog/pg_type.h"
+#include "fmgr.h"
 #if PG_VERSION_NUM >= 90300
 #include "access/tupmacs.h"
 #endif
