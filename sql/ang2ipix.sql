@@ -4,6 +4,8 @@ select q3c_ang2ipix(0, 90);
 select q3c_ang2ipix(-1, 0); 
 select q3c_ang2ipix(359, 0); 
 select q3c_ang2ipix('nan'::double precision,0);
+select q3c_ang2ipix(0,'nan'::double precision);
+select q3c_ang2ipix(0::real,'nan'::real);
 select abs(q3c_dist(0,0,1,0)-1)<1e-9;
 select abs(q3c_dist(0,0,0,1)-1)<1e-9;
 select abs(q3c_dist(0,0,90,0)-90)<1e-9;

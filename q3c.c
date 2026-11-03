@@ -197,6 +197,15 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 
 static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert);
 
+/* NaN/Inf policy: a non-finite coordinate on the data side of a query makes
+ * q3c_ang2ipix() return NULL, so that row never matches; a non-finite centre
+ * or radius on the query side (e.g. a NaN row in the left table of q3c_join())
+ * makes the *_it() range functions return the empty range (1,-1) used by the
+ * range generators, so that row matches nothing too. Only malformed constant
+ * inputs (polygons with NaN vertices) are errors.
+ */
+#define Q3C_RETURN_EMPTY_RANGE(iteration) PG_RETURN_INT64(((iteration) % 2) ? -1 : 1)
+
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS)
 {
@@ -507,9 +516,9 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 
     q3c_check_iteration("q3c_nearby_it", iteration, Q3C_NNEARBY);
 
-    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
 
     if (invocation == 0)
@@ -602,9 +611,9 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
     iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
     q3c_check_iteration("q3c_nearby_pm_it", iteration, Q3C_NNEARBY);
 
-    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
     if ((!isfinite(pmra)) || (!isfinite(pmdec)) || (!isfinite(max_epoch_delta)))
     {
@@ -701,7 +710,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 
     if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec,radius are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
 
     if (invocation == 0)
@@ -777,6 +786,10 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 
     q3c_check_full_flag("q3c_radial_query_it", full_flag);
     q3c_check_iteration("q3c_radial_query_it", iteration, full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
+    {
+        Q3C_RETURN_EMPTY_RANGE(iteration);
+    }
 
     ra_cen = UNWRAP_RA(ra_cen);
     if (q3c_fabs(dec_cen) > 90)
@@ -853,6 +866,11 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 
     q3c_check_full_flag("q3c_ellipse_query_it", full_flag);
     q3c_check_iteration("q3c_ellipse_query_it", iteration, full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)) || (!isfinite(axis_ratio)) ||
+        (!isfinite(PA)))
+    {
+        Q3C_RETURN_EMPTY_RANGE(iteration);
+    }
 
     ra_cen = UNWRAP_RA(ra_cen);
     if (q3c_fabs(dec_cen) > 90)
@@ -976,6 +994,10 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
     {
         ra_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
         dec_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
+        if ((!isfinite(ra_cur)) || (!isfinite(dec_cur)))
+        {
+            elog(ERROR, "The polygon vertices are infinites or NaNs");
+        }
 
         if ((in_ra[i] != ra_cur) || (in_dec[i] != dec_cur))
         {
@@ -1008,6 +1030,10 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
     {
         newx = poly->p[i].x;
         newy = poly->p[i].y;
+        if ((!isfinite(newx)) || (!isfinite(newy)))
+        {
+            elog(ERROR, "The polygon vertices are infinites or NaNs");
+        }
         if ((newx != ra[i]) || (newy != dec[i]))
         {
             identical = 0;
@@ -1267,6 +1293,10 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
     int identical;
     q3c_poly_info_type *qpit;
 
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    {
+        PG_RETURN_NULL();
+    }
     if (fcinfo->flinfo->fn_extra == 0)
     {
         // allocate memory where we are going to store converted info
@@ -1302,6 +1332,10 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
     int identical;
     q3c_poly_info_type *qpit;
 
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    {
+        PG_RETURN_NULL();
+    }
     if (fcinfo->flinfo->fn_extra == 0)
     {
         // allocate memory where we are going to store converted info
