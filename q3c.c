@@ -962,8 +962,8 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
     }
     p = ARR_DATA_PTR(poly_arr);
     poly_nitems /= 2;
+    identical = (*nvert == poly_nitems);
     *nvert = poly_nitems;
-    identical = 1;
 
     bitmap = ARR_NULLBITMAP(poly_arr);
     bitmask = 1;
@@ -988,7 +988,7 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 {
     int i, npts = poly->npts;
     q3c_coord_t newx, newy;
-    int identical = 1;
+    int identical = (*n == npts);
 
     *n = npts;
     if (npts < 3)
@@ -1021,6 +1021,7 @@ typedef struct q3c_poly_info_type
      * So we should have the array with the size twice bigger
      */
     int ready;
+    int n; /* number of vertices, part of the cache key */
     q3c_ipix_t partials[2 * Q3C_NPARTIALS]; /* array of ipixes partially covered */
     q3c_ipix_t fulls[2 * Q3C_NFULLS];       /* array of ipixes fully covered */
     q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX], x[Q3C_MAX_N_POLY_VERTEX],
@@ -1066,6 +1067,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
         b->faces[i] = a->faces[i];
     }
     b->multi_flag = a->multi_flag;
+    b->n = a->n;
 }
 
 /* Cache logic here is the following
@@ -1137,7 +1139,8 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
     qp.ax = qpit->ax;
     qp.ay = qpit->ay;
 
-    identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+    identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qpit->n));
+    qp.n = qpit->n;
     /* We fill the arrays and check if it matches what we had before */
 
     if (!identical || !good_cache)
@@ -1224,7 +1227,8 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
     qp.ax = qpit->ax;
     qp.ay = qpit->ay;
 
-    identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+    identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qpit->n));
+    qp.n = qpit->n;
     /* We fill the arrays and check if it matches what we had before */
 
     if (!identical || !good_cache)
@@ -1283,7 +1287,6 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
     ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
     extern struct q3c_prm hprm;
     char too_large = 0;
-    int nvert;
     bool result;
     int identical;
     q3c_poly_info_type *qpit;
@@ -1297,9 +1300,9 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+    identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &(qpit->n)) && qpit->ready;
 
-    result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
+    result = q3c_check_sphere_point_in_poly(&hprm, qpit->n, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
                                             qpit->xpj, qpit->ypj, qpit->axpj, qpit->aypj, qpit->faces,
                                             &(qpit->multi_flag)) != Q3C_DISJUNCT;
     if (too_large)
@@ -1319,7 +1322,6 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
     POLYGON *poly = PG_GETARG_POLYGON_P(2);    // ra_cen
     extern struct q3c_prm hprm;
     char too_large = 0;
-    int nvert;
     bool result;
     int identical;
     q3c_poly_info_type *qpit;
@@ -1333,9 +1335,9 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+    identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &(qpit->n)) && qpit->ready;
 
-    result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
+    result = q3c_check_sphere_point_in_poly(&hprm, qpit->n, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
                                             qpit->xpj, qpit->ypj, qpit->axpj, qpit->aypj, qpit->faces,
                                             &(qpit->multi_flag)) != Q3C_DISJUNCT;
     qpit->ready = 1;

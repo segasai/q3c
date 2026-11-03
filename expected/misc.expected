@@ -53,3 +53,15 @@
  t
 (1 row)
 
+ q3c_in_poly 
+-------------
+ t
+ f
+(2 rows)
+
+ q3c_in_poly 
+-------------
+ t
+ f
+(2 rows)
+
