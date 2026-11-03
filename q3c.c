@@ -112,8 +112,6 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
     Node *left;
     Node *other;
     VariableStatData vardata;
-    Datum radDatum;
-    bool isnull;
     double rad;
     double ratio;
 
@@ -126,12 +124,16 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 
     examine_variable(root, left, varRelid, &vardata);
     other = estimate_expression_value(root, vardata.var);
-    radDatum = ((Const *)other)->constvalue;
-    isnull = ((Const *)other)->constisnull;
-    /* We shouldn't be really getting null inputs here */
-    if (!isnull)
+    ReleaseVariableStats(vardata);
+    /* If the radius does not fold to a constant at plan time (a Param in a
+     * generic prepared plan, a column, ...) or is null, we have nothing to
+     * estimate from and fall back to radius 0, i.e. selectivity 0. The planner
+     * clamps that to one row: the most optimistic guess, which favours index
+     * probes, the plan shape q3c queries usually want anyway.
+     */
+    if (IsA(other, Const) && !((Const *)other)->constisnull)
     {
-        rad = DatumGetFloat8(radDatum);
+        rad = DatumGetFloat8(((Const *)other)->constvalue);
     }
     else
     {
@@ -158,8 +160,6 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
     Node *left;
     Node *other;
     VariableStatData vardata;
-    Datum radDatum;
-    bool isnull;
     double rad;
     double ratio;
 
@@ -172,12 +172,16 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 
     examine_variable(root, left, varRelid, &vardata);
     other = estimate_expression_value(root, vardata.var);
-    radDatum = ((Const *)other)->constvalue;
-    isnull = ((Const *)other)->constisnull;
-    /* We shouldn't be really getting null inputs here */
-    if (!isnull)
+    ReleaseVariableStats(vardata);
+    /* If the radius does not fold to a constant at plan time (a Param in a
+     * generic prepared plan, a column, ...) or is null, we have nothing to
+     * estimate from and fall back to radius 0, i.e. selectivity 0. The planner
+     * clamps that to one row: the most optimistic guess, which favours index
+     * probes, the plan shape q3c queries usually want anyway.
+     */
+    if (IsA(other, Const) && !((Const *)other)->constisnull)
     {
-        rad = DatumGetFloat8(radDatum);
+        rad = DatumGetFloat8(((Const *)other)->constvalue);
     }
     else
     {
