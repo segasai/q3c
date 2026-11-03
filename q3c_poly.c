@@ -320,7 +320,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, q3c_coord_t in_r
 {
     q3c_coord_t xmin, xmax, ymin, ymax;
     q3c_ipix_t ipix;
-    q3c_coord_t points[4];
+    q3c_coord_t points[8]; /* up to 4 (x,y) probe points from q3c_multi_face_check() */
     char face_num, face_num0, cur_face_num, large_flag = 0;
     q3c_coord_t x0, y0;
 

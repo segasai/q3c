@@ -1025,8 +1025,9 @@ typedef struct q3c_poly_info_type
     q3c_ipix_t fulls[2 * Q3C_NFULLS];       /* array of ipixes fully covered */
     q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX], x[Q3C_MAX_N_POLY_VERTEX],
         y[Q3C_MAX_N_POLY_VERTEX], ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
-    q3c_coord_t xpj[3][Q3C_MAX_N_POLY_VERTEX], ypj[3][Q3C_MAX_N_POLY_VERTEX], axpj[3][Q3C_MAX_N_POLY_VERTEX],
-        aypj[3][Q3C_MAX_N_POLY_VERTEX];
+    /* main face + up to 4 neighbouring faces (multi_flag <= 4, see q3c_multi_face_check()) */
+    q3c_coord_t xpj[5][Q3C_MAX_N_POLY_VERTEX], ypj[5][Q3C_MAX_N_POLY_VERTEX], axpj[5][Q3C_MAX_N_POLY_VERTEX],
+        aypj[5][Q3C_MAX_N_POLY_VERTEX];
     // arrays storing the ra,dec ,projected x,y
     char faces[6];
     char multi_flag;
@@ -1052,7 +1053,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
         b->y[i] = a->y[i];
         b->ax[i] = a->ax[i];
         b->ay[i] = a->ay[i];
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < 5; j++)
         {
             b->axpj[j][i] = a->axpj[j][i];
             b->aypj[j][i] = a->aypj[j][i];

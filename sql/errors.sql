@@ -120,3 +120,4 @@ SELECT q3c_radial_query_it(0, 0, 1, 0, 2);
 SELECT q3c_ellipse_query_it(0, 0, 1, 1, 0, 100, 0);
 SELECT q3c_poly_query_it(ARRAY[0,0,1,0,0,1]::double precision[], 100, 1);
 SELECT q3c_poly_query_it('((0,0),(1,0),(0,1))'::polygon, -1, 0);
+SELECT q3c_in_poly(10, 10, ARRAY[80,0, 0,80, 280,0, 0,-80]::double precision[]);
