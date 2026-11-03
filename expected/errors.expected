@@ -22,3 +22,8 @@ ERROR:  q3c_radial_query_it: invalid full_flag 2; valid values are 0 and 1
 ERROR:  q3c_ellipse_query_it: invalid iteration 100; valid range is 0..99
 ERROR:  q3c_poly_query_it: invalid iteration 100; valid range is 0..99
 ERROR:  q3c_poly_query_it: invalid iteration -1; valid range is 0..99
+ERROR:  The polygon is too large. Polygons having diameter >~23 degrees are unsupported
+ERROR:  The polygon vertices are infinites or NaNs
+ERROR:  The polygon vertices are infinites or NaNs
+ERROR:  The polygon vertices are infinites or NaNs
+CONTEXT:  SQL function "q3c_poly_query" statement 1

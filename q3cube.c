@@ -1417,8 +1417,9 @@ void q3c_fast_get_xy_minmax(char face_num, q3c_region region, void *region_data,
                                        xmax, ymin, ymax);
         break;
     }
-    case Q3C_POLYGON: {
-    }
+    default:
+        /* Q3C_POLYGON never gets here: q3c_poly_query() projects the polygon itself */
+        break;
     }
 }
 
@@ -2100,6 +2101,19 @@ int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin, q3c_coord
     return work_nstack;
 }
 
+/* Number of refinement passes for the quadtree starting at n0: only the
+ * first res_depth-1 passes split the squares, so n0 * 2^(res_depth-1) must
+ * not exceed nside, i.e. res_depth = 1 + log2(nside / n0), capped at
+ * Q3C_MAX_DEPTH. (nside / n0 is always a power of two.)
+ */
+static int q3c_res_depth(q3c_ipix_t nside, q3c_ipix_t n0)
+{
+    int d;
+    for (d = 1; d < Q3C_MAX_DEPTH && (n0 << d) <= nside; d++)
+        ;
+    return d;
+}
+
 /* Process the stack of quad-tree squares and depending on the overlap status
  * I either keep them, expand them into smaller squares or throw them out
  */
@@ -2459,14 +2473,7 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        /* For this case the maximal increase of resolution of 2^res_depth
-         * for each axis
-         */
-        res_depth = nside / n0;
-        /* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
-         * are limited by nside depth
-         */
-        res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+        res_depth = q3c_res_depth(nside, n0);
 
         for (i = 1; i <= res_depth; i++)
         {
@@ -2628,15 +2635,7 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        /* For this case the maximal increase of resolution of 2^res_depth
-         * for each axis
-         */
-
-        res_depth = nside / n0;
-        /* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
-         * are limited by nside depth
-         */
-        res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+        res_depth = q3c_res_depth(nside, n0);
 
         for (i = 1; i <= res_depth; i++)
         {
@@ -2851,15 +2850,7 @@ int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        /* For this case the maximal increase of resolution of 2^res_depth
-         * for each axis
-         */
-
-        res_depth = nside / n0;
-        /* If the the query is too small we cannot go up to Q3C_MAX_DEPTH since we
-         * are limited by nside depth
-         */
-        res_depth = Q3C_MAX_DEPTH > res_depth ? res_depth : Q3C_MAX_DEPTH;
+        res_depth = q3c_res_depth(nside, n0);
 
         for (i = 1; i <= res_depth; i++)
         {

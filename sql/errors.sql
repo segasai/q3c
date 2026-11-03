@@ -120,3 +120,8 @@ SELECT q3c_radial_query_it(0, 0, 1, 0, 2);
 SELECT q3c_ellipse_query_it(0, 0, 1, 1, 0, 100, 0);
 SELECT q3c_poly_query_it(ARRAY[0,0,1,0,0,1]::double precision[], 100, 1);
 SELECT q3c_poly_query_it('((0,0),(1,0),(0,1))'::polygon, -1, 0);
+SELECT q3c_in_poly(10, 10, ARRAY[80,0, 0,80, 280,0, 0,-80]::double precision[]);
+-- non-finite polygon vertices are rejected (issue #52)
+select q3c_in_poly(10, 10, ARRAY['NaN'::float8,9, 11,9, 11,11, 9,11]);
+select q3c_in_poly(10, 10, '((9,9),(11,9),(11,11),(9,NaN))'::polygon);
+select q3c_poly_query(10, 10, ARRAY[9,9, 11,'Infinity'::float8, 11,11, 9,11]);

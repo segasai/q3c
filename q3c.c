@@ -112,8 +112,6 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
     Node *left;
     Node *other;
     VariableStatData vardata;
-    Datum radDatum;
-    bool isnull;
     double rad;
     double ratio;
 
@@ -126,12 +124,16 @@ Datum pgq3c_sel(PG_FUNCTION_ARGS)
 
     examine_variable(root, left, varRelid, &vardata);
     other = estimate_expression_value(root, vardata.var);
-    radDatum = ((Const *)other)->constvalue;
-    isnull = ((Const *)other)->constisnull;
-    /* We shouldn't be really getting null inputs here */
-    if (!isnull)
+    ReleaseVariableStats(vardata);
+    /* If the radius does not fold to a constant at plan time (a Param in a
+     * generic prepared plan, a column, ...) or is null, we have nothing to
+     * estimate from and fall back to radius 0, i.e. selectivity 0. The planner
+     * clamps that to one row: the most optimistic guess, which favours index
+     * probes, the plan shape q3c queries usually want anyway.
+     */
+    if (IsA(other, Const) && !((Const *)other)->constisnull)
     {
-        rad = DatumGetFloat8(radDatum);
+        rad = DatumGetFloat8(((Const *)other)->constvalue);
     }
     else
     {
@@ -158,8 +160,6 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
     Node *left;
     Node *other;
     VariableStatData vardata;
-    Datum radDatum;
-    bool isnull;
     double rad;
     double ratio;
 
@@ -172,12 +172,16 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 
     examine_variable(root, left, varRelid, &vardata);
     other = estimate_expression_value(root, vardata.var);
-    radDatum = ((Const *)other)->constvalue;
-    isnull = ((Const *)other)->constisnull;
-    /* We shouldn't be really getting null inputs here */
-    if (!isnull)
+    ReleaseVariableStats(vardata);
+    /* If the radius does not fold to a constant at plan time (a Param in a
+     * generic prepared plan, a column, ...) or is null, we have nothing to
+     * estimate from and fall back to radius 0, i.e. selectivity 0. The planner
+     * clamps that to one row: the most optimistic guess, which favours index
+     * probes, the plan shape q3c queries usually want anyway.
+     */
+    if (IsA(other, Const) && !((Const *)other)->constisnull)
     {
-        rad = DatumGetFloat8(radDatum);
+        rad = DatumGetFloat8(((Const *)other)->constvalue);
     }
     else
     {
@@ -192,6 +196,15 @@ Datum pgq3c_seljoin(PG_FUNCTION_ARGS)
 }
 
 static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coord_t *in_dec, int *nvert);
+
+/* NaN/Inf policy: a non-finite coordinate on the data side of a query makes
+ * q3c_ang2ipix() return NULL, so that row never matches; a non-finite centre
+ * or radius on the query side (e.g. a NaN row in the left table of q3c_join())
+ * makes the *_it() range functions return the empty range (1,-1) used by the
+ * range generators, so that row matches nothing too. Only malformed constant
+ * inputs (polygons with NaN vertices) are errors.
+ */
+#define Q3C_RETURN_EMPTY_RANGE(iteration) PG_RETURN_INT64(((iteration) % 2) ? -1 : 1)
 
 PG_FUNCTION_INFO_V1(pgq3c_get_version);
 Datum pgq3c_get_version(PG_FUNCTION_ARGS)
@@ -373,7 +386,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
               epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7, epoch2_arg_pos = 8;
 
     if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(ra2_arg_pos) ||
-        PG_ARGISNULL(dec2_arg_pos))
+        PG_ARGISNULL(dec2_arg_pos) || PG_ARGISNULL(cosdec_arg_pos))
     {
         PG_RETURN_NULL();
     }
@@ -435,7 +448,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
               epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7, epoch2_arg_pos = 8;
 
     if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(ra2_arg_pos) ||
-        PG_ARGISNULL(dec2_arg_pos))
+        PG_ARGISNULL(dec2_arg_pos) || PG_ARGISNULL(cosdec_arg_pos))
     {
         PG_RETURN_NULL();
     }
@@ -503,9 +516,9 @@ Datum pgq3c_nearby_it(PG_FUNCTION_ARGS)
 
     q3c_check_iteration("q3c_nearby_it", iteration, Q3C_NNEARBY);
 
-    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
 
     if (invocation == 0)
@@ -598,9 +611,9 @@ Datum pgq3c_nearby_pm_it(PG_FUNCTION_ARGS)
     iteration = PG_GETARG_INT32(iteration_arg_pos); // iteration
     q3c_check_iteration("q3c_nearby_pm_it", iteration, Q3C_NNEARBY);
 
-    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
     if ((!isfinite(pmra)) || (!isfinite(pmdec)) || (!isfinite(max_epoch_delta)))
     {
@@ -697,7 +710,7 @@ Datum pgq3c_ellipse_nearby_it(PG_FUNCTION_ARGS)
 
     if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
     {
-        elog(ERROR, "The values of ra,dec,radius are infinites or NaNs");
+        Q3C_RETURN_EMPTY_RANGE(iteration);
     }
 
     if (invocation == 0)
@@ -773,6 +786,10 @@ Datum pgq3c_radial_query_it(PG_FUNCTION_ARGS)
 
     q3c_check_full_flag("q3c_radial_query_it", full_flag);
     q3c_check_iteration("q3c_radial_query_it", iteration, full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)))
+    {
+        Q3C_RETURN_EMPTY_RANGE(iteration);
+    }
 
     ra_cen = UNWRAP_RA(ra_cen);
     if (q3c_fabs(dec_cen) > 90)
@@ -849,6 +866,11 @@ Datum pgq3c_ellipse_query_it(PG_FUNCTION_ARGS)
 
     q3c_check_full_flag("q3c_ellipse_query_it", full_flag);
     q3c_check_iteration("q3c_ellipse_query_it", iteration, full_flag ? 2 * Q3C_NFULLS : 2 * Q3C_NPARTIALS);
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)) || (!isfinite(radius)) || (!isfinite(axis_ratio)) ||
+        (!isfinite(PA)))
+    {
+        Q3C_RETURN_EMPTY_RANGE(iteration);
+    }
 
     ra_cen = UNWRAP_RA(ra_cen);
     if (q3c_fabs(dec_cen) > 90)
@@ -962,8 +984,8 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
     }
     p = ARR_DATA_PTR(poly_arr);
     poly_nitems /= 2;
+    identical = (*nvert == poly_nitems);
     *nvert = poly_nitems;
-    identical = 1;
 
     bitmap = ARR_NULLBITMAP(poly_arr);
     bitmask = 1;
@@ -972,6 +994,10 @@ static int convert_pgarray2poly(ArrayType *poly_arr, q3c_coord_t *in_ra, q3c_coo
     {
         ra_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
         dec_cur = read_from_array(&p, &bitmap, &bitmask, typbyval, typalign, typlen);
+        if ((!isfinite(ra_cur)) || (!isfinite(dec_cur)))
+        {
+            elog(ERROR, "The polygon vertices are infinites or NaNs");
+        }
 
         if ((in_ra[i] != ra_cur) || (in_dec[i] != dec_cur))
         {
@@ -988,7 +1014,7 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
 {
     int i, npts = poly->npts;
     q3c_coord_t newx, newy;
-    int identical = 1;
+    int identical = (*n == npts);
 
     *n = npts;
     if (npts < 3)
@@ -1004,6 +1030,10 @@ static int convert_pgpoly2poly(POLYGON *poly, q3c_coord_t *ra, q3c_coord_t *dec,
     {
         newx = poly->p[i].x;
         newy = poly->p[i].y;
+        if ((!isfinite(newx)) || (!isfinite(newy)))
+        {
+            elog(ERROR, "The polygon vertices are infinites or NaNs");
+        }
         if ((newx != ra[i]) || (newy != dec[i]))
         {
             identical = 0;
@@ -1021,12 +1051,14 @@ typedef struct q3c_poly_info_type
      * So we should have the array with the size twice bigger
      */
     int ready;
+    int n; /* number of vertices, part of the cache key */
     q3c_ipix_t partials[2 * Q3C_NPARTIALS]; /* array of ipixes partially covered */
     q3c_ipix_t fulls[2 * Q3C_NFULLS];       /* array of ipixes fully covered */
     q3c_coord_t ra[Q3C_MAX_N_POLY_VERTEX], dec[Q3C_MAX_N_POLY_VERTEX], x[Q3C_MAX_N_POLY_VERTEX],
         y[Q3C_MAX_N_POLY_VERTEX], ax[Q3C_MAX_N_POLY_VERTEX], ay[Q3C_MAX_N_POLY_VERTEX];
-    q3c_coord_t xpj[3][Q3C_MAX_N_POLY_VERTEX], ypj[3][Q3C_MAX_N_POLY_VERTEX], axpj[3][Q3C_MAX_N_POLY_VERTEX],
-        aypj[3][Q3C_MAX_N_POLY_VERTEX];
+    /* main face + up to 4 neighbouring faces (multi_flag <= 4, see q3c_multi_face_check()) */
+    q3c_coord_t xpj[5][Q3C_MAX_N_POLY_VERTEX], ypj[5][Q3C_MAX_N_POLY_VERTEX], axpj[5][Q3C_MAX_N_POLY_VERTEX],
+        aypj[5][Q3C_MAX_N_POLY_VERTEX];
     // arrays storing the ra,dec ,projected x,y
     char faces[6];
     char multi_flag;
@@ -1052,7 +1084,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
         b->y[i] = a->y[i];
         b->ax[i] = a->ax[i];
         b->ay[i] = a->ay[i];
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < 5; j++)
         {
             b->axpj[j][i] = a->axpj[j][i];
             b->aypj[j][i] = a->aypj[j][i];
@@ -1065,6 +1097,7 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
         b->faces[i] = a->faces[i];
     }
     b->multi_flag = a->multi_flag;
+    b->n = a->n;
 }
 
 /* Cache logic here is the following
@@ -1073,11 +1106,9 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
    and locally allocated q3c_poly_info_table
    when the function is called for the first time and iteration  !=0
    I allocate new memory, copy stuff from static variable into locally allocated stuff
-   I make no checks of the data
-   If the function is called for the second time (i.e. fn_extra is not null)
-   I blindly assume everything is EXACTLY the same and do not recompute anything
-   as the q3c_poly_query_it() is the internal function and is ONLY supposed
-   to be called with the constant polygon
+   On every call the polygon is compared with the cached one and the
+   ranges are recomputed only if it differs, so a per-row polygon is
+   handled correctly (at the cost of a recompute per call site).
  */
 PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
@@ -1112,20 +1143,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    /* if second call it is easy */
-    if (!first_call)
-    {
-        if (full_flag)
-        {
-            PG_RETURN_INT64(qpit->fulls[iteration]);
-        }
-        else
-        {
-            PG_RETURN_INT64(qpit->partials[iteration]);
-        }
-    }
-
-    if (iteration > 0)
+    if (first_call && iteration > 0)
     {
         copy_q3c_poly_info_type(&lqpit, qpit);
     }
@@ -1136,7 +1154,8 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
     qp.ax = qpit->ax;
     qp.ay = qpit->ay;
 
-    identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+    identical = convert_pgarray2poly(poly_arr, qp.ra, qp.dec, &(qpit->n));
+    qp.n = qpit->n;
     /* We fill the arrays and check if it matches what we had before */
 
     if (!identical || !good_cache)
@@ -1150,7 +1169,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
             elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
         }
     }
-    if (iteration == 0)
+    if (first_call && iteration == 0)
     {
         good_cache = 0;
         copy_q3c_poly_info_type(qpit, &lqpit);
@@ -1199,20 +1218,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    /* if second call it is easy */
-    if (!first_call)
-    {
-        if (full_flag)
-        {
-            PG_RETURN_INT64(qpit->fulls[iteration]);
-        }
-        else
-        {
-            PG_RETURN_INT64(qpit->partials[iteration]);
-        }
-    }
-
-    if (iteration > 0)
+    if (first_call && iteration > 0)
     {
         copy_q3c_poly_info_type(&lqpit, qpit);
     }
@@ -1223,7 +1229,8 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
     qp.ax = qpit->ax;
     qp.ay = qpit->ay;
 
-    identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qp.n));
+    identical = convert_pgpoly2poly(poly_arr, qp.ra, qp.dec, &(qpit->n));
+    qp.n = qpit->n;
     /* We fill the arrays and check if it matches what we had before */
 
     if (!identical || !good_cache)
@@ -1237,7 +1244,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
             elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
         }
     }
-    if (iteration == 0)
+    if (first_call && iteration == 0)
     {
         good_cache = 0;
         copy_q3c_poly_info_type(qpit, &lqpit);
@@ -1282,11 +1289,14 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
     ArrayType *poly_arr = PG_GETARG_ARRAYTYPE_P(2); // ra_cen
     extern struct q3c_prm hprm;
     char too_large = 0;
-    int nvert;
     bool result;
     int identical;
     q3c_poly_info_type *qpit;
 
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    {
+        PG_RETURN_NULL();
+    }
     if (fcinfo->flinfo->fn_extra == 0)
     {
         // allocate memory where we are going to store converted info
@@ -1296,9 +1306,9 @@ Datum pgq3c_in_poly(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+    identical = convert_pgarray2poly(poly_arr, qpit->ra, qpit->dec, &(qpit->n)) && qpit->ready;
 
-    result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
+    result = q3c_check_sphere_point_in_poly(&hprm, qpit->n, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
                                             qpit->xpj, qpit->ypj, qpit->axpj, qpit->aypj, qpit->faces,
                                             &(qpit->multi_flag)) != Q3C_DISJUNCT;
     if (too_large)
@@ -1318,11 +1328,14 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
     POLYGON *poly = PG_GETARG_POLYGON_P(2);    // ra_cen
     extern struct q3c_prm hprm;
     char too_large = 0;
-    int nvert;
     bool result;
     int identical;
     q3c_poly_info_type *qpit;
 
+    if ((!isfinite(ra_cen)) || (!isfinite(dec_cen)))
+    {
+        PG_RETURN_NULL();
+    }
     if (fcinfo->flinfo->fn_extra == 0)
     {
         // allocate memory where we are going to store converted info
@@ -1332,9 +1345,9 @@ Datum pgq3c_in_poly1(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &nvert) && qpit->ready;
+    identical = convert_pgpoly2poly(poly, qpit->ra, qpit->dec, &(qpit->n)) && qpit->ready;
 
-    result = q3c_check_sphere_point_in_poly(&hprm, nvert, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
+    result = q3c_check_sphere_point_in_poly(&hprm, qpit->n, qpit->ra, qpit->dec, ra_cen, dec_cen, &too_large, identical,
                                             qpit->xpj, qpit->ypj, qpit->axpj, qpit->aypj, qpit->faces,
                                             &(qpit->multi_flag)) != Q3C_DISJUNCT;
     qpit->ready = 1;
