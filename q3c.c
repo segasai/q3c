@@ -386,7 +386,7 @@ Datum pgq3c_sindist_pm(PG_FUNCTION_ARGS)
               epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7, epoch2_arg_pos = 8;
 
     if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(ra2_arg_pos) ||
-        PG_ARGISNULL(dec2_arg_pos))
+        PG_ARGISNULL(dec2_arg_pos) || PG_ARGISNULL(cosdec_arg_pos))
     {
         PG_RETURN_NULL();
     }
@@ -448,7 +448,7 @@ Datum pgq3c_dist_pm(PG_FUNCTION_ARGS)
               epoch_arg_pos = 5, ra2_arg_pos = 6, dec2_arg_pos = 7, epoch2_arg_pos = 8;
 
     if (PG_ARGISNULL(ra_arg_pos) || PG_ARGISNULL(dec_arg_pos) || PG_ARGISNULL(ra2_arg_pos) ||
-        PG_ARGISNULL(dec2_arg_pos))
+        PG_ARGISNULL(dec2_arg_pos) || PG_ARGISNULL(cosdec_arg_pos))
     {
         PG_RETURN_NULL();
     }

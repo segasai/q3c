@@ -232,6 +232,7 @@ static char q3c_poly_intersection_check(q3c_poly *qp, q3c_coord_t xl, q3c_coord_
     return ret;
 }
 
+/* Four corners inside => Q3C_COVER: a concave notch can cut into such a square, so fulls need the q3c_in_poly() recheck */
 int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, q3c_coord_t yc_cur, q3c_coord_t cur_size)
 {
     q3c_coord_t xl_cur, xr_cur, yb_cur, yt_cur;

@@ -149,10 +149,6 @@ typedef long double q3c_coord_t;
  #define Q3C_RADEG 57.295779513082320876798154814105170L
  #define Q3C_LG2   0.301029995663981195213738894724493026768L
  #define Q3C_LG2   0.6931471805599453094172321214581765680755L*/
-#define Q3C_BOX_INTERSECT(x0, x1, y0, y1, a0, a1, b0, b1)                                                              \
-    ((((x0 < a0) && (x1 >= a0)) || (x0 <= a1)) && (((y0 < b0) && (y1 >= b0)) || (y0 <= b1)))
-/* True if square(x0,x1,y0,y1) and square(a0,a1,b0,b1) have any common point*/
-
 #define Q3C_INTERSECT(a, b, x, y) (((a <= y) && (a >= x)) || ((a < x) && (b >= x)))
 
 #define Q3C_DISJUNCT 0 /* disjunct areas */

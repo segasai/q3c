@@ -1417,8 +1417,9 @@ void q3c_fast_get_xy_minmax(char face_num, q3c_region region, void *region_data,
                                        xmax, ymin, ymax);
         break;
     }
-    case Q3C_POLYGON: {
-    }
+    default:
+        /* Q3C_POLYGON never gets here: q3c_poly_query() projects the polygon itself */
+        break;
     }
 }
 

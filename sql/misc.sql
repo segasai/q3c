@@ -26,3 +26,6 @@ select q3c_ellipse_query_it(0, 0, 1, 'NaN'::float8, 0, 0, 1);
 select q3c_ellipse_query(10, 10, 10, 10, 1, 'Infinity'::float8, 0);
 select q3c_nearby_it('NaN'::float8, 0, 1, 0), q3c_nearby_it('NaN'::float8, 0, 1, 1);
 select l.ra, count(b.*) from (values ('NaN'::float8, 10::float8), (10, 10)) as l(ra, dec) left join test_small b on q3c_join(l.ra, l.dec, b.ra, b.dec, 1) group by l.ra order by l.ra;
+-- NULL cosdec_flag gives NULL instead of reading an unchecked argument (issue #55)
+select round(q3c_dist_pm(1,2,3,4,null,2000,1,0,2005)::numeric,10);
+select round(q3c_sindist_pm(1,2,3,4,null,2000,1,0,2005)::numeric,10);
