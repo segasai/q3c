@@ -85,6 +85,8 @@ jobs:
           psql -c "alter extension q3c update to '2.0.2'" exttest 
           psql -c "alter extension q3c update to '2.0.3'" exttest 
           psql -c "alter extension q3c update to '2.0.4'" exttest 
+          psql -c "alter extension q3c update to '2.0.5'" exttest
+          psql -c "alter extension q3c update to '2.0.6'" exttest
       - if: ${{ matrix.COVERAGE == '1' }}
         name: Generate Coverage Report
         run: |
