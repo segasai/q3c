@@ -13,3 +13,6 @@ select q3c_radial_query(226.88753647119157, 76.232289097380033, 226.887536471191
 -- polygon cache must not reuse a quad's edges for a triangle sharing its first 3 vertices (issue #53)
 select q3c_in_poly(9.5, 10.5, p) from (values (ARRAY[9,9, 11,9, 11,11, 9,11]::double precision[]), (ARRAY[9,9, 11,9, 11,11]::double precision[])) as t(p);
 select q3c_in_poly(9.5, 10.5, p) from (values ('((9,9),(11,9),(11,11),(9,11))'::polygon), ('((9,9),(11,9),(11,11))'::polygon)) as t(p);
+-- per-row polygon: row 1 warms every call site of q3c_poly_query with its ranges, row 2 must not reuse them (issue #53)
+select q3c_poly_query(ra, dec, p) from (values (100.0::float8, 10.0::float8, ARRAY[9,9, 11,9, 11,11, 9,11]::double precision[]), (50.0, 50.0, ARRAY[49,49, 51,49, 51,51, 49,51])) as t(ra, dec, p);
+select q3c_poly_query(ra, dec, p) from (values (100.0::float8, 10.0::float8, '((9,9),(11,9),(11,11),(9,11))'::polygon), (50.0, 50.0, '((49,49),(51,49),(51,51),(49,51))'::polygon)) as t(ra, dec, p);

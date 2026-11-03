@@ -1076,11 +1076,9 @@ static void copy_q3c_poly_info_type(q3c_poly_info_type *a, q3c_poly_info_type *b
    and locally allocated q3c_poly_info_table
    when the function is called for the first time and iteration  !=0
    I allocate new memory, copy stuff from static variable into locally allocated stuff
-   I make no checks of the data
-   If the function is called for the second time (i.e. fn_extra is not null)
-   I blindly assume everything is EXACTLY the same and do not recompute anything
-   as the q3c_poly_query_it() is the internal function and is ONLY supposed
-   to be called with the constant polygon
+   On every call the polygon is compared with the cached one and the
+   ranges are recomputed only if it differs, so a per-row polygon is
+   handled correctly (at the cost of a recompute per call site).
  */
 PG_FUNCTION_INFO_V1(pgq3c_poly_query_it);
 Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
@@ -1115,20 +1113,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    /* if second call it is easy */
-    if (!first_call)
-    {
-        if (full_flag)
-        {
-            PG_RETURN_INT64(qpit->fulls[iteration]);
-        }
-        else
-        {
-            PG_RETURN_INT64(qpit->partials[iteration]);
-        }
-    }
-
-    if (iteration > 0)
+    if (first_call && iteration > 0)
     {
         copy_q3c_poly_info_type(&lqpit, qpit);
     }
@@ -1154,7 +1139,7 @@ Datum pgq3c_poly_query_it(PG_FUNCTION_ARGS)
             elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
         }
     }
-    if (iteration == 0)
+    if (first_call && iteration == 0)
     {
         good_cache = 0;
         copy_q3c_poly_info_type(qpit, &lqpit);
@@ -1203,20 +1188,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
 
     qpit = (q3c_poly_info_type *)(fcinfo->flinfo->fn_extra);
 
-    /* if second call it is easy */
-    if (!first_call)
-    {
-        if (full_flag)
-        {
-            PG_RETURN_INT64(qpit->fulls[iteration]);
-        }
-        else
-        {
-            PG_RETURN_INT64(qpit->partials[iteration]);
-        }
-    }
-
-    if (iteration > 0)
+    if (first_call && iteration > 0)
     {
         copy_q3c_poly_info_type(&lqpit, qpit);
     }
@@ -1242,7 +1214,7 @@ Datum pgq3c_poly_query1_it(PG_FUNCTION_ARGS)
             elog(ERROR, "The polygon is too large. Polygons having diameter >~23 degrees are unsupported");
         }
     }
-    if (iteration == 0)
+    if (first_call && iteration == 0)
     {
         good_cache = 0;
         copy_q3c_poly_info_type(qpit, &lqpit);
