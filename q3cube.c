@@ -834,8 +834,30 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q
                  * element is >~ our ellipse
                  */
 
-                ixmin = (Q3C_HALF + xmin) * n0;
-                iymin = (Q3C_HALF + ymin) * n0;
+                /* A box no larger than a cell of level n0 lies in a single cell
+                 * only if it cannot straddle a cell boundary. Touching a face edge
+                 * rules that out along the axis perpendicular to that edge. The
+                 * main-face box here touches two perpendicular edges, so one cell
+                 * suffices, but this box touches only the edge shared with the
+                 * main face and can straddle two cells along it. Unlike the
+                 * multi_flag == 1 case, there is room for only one range per face,
+                 * so use the smallest quadtree cell containing the box: go up the
+                 * levels until both corners fall into the same cell (finer levels
+                 * have cells smaller than the box; n0 == 1 is the whole face).
+                 */
+                for (;; n0 /= 2)
+                {
+                    ixmin = (Q3C_HALF + xmin) * n0;
+                    ixmax = (Q3C_HALF + xmax) * n0;
+                    iymin = (Q3C_HALF + ymin) * n0;
+                    iymax = (Q3C_HALF + ymax) * n0;
+                    ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
+                    iymax = (iymax == n0 ? n0 - 1 : iymax);
+                    if (ixmin == ixmax && iymin == iymax)
+                    {
+                        break;
+                    }
+                }
 
                 n1 = nside / n0;
 
