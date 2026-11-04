@@ -29,3 +29,7 @@ select l.ra, count(b.*) from (values ('NaN'::float8, 10::float8), (10, 10)) as l
 -- NULL cosdec_flag gives NULL instead of reading an unchecked argument (issue #55)
 select round(q3c_dist_pm(1,2,3,4,null,2000,1,0,2005)::numeric,10);
 select round(q3c_sindist_pm(1,2,3,4,null,2000,1,0,2005)::numeric,10);
+-- regions near a cube corner used to overflow the range arrays and raise "too many ipix ranges"
+select (select count(*) from test_small where q3c_radial_query(ra, dec, 134.995731603, -35.227917892, 0.698377141)) as n_index, (select count(*) from test_small where q3c_dist(ra, dec, 134.995731603, -35.227917892) < 0.698377141) as n_exact;
+select (select count(*) from test_small where q3c_ellipse_query(ra, dec, 315.016928013, -34.307924314, 2.96222095, 0.557272, 266.737)) as n_index, (select count(*) from test_small where q3c_in_ellipse(ra, dec, 315.016928013, -34.307924314, 2.96222095, 0.557272, 266.737)) as n_exact;
+select (select count(*) from test_small where q3c_poly_query(ra, dec, ARRAY[133.5,-38, 136.5,-38, 136.5,-35, 133.5,-35])) as n_index, (select count(*) from test_small where q3c_in_poly(ra, dec, ARRAY[133.5,-38, 136.5,-38, 136.5,-35, 133.5,-35])) as n_exact;

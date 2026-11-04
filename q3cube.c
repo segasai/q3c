@@ -2104,12 +2104,12 @@ int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin, q3c_coord
 /* Number of refinement passes for the quadtree starting at n0: only the
  * first res_depth-1 passes split the squares, so n0 * 2^(res_depth-1) must
  * not exceed nside, i.e. res_depth = 1 + log2(nside / n0), capped at
- * Q3C_MAX_DEPTH. (nside / n0 is always a power of two.)
+ * max_depth. (nside / n0 is always a power of two.)
  */
-static int q3c_res_depth(q3c_ipix_t nside, q3c_ipix_t n0)
+static int q3c_res_depth(q3c_ipix_t nside, q3c_ipix_t n0, int max_depth)
 {
     int d;
-    for (d = 1; d < Q3C_MAX_DEPTH && (n0 << d) <= nside; d++)
+    for (d = 1; d < max_depth && (n0 << d) <= nside; d++)
         ;
     return d;
 }
@@ -2228,7 +2228,7 @@ void q3c_stack_expand(struct q3c_square *work_stack, int *work_nstack, struct q3
  * lists.
  * It returns 0 on success and 1 if the ranges did not fit in the output
  * arrays, which hold Q3C_NFULLS/Q3C_NPARTIALS pairs each. In the latter case
- * the caller is expected to redo the decomposition with a smaller res_depth,
+ * the query wrappers redo the decomposition with a smaller res_depth,
  * which produces fewer and coarser ranges.
  */
 int q3c_output_stack(struct q3c_prm *hprm, struct q3c_square *out_stack, int out_nstack, struct q3c_square *work_stack,
@@ -2328,17 +2328,19 @@ static void array_filler(q3c_ipix_t *fulls, int fullpos, q3c_ipix_t *parts, int 
     }
 }
 
-/* Declare the whole sphere partially covered. Used for the regions that are
- * too large for the quadtree decomposition to describe with the number of
- * ranges we have at our disposal.
+/* A region spanning 3-4 cube faces can produce more ranges than the output
+ * arrays hold. The query functions below then retry with fewer refinement
+ * passes, i.e. fewer and coarser ranges. With a single pass every face
+ * contributes at most 4 squares (or one whole-face range), so at most 5 faces
+ * give <= 20 pairs, which always fits; the final return 1 is only a guard.
  */
-/* Main radial query function.
+
+/* Radial query decomposition using at most max_depth refinement passes.
  * Returns 0 on success and 1 when the produced ranges could not fit in the
- * output arrays; the latter should never happen and must be reported by the
- * caller as an internal error.
+ * output arrays.
  */
-int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t rad,
-                     q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
+static int q3c_radial_query_depth(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t rad,
+                                  q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, int max_depth)
 {
     q3c_coord_t axx, ayy, axy, ax, ay, a, xmin, xmax, ymin, ymax, xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize,
                                                                   points[8];
@@ -2473,7 +2475,7 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        res_depth = q3c_res_depth(nside, n0);
+        res_depth = q3c_res_depth(nside, n0, max_depth);
 
         for (i = 1; i <= res_depth; i++)
         {
@@ -2537,15 +2539,33 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3
 
     return 0;
 
-} /* End of q3c_radial_query() */
+} /* End of q3c_radial_query_depth() */
 
-/* Main polygonal query function.
+/* Main radial query function.
  * Returns 0 on success and 1 when the produced ranges could not fit in the
  * output arrays; the latter should never happen and must be reported by the
  * caller as an internal error.
  */
-int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_fulls,
-                   q3c_ipix_t *out_ipix_arr_partials, char *too_large)
+int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t rad,
+                     q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
+{
+    int max_depth;
+    for (max_depth = Q3C_MAX_DEPTH; max_depth >= 1; max_depth--)
+    {
+        if (!q3c_radial_query_depth(hprm, ra0, dec0, rad, out_ipix_arr_fulls, out_ipix_arr_partials, max_depth))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* Polygonal query decomposition using at most max_depth refinement passes.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays.
+ */
+static int q3c_poly_query_depth(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_fulls,
+                                q3c_ipix_t *out_ipix_arr_partials, char *too_large, int max_depth)
 {
 
     q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize, points[8];
@@ -2635,7 +2655,7 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        res_depth = q3c_res_depth(nside, n0);
+        res_depth = q3c_res_depth(nside, n0, max_depth);
 
         for (i = 1; i <= res_depth; i++)
         {
@@ -2709,15 +2729,34 @@ int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_
 
     return 0;
 
-} /* End of q3c_poly_query() */
+} /* End of q3c_poly_query_depth() */
 
-/* Main elliptical query function.
+/* Main polygonal query function.
  * Returns 0 on success and 1 when the produced ranges could not fit in the
  * output arrays; the latter should never happen and must be reported by the
  * caller as an internal error.
  */
-int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
-                      q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
+int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_fulls,
+                   q3c_ipix_t *out_ipix_arr_partials, char *too_large)
+{
+    int max_depth;
+    for (max_depth = Q3C_MAX_DEPTH; max_depth >= 1; max_depth--)
+    {
+        if (!q3c_poly_query_depth(hprm, qp, out_ipix_arr_fulls, out_ipix_arr_partials, too_large, max_depth))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* Elliptical query decomposition using at most max_depth refinement passes.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays.
+ */
+static int q3c_ellipse_query_depth(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t majax,
+                                   q3c_coord_t ell, q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls,
+                                   q3c_ipix_t *out_ipix_arr_partials, int max_depth)
 {
     q3c_coord_t xmin, xmax, ymin, ymax, xc_cur = 0, yc_cur = 0, cur_size, xesize, yesize, points[8], axx, ayy, axy, ax,
                                         ay, a;
@@ -2850,7 +2889,7 @@ int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q
 
         work_nstack = q3c_setup_square_stack(work_stack, xmin, ymin, xmax, ymax, n0);
 
-        res_depth = q3c_res_depth(nside, n0);
+        res_depth = q3c_res_depth(nside, n0, max_depth);
 
         for (i = 1; i <= res_depth; i++)
         {
@@ -2919,4 +2958,24 @@ int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q
 
     return 0;
 
-} /* End of q3c_ellipse_query() */
+} /* End of q3c_ellipse_query_depth() */
+
+/* Main elliptical query function.
+ * Returns 0 on success and 1 when the produced ranges could not fit in the
+ * output arrays; the latter should never happen and must be reported by the
+ * caller as an internal error.
+ */
+int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
+                      q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
+{
+    int max_depth;
+    for (max_depth = Q3C_MAX_DEPTH; max_depth >= 1; max_depth--)
+    {
+        if (!q3c_ellipse_query_depth(hprm, ra0, dec0, majax, ell, PA, out_ipix_arr_fulls, out_ipix_arr_partials,
+                                     max_depth))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
