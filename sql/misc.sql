@@ -35,3 +35,5 @@ select (select count(*) from test_small where q3c_ellipse_query(ra, dec, 315.016
 select (select count(*) from test_small where q3c_poly_query(ra, dec, ARRAY[133.5,-38, 136.5,-38, 136.5,-35, 133.5,-35])) as n_index, (select count(*) from test_small where q3c_in_poly(ra, dec, ARRAY[133.5,-38, 136.5,-38, 136.5,-35, 133.5,-35])) as n_exact;
 -- thin ellipse at a cube corner: q3c_ellipse_join used to miss points on a secondary face
 select q3c_in_ellipse(313.590741884, 35.718985187, 315.613281256, 34.023265614, 2.45639473, 0.0205003, 136.404) as in_ell, q3c_ellipse_join(315.613281256, 34.023265614, 313.590741884, 35.718985187, 2.45639473, 0.0205003, 136.404) as joined;
+-- 1 mas ellipse: q3c_in_ellipse used to lose precision for tiny ellipses
+select q3c_in_ellipse(350.8000002710, 27.3999998611, 350.8, 27.4, 1/3600000.0, 0.5, 30) as outside, q3c_in_ellipse(350.8000000782, 27.4000001203, 350.8, 27.4, 1/3600000.0, 0.5, 30) as inside;

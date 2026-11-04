@@ -148,3 +148,8 @@
  t      | t
 (1 row)
 
+ outside | inside 
+---------+--------
+ f       | t
+(1 row)
+

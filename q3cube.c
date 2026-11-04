@@ -285,91 +285,43 @@ char q3c_get_region_facenum(q3c_region region, void *data)
     }
 }
 
-/* Check that the given point (alpha, delta0)
- * is within the ellipse specified by
- * center, maj_ax, axis ratio and positional angle
+/* Check that the point (alpha1, delta01) is within the ellipse with centre
+ * (alpha, delta0), semi-major axis d0, eccentricity e and positional angle PA0
+ * (east of north), all in degrees. The ellipse is defined in the gnomonic
+ * (tangent-plane) projection around its centre: with u, v the tangent-plane
+ * coordinates along the major and minor axes, the point is inside if
+ * u^2/tan^2(d0) + v^2/(tan^2(d0) (1-e^2)) < 1 and it is less than 90 degrees
+ * away from the centre. The inequality is multiplied by the positive
+ * denominators, and the coordinates are computed without subtracting nearly
+ * equal numbers, so that it stays accurate for tiny ellipses.
  */
 char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0, q3c_coord_t alpha1, q3c_coord_t delta01, q3c_coord_t d0,
                     q3c_coord_t e, q3c_coord_t PA0)
 {
-    q3c_coord_t d_alpha = (alpha1 - alpha) * Q3C_DEGRA;
-    q3c_coord_t delta1 = delta01 * Q3C_DEGRA;
-    q3c_coord_t delta = delta0 * Q3C_DEGRA;
-    q3c_coord_t PA = PA0 * Q3C_DEGRA;
-    q3c_coord_t d = d0 * Q3C_DEGRA;
+    const q3c_coord_t d_alpha = (alpha1 - alpha) * Q3C_DEGRA, delta = delta0 * Q3C_DEGRA, delta1 = delta01 * Q3C_DEGRA,
+                      PA = PA0 * Q3C_DEGRA, d = d0 * Q3C_DEGRA;
+    const q3c_coord_t sin_delta = q3c_sin(delta), cos_delta = q3c_cos(delta), sin_delta1 = q3c_sin(delta1),
+                      cos_delta1 = q3c_cos(delta1), sin_ddelta = q3c_sin((delta01 - delta0) * Q3C_DEGRA),
+                      sin_half_dalpha = q3c_sin(d_alpha / 2), cos_half_dalpha = q3c_cos(d_alpha / 2),
+                      sin_PA = q3c_sin(PA), cos_PA = q3c_cos(PA), sin_d = q3c_sin(d), cos_d = q3c_cos(d);
+    /* (delta01 - delta0) is taken in degrees, where the subtraction of close values is exact */
+    /* 1 - cos(d_alpha) */
+    const q3c_coord_t vers_dalpha = 2 * sin_half_dalpha * sin_half_dalpha;
+    /* cosine of the distance between the point and the centre */
+    const q3c_coord_t cos_dist = sin_delta * sin_delta1 + cos_delta * cos_delta1 * (1 - vers_dalpha);
+    /* tangent-plane coordinates (east, north) multiplied by cos_dist;
+     * y is cos(delta) sin(delta1) - sin(delta) cos(delta1) cos(d_alpha) */
+    const q3c_coord_t x = cos_delta1 * 2 * sin_half_dalpha * cos_half_dalpha;
+    const q3c_coord_t y = sin_ddelta + sin_delta * cos_delta1 * vers_dalpha;
+    /* the same along the major and minor axes */
+    const q3c_coord_t u = x * sin_PA + y * cos_PA, v = -x * cos_PA + y * sin_PA;
+    const q3c_coord_t e2 = 1 - e * e;
 
-    q3c_coord_t t1 = q3c_cos(d_alpha);
-    q3c_coord_t t22 = q3c_sin(d_alpha);
-    q3c_coord_t t3 = q3c_cos(delta1);
-    q3c_coord_t t32 = q3c_sin(delta1);
-    q3c_coord_t t6 = q3c_cos(delta);
-    q3c_coord_t t26 = q3c_sin(delta);
-    q3c_coord_t t9 = q3c_cos(d);
-    q3c_coord_t t55 = q3c_sin(d);
-
-    q3c_coord_t t2;
-    q3c_coord_t t4;
-    q3c_coord_t t5;
-    q3c_coord_t t7;
-    q3c_coord_t t8;
-    q3c_coord_t t10;
-    q3c_coord_t t11;
-    q3c_coord_t t13;
-    q3c_coord_t t14;
-    q3c_coord_t t15;
-    q3c_coord_t t18;
-    q3c_coord_t t19;
-    q3c_coord_t t24;
-    q3c_coord_t t31;
-    q3c_coord_t t36;
-    q3c_coord_t t37;
-    q3c_coord_t t38;
-    q3c_coord_t t45;
-
-    q3c_coord_t t56;
-    q3c_coord_t t57;
-    q3c_coord_t t60;
-    q3c_coord_t t61;
-    q3c_coord_t t63;
-
-    if ((t3 * t6 * t1 + t32 * t26) < 0)
+    if (cos_dist < 0)
     {
         return 0;
     }
-
-    t2 = t1 * t1;
-
-    t4 = t3 * t3;
-    t5 = t2 * t4;
-
-    t7 = t6 * t6;
-    t8 = t5 * t7;
-
-    t10 = t9 * t9;
-    t11 = t7 * t10;
-    t13 = q3c_cos(PA);
-    t14 = t13 * t13;
-    t15 = t14 * t10;
-    t18 = t7 * t14;
-    t19 = t18 * t10;
-
-    t24 = q3c_sin(PA);
-
-    t31 = t1 * t3;
-
-    t36 = 2.0 * t31 * t32 * t26 * t6;
-    t37 = t31 * t32;
-    t38 = t26 * t6;
-    t45 = t4 * t10;
-
-    t56 = t55 * t55;
-    t57 = t4 * t7;
-    t60 = -t8 + t5 * t11 + 2.0 * t5 * t15 - t5 * t19 - 2.0 * t1 * t4 * t22 * t10 * t24 * t13 * t26 - t36 +
-          2.0 * t37 * t38 * t10 - 2.0 * t37 * t38 * t15 - t45 * t14 - t45 * t2 +
-          2.0 * t22 * t3 * t32 * t6 * t24 * t10 * t13 - t56 + t7 - t11 + t4 - t57 + t57 * t10 + t19 - t18 * t45;
-    t61 = e * e;
-    t63 = t60 * t61 + t8 + t57 - t4 - t7 + t56 + t36;
-    return t63 > 0;
+    return (u * u * e2 + v * v) * cos_d * cos_d < sin_d * sin_d * e2 * cos_dist * cos_dist;
 }
 
 /* Clamp the box (xmin,xmax,ymin,ymax) to the face, i.e. [-0.5,0.5] in
