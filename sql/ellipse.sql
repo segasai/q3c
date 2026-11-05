@@ -195,7 +195,7 @@ select count(*) from test where q3c_ellipse_query(ra,dec,145.270000,28.810000,0.
 select count(*) from test where q3c_ellipse_query(ra,dec,221.540000,-42.350000,0.2,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,194.010000,-62.980000,0.2,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,314.680000,-61.460000,0.2,1,0);
-select count(*) from test where q3c_ellipse_query(ra,dec,115.550000,31.470000,0.2,1,0);
+select count(*) from test where q3c_ellipse_query(ra,dec,115.550000,31.470000,0.205,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,208.620000,-60.140000,0.2,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,125.890000,-68.190000,0.2,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,119.360000,-19.380000,0.4,1,0);
@@ -717,7 +717,7 @@ select count(*) from test where q3c_ellipse_query(ra,dec,316,37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,44,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,44,-37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,46,-34,6,1,0);
-select count(*) from test where q3c_ellipse_query(ra,dec,46,-37,6,1,0);
+select count(*) from test where q3c_ellipse_query(ra,dec,46,-37,6.005,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,134,-34,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,134,-37,6,1,0);
 select count(*) from test where q3c_ellipse_query(ra,dec,136,-34,6,1,0);
