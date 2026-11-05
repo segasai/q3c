@@ -12,15 +12,21 @@ on:
 jobs:
   tester:
     name: Test the code
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
     strategy:
       matrix:
         container: ['ubuntu:24.04']
+        os: [ubuntu-24.04]
         compiler: [gcc]
         PGVERSION: [14, 15, 16, 17, 18, 19]
         COVERAGE: ['0']
         APT: ['1']
         include:
+          - os: ubuntu-24.04-arm
+            PGVERSION: 18
+            APT: '1'
+            COVERAGE: '0'
+            compiler: 'gcc'
           - APT: '0'
             COVERAGE: '1'
             compiler: 'gcc'
