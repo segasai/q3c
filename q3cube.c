@@ -46,8 +46,8 @@ typedef struct
     q3c_coord_t x0, y0, axx, ayy, axy, ax, ay, a;
 } q3c_conic;
 
-static char q3c_face_setup(char face_num, q3c_region region, void *region_data, q3c_coord_t *xmin, q3c_coord_t *xmax,
-                           q3c_coord_t *ymin, q3c_coord_t *ymax, q3c_conic *c, char *full_flag);
+static void q3c_face_setup(char face_num, q3c_region region, void *region_data, q3c_coord_t *xmin, q3c_coord_t *xmax,
+                           q3c_coord_t *ymin, q3c_coord_t *ymax, q3c_conic *c, q3c_poly *qp, char *full_flag);
 
 void q3c_get_version(char *out, int maxchar)
 {
@@ -189,9 +189,6 @@ char q3c_get_region_facenum(q3c_region region, void *data)
     }
     case Q3C_ELLIPSE: {
         return q3c_get_facenum(((q3c_ellipse_region *)data)->ra, ((q3c_ellipse_region *)data)->dec);
-    }
-    case Q3C_POLYGON: {
-        return q3c_get_facenum_poly((q3c_poly *)data);
     }
     default:
         return 1;
@@ -463,7 +460,7 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q
     face_num = q3c_get_region_facenum(region, region_data);
     face_num0 = face_num;
 
-    q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, &full_flag);
+    q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, NULL, &full_flag);
     /* xmin, xmax, ymin, ymax are face coordinates, the face is [-1,1]x[-1,1] */
 #ifdef Q3C_DEBUG
     fprintf(stderr, "XMIN: %f XMAX: %f YMIN: %f YMAX: %f\n", xmin, xmax, ymin, ymax);
@@ -503,7 +500,7 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q
     for (i = 0; i < multi_flag; i++)
     {
         face_num = q3c_xy2facenum(points[2 * i], points[2 * i + 1], face_num0);
-        q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, &full_flag);
+        q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, NULL, &full_flag);
         /* skip a face the region does not really touch (only checked when
          * there are several neighbours; a single neighbour is always kept) */
         if (multi_flag > 1 && q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
@@ -803,7 +800,7 @@ char q3c_too_big_check(q3c_region region, void *region_data)
 /* Components t = (v.n_f, v.u_f, v.w_f) of the vector v in the frame of face
  * face_num (COORDINATES.md section 2), a signed permutation of v
  */
-static void q3c_to_face_frame(char face_num, const q3c_coord_t v[3], q3c_coord_t t[3])
+void q3c_to_face_frame(char face_num, const q3c_coord_t v[3], q3c_coord_t t[3])
 {
     static const char idx[6][3] = {{2, 1, 0}, {0, 1, 2}, {1, 0, 2}, {0, 1, 2}, {1, 0, 2}, {2, 1, 0}};
     static const signed char sgn[6][3] = {{1, 1, -1}, {1, 1, 1}, {1, -1, 1}, {-1, -1, 1}, {-1, 1, 1}, {-1, 1, 1}};
@@ -1213,90 +1210,99 @@ static int q3c_output_stack(struct q3c_prm *hprm, struct q3c_square *out_stack, 
 /* Compute the bounding box (xmin, xmax, ymin, ymax) of the region on face
  * face_num and what the cover checks need on that face: the conic c for
  * circles/ellipses (*full_flag is set when the curve on the face is not an
- * ellipse, then the box is [-1,1]x[-1,1] and the whole face is taken) or the
- * polygon projected on the face (q3c_get_nearby() is never called for those).
- * Returns 1 when the polygon is too large to be projected on the face.
+ * ellipse, then the box is [-2,2]x[-2,2] and the whole face is taken) or the
+ * piece qp of the polygon on that face, for which region_data is the
+ * q3c_poly_faces from q3c_poly_to_faces() (q3c_get_nearby() is never called
+ * for polygons).
  */
-static char q3c_face_setup(char face_num, q3c_region region, void *region_data, q3c_coord_t *xmin, q3c_coord_t *xmax,
-                           q3c_coord_t *ymin, q3c_coord_t *ymax, q3c_conic *c, char *full_flag)
+static void q3c_face_setup(char face_num, q3c_region region, void *region_data, q3c_coord_t *xmin, q3c_coord_t *xmax,
+                           q3c_coord_t *ymin, q3c_coord_t *ymax, q3c_conic *c, q3c_poly *qp, char *full_flag)
 {
     switch (region)
     {
     case Q3C_CIRCLE: {
         const q3c_circle_region *r = region_data;
         q3c_circle_face(face_num, r->ra, r->dec, r->rad, xmin, xmax, ymin, ymax, c, full_flag);
-        return 0;
+        break;
     }
     case Q3C_ELLIPSE: {
         const q3c_ellipse_region *r = region_data;
         q3c_ellipse_face(face_num, r->ra, r->dec, r->rad, r->e, r->PA, xmin, xmax, ymin, ymax, c, full_flag);
-        return 0;
+        break;
     }
-    default: {
-        char large_flag = 0;
-        q3c_project_poly(region_data, face_num, &large_flag);
-        if (large_flag)
+    default:
+        q3c_face_poly(region_data, face_num, qp);
+        q3c_get_minmax_poly(qp, xmin, xmax, ymin, ymax);
+    }
+}
+
+/* The faces the region has to be searched on: for polygons every face with a
+ * non-empty piece of the polygon; for circles/ellipses the face of the centre
+ * followed by the neighbours behind the sides of its box that overflow the
+ * face (see q3c_multi_face_check()). Returns their number (at most 6).
+ */
+static int q3c_region_faces(q3c_region region, void *region_data, char faces[6])
+{
+    q3c_coord_t xmin, xmax, ymin, ymax, points[8];
+    q3c_conic conic;
+    char multi_flag, full_flag = 0;
+    int i, nfaces = 0;
+
+    if (region == Q3C_POLYGON)
+    {
+        for (i = 0; i < 6; i++)
         {
-            return 1;
+            if (((q3c_poly_faces *)region_data)->n[i] > 0)
+            {
+                faces[nfaces++] = i;
+            }
         }
-        q3c_prepare_poly(region_data);
-        q3c_get_minmax_poly(region_data, xmin, xmax, ymin, ymax);
-        return 0;
+        return nfaces;
     }
+    faces[0] = q3c_get_region_facenum(region, region_data);
+    q3c_face_setup(faces[0], region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, NULL, &full_flag);
+    q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
+    for (i = 0; i < multi_flag; i++)
+    {
+        faces[i + 1] = q3c_xy2facenum(points[2 * i], points[2 * i + 1], faces[0]);
     }
+    return multi_flag + 1;
 }
 
 /* Quadtree decomposition of the region into fully and partially covered ipix
  * ranges using at most max_depth refinement passes.
  * Returns 0 on success and 1 when the produced ranges could not fit in the
  * output arrays.
- * A region spanning 3-4 cube faces can produce more ranges than the output
- * arrays hold. q3c_region_query() then retries with fewer refinement
+ * A region spanning several cube faces can produce more ranges than the
+ * output arrays hold. q3c_region_query() then retries with fewer refinement
  * passes, i.e. fewer and coarser ranges. With a single pass every face
- * contributes at most 4 squares (or one whole-face range), so at most 5 faces
- * give <= 20 pairs, which always fits; its final return 1 is only a guard.
+ * contributes at most 4 squares (or one whole-face range), so the at most 6
+ * faces give <= 24 pairs, which always fits; its final return 1 is only a
+ * guard.
  */
 static int q3c_region_query_depth(struct q3c_prm *hprm, q3c_region region, void *region_data,
-                                  q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, char *too_large,
-                                  int max_depth)
+                                  q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, int max_depth)
 {
-    q3c_coord_t xmin, xmax, ymin, ymax, xc_cur, yc_cur, cur_size, points[8];
+    q3c_coord_t xmin, xmax, ymin, ymax, xc_cur, yc_cur, cur_size;
     q3c_conic conic;
+    q3c_poly qp;
     const q3c_ipix_t nside = hprm->nside;
     q3c_ipix_t n0;
-    char face_num, face_num0, multi_flag = 0, face_count, full_flag = 0;
+    char face_num, faces[6], full_flag;
     int out_ipix_arr_fulls_pos = 0, out_ipix_arr_partials_pos = 0;
-    int work_nstack, out_nstack, i, j, res_depth;
+    int work_nstack, out_nstack, i, j, res_depth, face_count, nfaces;
     struct q3c_square work_stack[Q3C_STACK_SIZE], out_stack[Q3C_STACK_SIZE], *cur_square;
 
-    face_num0 = face_num = q3c_get_region_facenum(region, region_data);
-
-    if (q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, &full_flag))
+    nfaces = q3c_region_faces(region, region_data, faces);
+    for (face_count = 0; face_count < nfaces; face_count++)
     {
-        *too_large = 1;
-        return 0;
-    }
-
-    q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
-
-    for (face_count = 0; face_count <= multi_flag; face_count++)
-    {
-        /* This the beginning of the mega-loop over multiple faces */
-        if (face_count > 0)
-        /* This "if" works when we pass through the secondary faces */
+        face_num = faces[face_count];
+        full_flag = 0;
+        q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, &qp, &full_flag);
+        if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
+        /* the region does not really touch this face */
         {
-            face_num = q3c_xy2facenum(points[2 * face_count - 2], points[2 * face_count - 1], face_num0);
-            full_flag = 0;
-            if (q3c_face_setup(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax, &conic, &full_flag))
-            {
-                *too_large = 1;
-                return 0;
-            }
-            if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
-            /* the region does not really touch this face */
-            {
-                continue;
-            }
+            continue;
         }
         /* clamp the box of every face, including the main one */
         q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
@@ -1338,7 +1344,7 @@ static int q3c_region_query_depth(struct q3c_prm *hprm, q3c_region region, void 
                 yc_cur = (2 * cur_square->iy + 1) / (q3c_coord_t)cur_square->n0 - 1;
                 cur_square->status =
                     (region == Q3C_POLYGON)
-                        ? q3c_poly_cover_check(region_data, xc_cur, yc_cur, cur_size)
+                        ? q3c_poly_cover_check(&qp, xc_cur, yc_cur, cur_size)
                         : q3c_conic_cover_check(xc_cur, yc_cur, cur_size, xmin, xmax, ymin, ymax, &conic);
             }
             q3c_stack_expand(work_stack, &work_nstack, out_stack, &out_nstack, i, res_depth);
@@ -1363,7 +1369,7 @@ static int q3c_region_query_depth(struct q3c_prm *hprm, q3c_region region, void 
  * caller as an internal error.
  */
 static int q3c_region_query(struct q3c_prm *hprm, q3c_region region, void *region_data,
-                            q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, char *too_large)
+                            q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
 {
     const q3c_coord_t rad = q3c_region_rad(region, region_data);
     int max_depth;
@@ -1392,8 +1398,7 @@ static int q3c_region_query(struct q3c_prm *hprm, q3c_region region, void *regio
 
     for (max_depth = Q3C_MAX_DEPTH; max_depth >= 1; max_depth--)
     {
-        if (!q3c_region_query_depth(hprm, region, region_data, out_ipix_arr_fulls, out_ipix_arr_partials, too_large,
-                                    max_depth))
+        if (!q3c_region_query_depth(hprm, region, region_data, out_ipix_arr_fulls, out_ipix_arr_partials, max_depth))
         {
             return 0;
         }
@@ -1405,22 +1410,29 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3
                      q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
 {
     q3c_circle_region circle = {ra0, dec0, rad};
-    char too_large = 0;
-    return q3c_region_query(hprm, Q3C_CIRCLE, &circle, out_ipix_arr_fulls, out_ipix_arr_partials, &too_large);
+    return q3c_region_query(hprm, Q3C_CIRCLE, &circle, out_ipix_arr_fulls, out_ipix_arr_partials);
 }
 
 int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials)
 {
     q3c_ellipse_region ellipse = {ra0, dec0, majax, ell, PA};
-    char too_large = 0;
-    return q3c_region_query(hprm, Q3C_ELLIPSE, &ellipse, out_ipix_arr_fulls, out_ipix_arr_partials, &too_large);
+    return q3c_region_query(hprm, Q3C_ELLIPSE, &ellipse, out_ipix_arr_fulls, out_ipix_arr_partials);
 }
 
-/* *too_large is set when the polygon is too large to be projected on the
- * cube faces, the output arrays are then not filled */
-int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_fulls,
-                   q3c_ipix_t *out_ipix_arr_partials, char *too_large)
+/* Polygon with n vertices ra, dec (degrees) joined by great circle arcs.
+ * *too_large is set when the polygon does not lie within a hemisphere, the
+ * output arrays are then not filled
+ */
+int q3c_poly_query(struct q3c_prm *hprm, int n, const q3c_coord_t *ra, const q3c_coord_t *dec,
+                   q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, char *too_large)
 {
-    return q3c_region_query(hprm, Q3C_POLYGON, qp, out_ipix_arr_fulls, out_ipix_arr_partials, too_large);
+    q3c_poly_faces pf;
+
+    if (q3c_poly_to_faces(n, ra, dec, &pf))
+    {
+        *too_large = 1;
+        return 0;
+    }
+    return q3c_region_query(hprm, Q3C_POLYGON, &pf, out_ipix_arr_fulls, out_ipix_arr_partials);
 }

@@ -109,7 +109,7 @@ SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[1,2,3,4]);
 SELECT q3c_in_poly(0, 0, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, ARRAY[0,0,1,0,1,1,0,1,NULL,0]::double precision[]);
 SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((1,2),(3,4))'::polygon);
-SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((0,0),(90,0),(45,89))'::polygon);
+SELECT * FROM test_small WHERE q3c_poly_query(ra, dec, '((0,0),(120,0),(240,0))'::polygon);
 SELECT q3c_nearby_it(0, 0, 1, -1);
 SELECT q3c_nearby_it(0, 0, 1, 8);
 SELECT q3c_nearby_pm_it(0, 0, NULL, NULL, 0, NULL, 1, 8);
@@ -120,7 +120,7 @@ SELECT q3c_radial_query_it(0, 0, 1, 0, 2);
 SELECT q3c_ellipse_query_it(0, 0, 1, 1, 0, 100, 0);
 SELECT q3c_poly_query_it(ARRAY[0,0,1,0,0,1]::double precision[], 100, 1);
 SELECT q3c_poly_query_it('((0,0),(1,0),(0,1))'::polygon, -1, 0);
-SELECT q3c_in_poly(10, 10, ARRAY[80,0, 0,80, 280,0, 0,-80]::double precision[]);
+SELECT q3c_in_poly(10, 10, ARRAY[0,0, 120,0, 240,0]::double precision[]);
 -- non-finite polygon vertices are rejected (issue #52)
 select q3c_in_poly(10, 10, ARRAY['NaN'::float8,9, 11,9, 11,11, 9,11]);
 select q3c_in_poly(10, 10, '((9,9),(11,9),(11,11),(9,NaN))'::polygon);

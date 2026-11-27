@@ -154,7 +154,7 @@ correction (unlike the COBE quad-cube); the pixel grid is uniform in X, Y.
     v = (n_f + X u_f + Y w_f) / sqrt(1 + X² + Y²)
 
 **Face coordinates in the code.** All the code (`q3c_ang2ipix_xy` output,
-`q3c_project_poly`, `q3c_xy2facenum`, the query boxes and conics) uses X, Y
+`q3c_poly_to_faces`, `q3c_xy2facenum`, the query boxes and conics) uses X, Y
 in [-1, 1]; the face is the square [-1, 1]². The forward and inverse maps above
 are `q3c_ang2XY` and `q3c_XY2ang`.
 
@@ -250,7 +250,14 @@ Each of these has its own equatorial / face 0 / face 5 branches:
 
 * `q3cube.c`: `q3c_ang2XY` (used by `q3c_ang2ipix_xy`, `q3c_get_facenum`),
   `q3c_XY2ang` (used by `q3c_ipix2ang`, `q3c_xy2facenum`).
-* `q3c_poly.c`: `q3c_project_poly`.
+
+Polygons (`q3c_poly_to_faces`) are clipped in 3D to each face pyramid
+`|t_u| <= t_n, |t_w| <= t_n` (t the components in the face frame), by
+Sutherland-Hodgman with linear interpolation along the chords. The edges are
+great circle arcs, which the gnomonic projection maps to straight lines, so
+the piece on each face is exact and only the clipped vertices, which are all
+on the face, are projected. This requires the polygon to lie within an open
+hemisphere, which also defines its inside.
 
 The circle and ellipse code (`q3c_circle_face`, `q3c_ellipse_face`) uses the
 vector form of section 6: the face enters only through the signed permutation
