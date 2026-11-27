@@ -108,69 +108,43 @@ char q3c_get_facenum_poly(q3c_poly *qp)
     return q3c_get_facenum(qp->ra[0], qp->dec[0]);
 }
 
+/* Gnomonic projection of the polygon vertices on face face_num, giving the
+ * face coordinates X, Y (COORDINATES.md section 3). *large_flag is set
+ * if a vertex is (nearly) 90 degrees or more away from the face centre.
+ */
 void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
 {
-    q3c_coord_t ra1, dec1, tmp0;
+    q3c_coord_t ra1, cos_ra1, tan_dec, inv_tan_dec, X, Y;
     q3c_coord_t *ra = qp->ra, *dec = qp->dec;
-    q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
-    q3c_coord_t tmpval;
+    q3c_coord_t *x = qp->x, *y = qp->y;
+    /* face 5 is face 0 mirrored by z -> -z with X flipped */
+    const q3c_coord_t pole_sign = (face_num == 0) ? 1 : -1;
     int i, n = qp->n;
-    if ((face_num > 0) && (face_num < 5))
+
+    for (i = 0; i < n; i++)
     {
-        face_num--; /* Just computation trick */
-        for (i = 0; i < n; i++)
+        if ((face_num > 0) && (face_num < 5))
         {
-            ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_cos(ra1);
-            if (tmpval < Q3C_MINDISCR)
+            ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)(face_num - 1));
+            cos_ra1 = q3c_cos(ra1);
+            if (cos_ra1 < Q3C_MINDISCR)
             {
                 *large_flag = 1;
             }
-            x[i] = (q3c_tan(ra1)) / 2;
-            y[i] = (q3c_tan(dec1)) / tmpval / 2;
+            x[i] = q3c_tan(ra1);
+            y[i] = q3c_tan(Q3C_DEGRA * dec[i]) / cos_ra1;
         }
-        /* Now x[i] and y[i] are coordinates on cube face [-0.5:0.5]x[-0.5:0.5] */
-    }
-    else if (face_num == 0)
-    {
-        for (i = 0; i < n; i++)
+        else
         {
-            ra1 = Q3C_DEGRA * ra[i];
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_tan(dec1);
-            if (tmpval < Q3C_MINDISCR)
+            tan_dec = pole_sign * q3c_tan(Q3C_DEGRA * dec[i]);
+            if (tan_dec < Q3C_MINDISCR)
             {
                 *large_flag = 1;
             }
-            tmp0 = 1 / tmpval;
-            q3c_sincos(ra1, x0, y0);
-
-            x0 *= tmp0;
-            y0 *= (-tmp0);
-            x[i] = x0 / 2;
-            y[i] = y0 / 2;
-        }
-    }
-    else
-    {
-        for (i = 0; i < n; i++)
-        {
-            ra1 = Q3C_DEGRA * ra[i];
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_tan(dec1);
-            if (tmpval > -Q3C_MINDISCR)
-            {
-                *large_flag = 1;
-            }
-            tmp0 = 1 / tmpval;
-
-            q3c_sincos(ra1, x0, y0);
-
-            x0 *= (-tmp0);
-            y0 *= (-tmp0);
-            x[i] = x0 / 2;
-            y[i] = y0 / 2;
+            inv_tan_dec = 1 / tan_dec;
+            q3c_sincos(Q3C_DEGRA * ra[i], X, Y);
+            x[i] = X * inv_tan_dec;
+            y[i] = Y * (-pole_sign * inv_tan_dec);
         }
     }
 }
@@ -370,7 +344,7 @@ int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, q3c_coord_t in_r
             if (face_count > 0)
             /* This "if" works when we pass through the secondary faces */
             {
-                face_num = q3c_xy2facenum(2 * points[2 * face_count - 2], 2 * points[2 * face_count - 1], face_num0);
+                face_num = q3c_xy2facenum(points[2 * face_count - 2], points[2 * face_count - 1], face_num0);
 
                 faces[face_count] = face_num;
 

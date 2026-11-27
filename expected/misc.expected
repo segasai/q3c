@@ -168,3 +168,8 @@
  t
 (1 row)
 
+ cone_mismatch | ellipse_mismatch 
+---------------+------------------
+             0 |                0
+(1 row)
+

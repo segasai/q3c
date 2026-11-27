@@ -43,3 +43,5 @@ select q3c_join(219.27811033058825, 22.634103768334768, 219.27811033058825, 22.6
 select q3c_join(276.02111089691249, -46.584458573904108, 278.4014844202834, -47.603933693246056, 2.0660123695071788) as joined;
 -- a region smaller than a pixel is covered by the single pixel containing it
 select q3c_join(10, 20, 10, 20, 1e-9) as tiny;
+-- cones and ellipses below ~1e-4 deg used to miss points near their edge, or include outside points as fully covered
+select sum((q3c_radial_query(ra, dec, ra0, dec0, r) != (q3c_dist(ra, dec, ra0, dec0) < r))::int) as cone_mismatch, sum((q3c_ellipse_query(ra, dec, ra0, dec0, r, 0.5, pa) != q3c_in_ellipse(ra, dec, ra0, dec0, r, 0.5, pa))::int) as ellipse_mismatch from (select ra0, dec0, r, pa, ra0 + f * r * sin(radians(t)) / cos(radians(dec0)) as ra, dec0 + f * r * cos(radians(t)) as dec from (select (i * 137.508) % 360 as ra0, degrees(asin((i * 0.618034) % 2 - 1)) as dec0, 10 ^ (-5 - i % 3) as r, (i * 77.7) % 180 as pa, 0.8 + 0.4 * ((i * 0.7548777) % 1) as f, (i * 222.49) % 360 as t from generate_series(1, 3000) as i) as x) as y;

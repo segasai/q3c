@@ -26,7 +26,6 @@ face numbers agree exactly, X and Y agree to 2e-14, ipix agrees exactly.
 | u_f | unit vector lying in face f, pointing along increasing X on that face |
 | w_f | unit vector lying in face f, pointing along increasing Y on that face |
 | X, Y | coordinates of a point within face f, each in [-1, 1]; (0,0) is the face centre, ±1 are the face edges |
-| x, y (in code) | X/2, Y/2 ∈ [-0.5, 0.5]: what most of the C code stores (section 3) |
 | nside | number of finest cells along each edge of a face (2^30) |
 | xi, yi | integer column and row of the finest cell containing (X, Y), 0..nside-1 (section 4) |
 | R_a(θ) | right-handed rotation by angle θ about axis a (counter-clockwise when looking down from +a) |
@@ -154,10 +153,10 @@ correction (unlike the COBE quad-cube); the pixel grid is uniform in X, Y.
 
     v = (n_f + X u_f + Y w_f) / sqrt(1 + X² + Y²)
 
-**Scaled face coordinates in the code.** Most of the code (`q3c_ang2ipix_xy`
-output, `q3c_project_poly`, the query boxes, `Q3C_HALF`) stores
-`x = X/2, y = Y/2 ∈ [-0.5, 0.5]`. `q3c_xy2facenum` takes the unscaled X, Y,
-hence the `2 * points[...]` at its call sites.
+**Face coordinates in the code.** All the code (`q3c_ang2ipix_xy` output,
+`q3c_project_poly`, `q3c_xy2facenum`, the query boxes and conics) uses X, Y
+in [-1, 1]; the face is the square [-1, 1]². The forward and inverse maps above
+are `q3c_ang2XY` and `q3c_XY2ang`.
 
 ## 4. (X, Y) <-> integer cell coordinates (xi, yi)
 
@@ -194,7 +193,7 @@ the finest grid), the column index is
 
     Ix = floor((X + 1)/2 · n0) = xi >> log2(nside/n0)
 
-(`q3c_cell_index` computes it from x = X/2), and coarse cell (Ix, Iy)
+(`q3c_cell_index`), and coarse cell (Ix, Iy)
 contains exactly the finest cells with xi ∈ [Ix·m, (Ix+1)·m),
 yi ∈ [Iy·m, (Iy+1)·m), where m = nside/n0. `q3c_pixarea` uses the depth
 d = log2(m) instead: d = 0 is a finest cell, d = 30 the whole face.
@@ -219,8 +218,8 @@ so any coarse cell is a single ipix range, which is what the queries emit
 (`q3c_push_box_cells`, `q3c_output_stack`).
 
 In the code `q3c_xiyi2ipix` does the forward interleaving through the lookup
-tables `xbits`/`ybits` (16 bits of xi or yi at a time); `q3c_ipix2ang` and
-`q3c_pixarea` undo it through `xbits1`/`ybits1`. All tables are built in
+tables `xbits`/`ybits` (16 bits of xi or yi at a time); `q3c_ipix2xiyi`
+(used by `q3c_ipix2ang` and `q3c_pixarea`) undoes it through `xbits1`/`ybits1`. All tables are built in
 `init_q3c1`.
 
 ## 6. Vector form of the query geometry
@@ -239,21 +238,40 @@ i.e. `axx X² + ayy Y² + axy XY + ax X + ay Y + a <= 0` with
     axx = cos²r - c_u²,   ayy = cos²r - c_w²,   axy = -2 c_u c_w,
     ax  = -2 c_n c_u,     ay  = -2 c_n c_w,     a   = cos²r - c_n²
 
-This reproduces all three branches of `q3c_get_poly_coefs` term by term
-(before its final ×4, ×2 rescaling to x = X/2, y = Y/2). Squaring drops the
-sign of `c_n + X c_u + Y c_w`, so it also admits the antipodal cone; the
-existing code has the same property.
+This is what `q3c_circle_face` computes (in the centre-relative form below);
+it replaced the three equatorial / face 0 / face 5 branches
+of the former `q3c_get_poly_coefs`. Squaring drops the sign of
+`c_n + X c_u + Y c_w`, so it also admits the antipodal cone; the code before
+the change had the same property.
 
 ## Where the conventions are hard-coded today
 
 Each of these has its own equatorial / face 0 / face 5 branches:
 
-* `q3cube.c`: `q3c_ang2ipix_xy`, `q3c_get_facenum`, `q3c_ipix2ang`,
-  `q3c_xy2facenum`, `q3c_get_poly_coefs`, `q3c_fast_get_circle_xy_minmax`,
-  `q3c_fast_get_ellipse_xy_minmax`,
-  `q3c_fast_get_ellipse_xy_minmax_and_poly_coefs` and the
-  `*_equatorial_*` / `*_polar_*` ellipse helpers.
+* `q3cube.c`: `q3c_ang2XY` (used by `q3c_ang2ipix_xy`, `q3c_get_facenum`),
+  `q3c_XY2ang` (used by `q3c_ipix2ang`, `q3c_xy2facenum`).
 * `q3c_poly.c`: `q3c_project_poly`.
+
+The circle and ellipse code (`q3c_circle_face`, `q3c_ellipse_face`) uses the
+vector form of section 6: the face enters only through the signed permutation
+`q3c_to_face_frame`. The bounding box comes from the dual conic
+`B = s² (m mᵀ + (1-e²) n nᵀ) - k² c cᵀ` (s = sin r, k = cos r, m, n the
+major/minor axis directions), whose tangent-line discriminants carry s² as an
+exact factor, so the box stays accurate for tiny regions. For a circle
+(e = 0) `B = s² I - c cᵀ` and `A = k² I - c cᵀ`, which `q3c_circle_face`
+uses directly.
+
+The conic itself is stored relative to the projected centre
+`p_c = c / c_n = (1, X0, Y0)`. Since `A c = -(1-e²) s² c` exactly, writing
+`p = p_c + (0, dX, dY)` gives
+
+    pᵀ A p = (quadratic in dX, dY) - 2 (1-e²) s² (c_u dX + c_w dY) / c_n
+             - (1-e²) s² / c_n²
+
+where every term is O(r²) near the region. The same expression in absolute
+X, Y is a sum of O(1) terms cancelling to O(r²), which made the cover check
+(and hence `q3c_radial_query`/`q3c_ellipse_query`) lose points for radii
+below ~1e-4 deg.
 
 Caution for a refactor: `q3c_ang2ipix` is what existing functional indexes were
 built with. If a vector version gives a different floating-point result for a
