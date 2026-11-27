@@ -324,6 +324,17 @@ char q3c_in_ellipse(q3c_coord_t alpha, q3c_coord_t delta0, q3c_coord_t alpha1, q
     return (u * u * e2 + v * v) * cos_d * cos_d < sin_d * sin_d * e2 * cos_dist * cos_dist;
 }
 
+/* Index of the quadtree cell of level n0 (n0 cells per face side) containing
+ * the face coordinate x in [-0.5, 0.5]. x == 0.5 (or 0.5 + x rounding up to 1)
+ * belongs to the last cell; without this clamp the index would be n0, which
+ * is outside the face (and made the level search in q3c_get_nearby() spin).
+ */
+static q3c_ipix_t q3c_cell_index(q3c_coord_t x, q3c_ipix_t n0)
+{
+    q3c_ipix_t i = (Q3C_HALF + x) * n0; /* C truncation of floats to integers */
+    return i == n0 ? n0 - 1 : i;
+}
+
 /* Clamp the box (xmin,xmax,ymin,ymax) to the face, i.e. [-0.5,0.5] in
  * both coordinates. A degenerate (inverted) or NaN box is replaced by the
  * whole face, so that regions with degenerate projections still cover all
@@ -346,6 +357,50 @@ static void q3c_clip_facebox(q3c_coord_t *xmin, q3c_coord_t *xmax, q3c_coord_t *
     *xmin = (*xmin < -Q3C_HALF ? -Q3C_HALF : (*xmin > Q3C_HALF ? Q3C_HALF : *xmin));
     *ymax = (*ymax > Q3C_HALF ? Q3C_HALF : (*ymax < -Q3C_HALF ? -Q3C_HALF : *ymax));
     *ymin = (*ymin < -Q3C_HALF ? -Q3C_HALF : (*ymin > Q3C_HALF ? Q3C_HALF : *ymin));
+}
+
+/* Covers the (clipped) box on a face with at most nslots quadtree cells of
+ * one level and writes their ipix ranges to *ipix_cur, advancing it.
+ * It starts at the level whose cell is about the size of the box and goes
+ * to coarser levels until the cells touched by the box fit in nslots (a box
+ * can touch more cells than expected when its side lies exactly on a cell
+ * boundary or when the level estimate is off by rounding); n0 == 1 is the
+ * whole face, which always fits.
+ */
+static void q3c_push_box_cells(struct q3c_prm *hprm, char face_num, q3c_coord_t xmin, q3c_coord_t xmax,
+                               q3c_coord_t ymin, q3c_coord_t ymax, int nslots, q3c_ipix_t **ipix_cur)
+{
+    const q3c_ipix_t nside = hprm->nside;
+    q3c_coord_t esize = (xmax - xmin > ymax - ymin ? xmax - xmin : ymax - ymin);
+    q3c_ipix_t n0, n1, ix, iy, ixmin, ixmax, iymin, iymax, ipix0;
+
+    if (esize * nside < 1)
+    /* If the region is too small */
+    {
+        esize = 1 / (q3c_coord_t)nside;
+    }
+    n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(esize) / Q3C_LG2))); /* cell size 1/n0 >= esize */
+    for (;; n0 /= 2)
+    {
+        ixmin = q3c_cell_index(xmin, n0);
+        ixmax = q3c_cell_index(xmax, n0);
+        iymin = q3c_cell_index(ymin, n0);
+        iymax = q3c_cell_index(ymax, n0);
+        if ((ixmax - ixmin + 1) * (iymax - iymin + 1) <= nslots || n0 == 1)
+        {
+            break;
+        }
+    }
+    n1 = nside / n0;
+    for (ix = ixmin; ix <= ixmax; ix++)
+    {
+        for (iy = iymin; iy <= iymax; iy++)
+        {
+            ipix0 = q3c_xiyi2ipix(nside, hprm->xbits, hprm->ybits, face_num, ix * n1, iy * n1);
+            *((*ipix_cur)++) = ipix0;
+            *((*ipix_cur)++) = ipix0 + n1 * n1 - 1; /* -1 as the queries use <= ipix <= */
+        }
+    }
 }
 
 /* Returns 1 when the box does not overlap the face at all. Since the box
@@ -437,14 +492,11 @@ void q3c_multi_face_check(q3c_coord_t *xmin0, q3c_coord_t *ymin0, q3c_coord_t *x
  */
 int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q3c_ipix_t *ipix)
 {
-    q3c_coord_t xmin, xmax, ymin, ymax, xesize, yesize, points[8];
-    const q3c_ipix_t nside = hprm->nside, *xbits = hprm->xbits, *ybits = hprm->ybits;
-
-    q3c_ipix_t *ipix_cur = ipix, ipix0, xi, yi, n0, n1, ixmin, ixmax, iymin, iymax, xistack[4], yistack[4],
-               facestack[4], nstack[4];
+    q3c_coord_t xmin, xmax, ymin, ymax, points[8];
+    const q3c_ipix_t nside = hprm->nside;
+    q3c_ipix_t *ipix_cur = ipix;
     char face_num, face_num0, multi_flag;
-    int i, nistack = 0;
-    const q3c_coord_t q3c_lg2 = Q3C_LG2;
+    int i, nslots;
 
     if (((region == Q3C_CIRCLE) && (((q3c_circle_region *)region_data)->rad < 0)) ||
         ((region == Q3C_ELLIPSE) && (((q3c_ellipse_region *)region_data)->rad < 0)))
@@ -485,7 +537,8 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q
     q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, &multi_flag);
     /* q3c_multi_face_check() may leave some sides unclamped, so the
      * main-face box must be clamped here; otherwise a box wider than the
-     * face gives xesize > 1 and a negative shift count below
+     * face gives a box size > 1 and a negative shift count in
+     * q3c_push_box_cells()
      */
     q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
 
@@ -507,345 +560,31 @@ int q3c_get_nearby(struct q3c_prm *hprm, q3c_region region, void *region_data, q
         return 1;
     }
 
-    if (multi_flag == 0)
+    /* The four output ranges are shared between the main face and its
+     * multi_flag neighbours: 4, 2+2, 1+1+1 or 1+1+1+1
+     */
+    nslots = (multi_flag == 0 ? 4 : (multi_flag == 1 ? 2 : 1));
+    q3c_push_box_cells(hprm, face_num0, xmin, xmax, ymin, ymax, nslots, &ipix_cur);
+    for (i = 0; i < multi_flag; i++)
     {
-        xesize = xmax - xmin;
-        yesize = ymax - ymin;
-        xesize = xesize > yesize ? xesize : yesize;
-
-        if (xesize * nside < 1)
-        /* If the region is too small */
+        face_num = q3c_xy2facenum(2 * points[2 * i], 2 * points[2 * i + 1], face_num0);
+        q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax);
+        /* skip a face the region does not really touch (only checked when
+         * there are several neighbours; a single neighbour is always kept) */
+        if (multi_flag > 1 && q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
         {
-            xesize = 1 / (q3c_coord_t)nside;
+            continue;
         }
-
-        n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-        /* n0 is now the level of quadtree for which the minimal
-         * element is >~ our ellipse
-         */
-
-        ixmin = (Q3C_HALF + xmin) * n0;
-        ixmax = (Q3C_HALF + xmax) * n0;
-        iymin = (Q3C_HALF + ymin) * n0;
-        iymax = (Q3C_HALF + ymax) * n0;
-
-        ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-        iymax = (iymax == n0 ? n0 - 1 : iymax);
-
-        n1 = nside / n0;
-
-        if (iymin == iymax)
-        {
-            if (ixmin == ixmax)
-            {
-                xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                yistack[0] = (q3c_ipix_t)(iymin * n1);
-                facestack[0] = face_num;
-                nstack[0] = n1;
-                nistack = 1;
-            }
-            else
-            {
-                xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                yistack[0] = (q3c_ipix_t)(iymin * n1);
-                facestack[0] = face_num;
-                nstack[0] = n1;
-                xistack[1] = (q3c_ipix_t)(ixmax * n1);
-                yistack[1] = (q3c_ipix_t)(iymin * n1);
-                facestack[1] = face_num;
-                nstack[1] = n1;
-                nistack = 2;
-            }
-        }
-        else
-        {
-            if (ixmin == ixmax)
-            {
-                xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                yistack[0] = (q3c_ipix_t)(iymin * n1);
-                facestack[0] = face_num;
-                nstack[0] = n1;
-                xistack[1] = (q3c_ipix_t)(ixmin * n1);
-                yistack[1] = (q3c_ipix_t)(iymax * n1);
-                facestack[1] = face_num;
-                nstack[1] = n1;
-                nistack = 2;
-            }
-            else
-            {
-                xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                yistack[0] = (q3c_ipix_t)(iymin * n1);
-                facestack[0] = face_num;
-                nstack[0] = n1;
-                xistack[1] = (q3c_ipix_t)(ixmin * n1);
-                yistack[1] = (q3c_ipix_t)(iymax * n1);
-                facestack[1] = face_num;
-                nstack[1] = n1;
-                xistack[2] = (q3c_ipix_t)(ixmax * n1);
-                yistack[2] = (q3c_ipix_t)(iymin * n1);
-                facestack[2] = face_num;
-                nstack[2] = n1;
-                xistack[3] = (q3c_ipix_t)(ixmax * n1);
-                yistack[3] = (q3c_ipix_t)(iymax * n1);
-                facestack[3] = face_num;
-                nstack[3] = n1;
-                nistack = 4;
-            }
-        }
-    }
-    else
-    {
-        if (multi_flag == 1)
-        {
-            xesize = xmax - xmin;
-            yesize = ymax - ymin;
-            xesize = xesize > yesize ? xesize : yesize;
-
-            if (xesize * nside < 1)
-            /* If the region is too small */
-            {
-                xesize = 1 / (q3c_coord_t)nside;
-            }
-
-            n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-            /* n0 is now the level of quadtree for which the minimal
-             * element is >~ our ellipse
-             */
-
-            ixmin = (Q3C_HALF + xmin) * n0;
-            ixmax = (Q3C_HALF + xmax) * n0;
-            iymin = (Q3C_HALF + ymin) * n0;
-            iymax = (Q3C_HALF + ymax) * n0;
-
-            ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-            iymax = (iymax == n0 ? n0 - 1 : iymax);
-
-            n1 = nside / n0;
-
-            if (ixmin == ixmax)
-            {
-                if (iymin == iymax)
-                {
-                    xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[0] = (q3c_ipix_t)(iymin * n1);
-                    facestack[0] = face_num;
-                    nstack[0] = n1;
-                    nistack = 1;
-                }
-                else
-                {
-                    xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[0] = (q3c_ipix_t)(iymin * n1);
-                    facestack[0] = face_num;
-                    nstack[0] = n1;
-                    xistack[1] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[1] = (q3c_ipix_t)(iymax * n1);
-                    facestack[1] = face_num;
-                    nstack[1] = n1;
-                    nistack = 2;
-                }
-            }
-            else
-            {
-                xistack[0] = (q3c_ipix_t)(ixmin * n1);
-                yistack[0] = (q3c_ipix_t)(iymin * n1);
-                facestack[0] = face_num;
-                nstack[0] = n1;
-                xistack[1] = (q3c_ipix_t)(ixmax * n1);
-                yistack[1] = (q3c_ipix_t)(iymin * n1);
-                facestack[1] = face_num;
-                nstack[1] = n1;
-                nistack = 2;
-            }
-
-            face_num = q3c_xy2facenum(2 * points[0], 2 * points[1], face_num0);
-            q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax);
-
-            q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
-            xesize = xmax - xmin;
-            yesize = ymax - ymin;
-            xesize = xesize > yesize ? xesize : yesize;
-
-            if (xesize * nside < 1)
-            /* If the region is too small */
-            {
-                xesize = 1 / (q3c_coord_t)nside;
-            }
-
-            n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-            /* n0 is now the level of quadtree for which the minimal
-             * element is >~ our ellipse
-             */
-
-            ixmin = (Q3C_HALF + xmin) * n0;
-            ixmax = (Q3C_HALF + xmax) * n0;
-            iymin = (Q3C_HALF + ymin) * n0;
-            iymax = (Q3C_HALF + ymax) * n0;
-
-            ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-            iymax = (iymax == n0 ? n0 - 1 : iymax);
-
-            n1 = nside / n0;
-
-            if (ixmin == ixmax)
-            {
-                if (iymin == iymax)
-                {
-                    xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[nistack] = (q3c_ipix_t)(iymin * n1);
-                    facestack[nistack] = face_num;
-                    nstack[nistack++] = n1;
-                }
-                else
-                {
-                    xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[nistack] = (q3c_ipix_t)(iymin * n1);
-                    facestack[nistack] = face_num;
-                    nstack[nistack++] = n1;
-                    xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
-                    yistack[nistack] = (q3c_ipix_t)(iymax * n1);
-                    facestack[nistack] = face_num;
-                    nstack[nistack++] = n1;
-                }
-            }
-            else
-            {
-                xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
-                yistack[nistack] = (q3c_ipix_t)(iymin * n1);
-                facestack[nistack] = face_num;
-                nstack[nistack++] = n1;
-                xistack[nistack] = (q3c_ipix_t)(ixmax * n1);
-                yistack[nistack] = (q3c_ipix_t)(iymin * n1);
-                facestack[nistack] = face_num;
-                nstack[nistack++] = n1;
-            }
-        }
-        else
-        {
-            xesize = xmax - xmin;
-            yesize = ymax - ymin;
-            xesize = xesize > yesize ? xesize : yesize;
-
-            if (xesize * nside < 1)
-            /* If the region is too small */
-            {
-                xesize = 1 / (q3c_coord_t)nside;
-            }
-
-            n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-            /* n0 is now the level of quadtree for which the minimal
-             * element is >~ our ellipse
-             */
-
-            ixmin = (Q3C_HALF + xmin) * n0;
-            ixmax = (Q3C_HALF + xmax) * n0;
-            iymin = (Q3C_HALF + ymin) * n0;
-            iymax = (Q3C_HALF + ymax) * n0;
-
-            ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-            iymax = (iymax == n0 ? n0 - 1 : iymax);
-
-            n1 = nside / n0;
-
-            xistack[0] = (q3c_ipix_t)(ixmin * n1);
-            yistack[0] = (q3c_ipix_t)(iymin * n1);
-            facestack[0] = face_num;
-            nstack[0] = n1;
-            nistack = 1;
-
-            /* two or three secondary faces; multi_flag == 3 does happen
-             * for circles/ellipses with radii close to Q3C_MAXRAD centred
-             * near the midpoint of a face edge, and the region then
-             * genuinely covers all three neighbours; the main face plus
-             * three neighbours still fit in the four output ranges
-             */
-            for (i = 0; i < multi_flag; i++)
-            {
-                face_num = q3c_xy2facenum(2 * points[2 * i], 2 * points[2 * i + 1], face_num0);
-                q3c_fast_get_xy_minmax(face_num, region, region_data, &xmin, &xmax, &ymin, &ymax);
-
-                if (q3c_facebox_disjoint(xmin, xmax, ymin, ymax))
-                /* the region does not really touch this face */
-                {
-                    continue;
-                }
-
-                q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
-                xesize = xmax - xmin;
-                yesize = ymax - ymin;
-                xesize = xesize > yesize ? xesize : yesize;
-
-                if (xesize * nside < 1)
-                /* If the region is too small */
-                {
-                    xesize = 1 / (q3c_coord_t)nside;
-                }
-
-                n0 = 1 << ((q3c_ipix_t)(-q3c_ceil(q3c_log(xesize) / q3c_lg2)));
-                /* n0 is now the level of quadtree for which the minimal
-                 * element is >~ our ellipse
-                 */
-
-                /* A box no larger than a cell of level n0 lies in a single cell
-                 * only if it cannot straddle a cell boundary. Touching a face edge
-                 * rules that out along the axis perpendicular to that edge. The
-                 * main-face box here touches two perpendicular edges, so one cell
-                 * suffices, but this box touches only the edge shared with the
-                 * main face and can straddle two cells along it. Unlike the
-                 * multi_flag == 1 case, there is room for only one range per face,
-                 * so use the smallest quadtree cell containing the box: go up the
-                 * levels until both corners fall into the same cell (finer levels
-                 * have cells smaller than the box; n0 == 1 is the whole face).
-                 */
-                for (;; n0 /= 2)
-                {
-                    ixmin = (Q3C_HALF + xmin) * n0;
-                    ixmax = (Q3C_HALF + xmax) * n0;
-                    iymin = (Q3C_HALF + ymin) * n0;
-                    iymax = (Q3C_HALF + ymax) * n0;
-                    ixmax = (ixmax == n0 ? n0 - 1 : ixmax);
-                    iymax = (iymax == n0 ? n0 - 1 : iymax);
-                    if (ixmin == ixmax && iymin == iymax)
-                    {
-                        break;
-                    }
-                }
-
-                n1 = nside / n0;
-
-                xistack[nistack] = (q3c_ipix_t)(ixmin * n1);
-                yistack[nistack] = (q3c_ipix_t)(iymin * n1);
-                facestack[nistack] = face_num;
-                nstack[nistack] = n1;
-                nistack++;
-            }
-        }
+        q3c_clip_facebox(&xmin, &xmax, &ymin, &ymax);
+        q3c_push_box_cells(hprm, face_num, xmin, xmax, ymin, ymax, nslots, &ipix_cur);
     }
 
 #ifdef Q3C_DEBUG
     fprintf(stderr, "MULTI_FLAG: %d\n", multi_flag);
 #endif
 
-    /* Now I produce the final pixel value by converting x and y values to bitfields
-        and combining them by interleaving, using the predefined arrays xbits and ybits
-     */
-
-    for (i = 0; i < nistack; i++)
-    {
-        face_num = facestack[i];
-        xi = xistack[i];
-        yi = yistack[i];
-        n1 = nstack[i];
-
-        ipix0 = q3c_xiyi2ipix(nside, xbits, ybits, face_num, xi, yi);
-
-        *(ipix_cur++) = ipix0;
-        *(ipix_cur++) = ipix0 + n1 * n1 - 1;
-        /* IMPORTANT!! I subtract 1 to make after the query with <=ipix<=
-         */
-    }
-
-    for (; i < 4; i++)
+    while (ipix_cur < ipix + 8)
+    /* empty ranges for the unused slots */
     {
         *(ipix_cur++) = 1;
         *(ipix_cur++) = -1;
@@ -2027,14 +1766,12 @@ int q3c_setup_square_stack(struct q3c_square *stack, q3c_coord_t xmin, q3c_coord
 {
     /* Here we set up the stack with initial squares */
     int work_nstack = 0;
-    q3c_ipix_t ixmin = (Q3C_HALF + xmin) * n0; /* Here I use the C truncation of floats */
-    q3c_ipix_t ixmax = (Q3C_HALF + xmax) * n0; /* to integers */
-    q3c_ipix_t iymin = (Q3C_HALF + ymin) * n0;
-    q3c_ipix_t iymax = (Q3C_HALF + ymax) * n0;
+    q3c_ipix_t ixmin = q3c_cell_index(xmin, n0);
+    q3c_ipix_t ixmax = q3c_cell_index(xmax, n0);
+    q3c_ipix_t iymin = q3c_cell_index(ymin, n0);
+    q3c_ipix_t iymax = q3c_cell_index(ymax, n0);
     struct q3c_square *cur_square = stack;
 
-    ixmax = (ixmax == n0 ? (n0 - 1) : ixmax);
-    iymax = (iymax == n0 ? (n0 - 1) : iymax);
 
     if (ixmin == ixmax)
     {

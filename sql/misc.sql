@@ -37,3 +37,7 @@ select (select count(*) from test_small where q3c_poly_query(ra, dec, ARRAY[133.
 select q3c_in_ellipse(313.590741884, 35.718985187, 315.613281256, 34.023265614, 2.45639473, 0.0205003, 136.404) as in_ell, q3c_ellipse_join(315.613281256, 34.023265614, 313.590741884, 35.718985187, 2.45639473, 0.0205003, 136.404) as joined;
 -- 1 mas ellipse: q3c_in_ellipse used to lose precision for tiny ellipses
 select q3c_in_ellipse(350.8000002710, 27.3999998611, 350.8, 27.4, 1/3600000.0, 0.5, 30) as outside, q3c_in_ellipse(350.8000000782, 27.4000001203, 350.8, 27.4, 1/3600000.0, 0.5, 30) as inside;
+-- issue #60: the region box on a neighbour face touching the far face edge made q3c_get_nearby loop forever (which cones trigger it depends on the libm: the first two on x86_64 glibc, the last two on macOS arm64)
+select q3c_join(219.27811033058825, 22.634103768334768, 219.27811033058825, 22.634103768334768, 13.478208875278737) as j1, q3c_join(148.49373479769272, 19.932568534711635, 148.49373479769272, 19.932568534711635, 19.007358406707613) as j2, q3c_join(45.616377184920189, 26.923165993729214, 45.616377184920189, 26.923165993729214, 7.4928631702840676) as j3, q3c_join(312.93494563220764, 38.384335587445804, 312.93494563220764, 38.384335587445804, 3.5266124672562063) as j4;
+-- a box side exactly on a quadtree cell boundary made q3c_get_nearby drop a cell of the main face (x86_64 glibc)
+select q3c_join(276.02111089691249, -46.584458573904108, 278.4014844202834, -47.603933693246056, 2.0660123695071788) as joined;
