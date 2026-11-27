@@ -103,76 +103,119 @@ void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax, q3c
     *ymax = yma;
 }
 
-char q3c_get_facenum_poly(q3c_poly *qp)
+/* Clip the spherical polygon (n vertices ra, dec in degrees, joined by great
+ * circle arcs) to each of the six face pyramids and project the pieces onto
+ * their faces (COORDINATES.md section 3).
+ * The polygon must lie within an open hemisphere: then its inside is the side
+ * which does not contain the opposite hemisphere, and the piece on face f is
+ * the polygon clipped by the four planes |t1| <= t0, |t2| <= t0, where
+ * t = (v.n_f, v.u_f, v.w_f). The clipping is done in 3D (Sutherland-Hodgman,
+ * interpolating linearly along the chords, which project onto the great
+ * circle arcs), so it is exact and needs no projection of the vertices far
+ * from the face. The pyramids are enlarged by a relative 1e-12 so that a
+ * point on a face edge is never outside the piece of its own face because of
+ * rounding.
+ * Returns 1 if the polygon does not lie within an open hemisphere (or, which
+ * should not happen, a piece does not fit in Q3C_MAX_N_FACE_VERTEX vertices).
+ */
+char q3c_poly_to_faces(int n, const q3c_coord_t *ra, const q3c_coord_t *dec, q3c_poly_faces *pf)
 {
-    return q3c_get_facenum(qp->ra[0], qp->dec[0]);
+    const q3c_coord_t lim = 1 + 1e-12;
+    q3c_coord_t v[Q3C_MAX_N_POLY_VERTEX][3], m[3] = {0, 0, 0}, buf[2][Q3C_MAX_N_FACE_VERTEX][3], sa, ca, sd, cd;
+    int i, j, k, f, iter, nin, nout, cur;
+    q3c_poly qp;
+
+    for (i = 0; i < n; i++)
+    {
+        q3c_sincos(ra[i] * Q3C_DEGRA, sa, ca);
+        q3c_sincos(dec[i] * Q3C_DEGRA, sd, cd);
+        v[i][0] = cd * ca, v[i][1] = cd * sa, v[i][2] = sd;
+    }
+    /* look for m with v_i.m > 0 for all the vertices (perceptron algorithm,
+     * which finds it in a finite number of steps if it exists) */
+    for (iter = 0;; iter++)
+    {
+        for (i = 0; i < n && (v[i][0] * m[0] + v[i][1] * m[1] + v[i][2] * m[2]) > 0; i++)
+            ;
+        if (i == n)
+        {
+            break;
+        }
+        if (iter == 10 * Q3C_MAX_N_POLY_VERTEX)
+        {
+            return 1;
+        }
+        for (j = 0; j < 3; j++)
+        {
+            m[j] += v[i][j];
+        }
+    }
+
+    for (f = 0; f < 6; f++)
+    {
+        for (i = 0; i < n; i++)
+        {
+            q3c_to_face_frame(f, v[i], buf[0][i]);
+        }
+        /* clip by the half-spaces lim t0 + t1 >= 0, lim t0 - t1 >= 0, then the same with t2 */
+        for (k = 0, cur = 0, nin = n; k < 4; k++, cur = 1 - cur, nin = nout)
+        {
+            const int jj = 1 + k / 2;
+            const q3c_coord_t sgn = (k % 2) ? -1 : 1;
+            q3c_coord_t(*in)[3] = buf[cur], (*out)[3] = buf[1 - cur];
+
+            for (i = 0, nout = 0; i < nin; i++)
+            {
+                const q3c_coord_t *a = in[i], *b = in[(i + 1) % nin];
+                const q3c_coord_t da = lim * a[0] + sgn * a[jj], db = lim * b[0] + sgn * b[jj];
+
+                if (nout + 2 > Q3C_MAX_N_FACE_VERTEX)
+                {
+                    return 1;
+                }
+                if (da >= 0)
+                {
+                    for (j = 0; j < 3; j++)
+                    {
+                        out[nout][j] = a[j];
+                    }
+                    nout++;
+                }
+                if ((da >= 0) != (db >= 0))
+                /* the edge crosses the plane */
+                {
+                    for (j = 0; j < 3; j++)
+                    {
+                        out[nout][j] = a[j] + (b[j] - a[j]) * (da / (da - db));
+                    }
+                    nout++;
+                }
+            }
+        }
+        /* fewer than 3 vertices means the polygon only touches the face */
+        pf->n[f] = (nin >= 3) ? nin : 0;
+        for (i = 0; i < pf->n[f]; i++)
+        {
+            pf->x[f][i] = buf[cur][i][1] / buf[cur][i][0];
+            pf->y[f][i] = buf[cur][i][2] / buf[cur][i][0];
+        }
+        q3c_face_poly(pf, f, &qp);
+        if (qp.n > 0)
+        {
+            q3c_prepare_poly(&qp);
+        }
+    }
+    return 0;
 }
 
-void q3c_project_poly(q3c_poly *qp, char face_num, char *large_flag)
+/* The piece of the polygon on face face_num */
+void q3c_face_poly(q3c_poly_faces *pf, char face_num, q3c_poly *qp)
 {
-    q3c_coord_t ra1, dec1, tmp0;
-    q3c_coord_t *ra = qp->ra, *dec = qp->dec;
-    q3c_coord_t *x = qp->x, *y = qp->y, x0, y0;
-    q3c_coord_t tmpval;
-    int i, n = qp->n;
-    if ((face_num > 0) && (face_num < 5))
-    {
-        face_num--; /* Just computation trick */
-        for (i = 0; i < n; i++)
-        {
-            ra1 = Q3C_DEGRA * (ra[i] - 90 * (q3c_coord_t)face_num);
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_cos(ra1);
-            if (tmpval < Q3C_MINDISCR)
-            {
-                *large_flag = 1;
-            }
-            x[i] = (q3c_tan(ra1)) / 2;
-            y[i] = (q3c_tan(dec1)) / tmpval / 2;
-        }
-        /* Now x[i] and y[i] are coordinates on cube face [-0.5:0.5]x[-0.5:0.5] */
-    }
-    else if (face_num == 0)
-    {
-        for (i = 0; i < n; i++)
-        {
-            ra1 = Q3C_DEGRA * ra[i];
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_tan(dec1);
-            if (tmpval < Q3C_MINDISCR)
-            {
-                *large_flag = 1;
-            }
-            tmp0 = 1 / tmpval;
-            q3c_sincos(ra1, x0, y0);
-
-            x0 *= tmp0;
-            y0 *= (-tmp0);
-            x[i] = x0 / 2;
-            y[i] = y0 / 2;
-        }
-    }
-    else
-    {
-        for (i = 0; i < n; i++)
-        {
-            ra1 = Q3C_DEGRA * ra[i];
-            dec1 = Q3C_DEGRA * dec[i];
-            tmpval = q3c_tan(dec1);
-            if (tmpval > -Q3C_MINDISCR)
-            {
-                *large_flag = 1;
-            }
-            tmp0 = 1 / tmpval;
-
-            q3c_sincos(ra1, x0, y0);
-
-            x0 *= (-tmp0);
-            y0 *= (-tmp0);
-            x[i] = x0 / 2;
-            y[i] = y0 / 2;
-        }
-    }
+    qp->n = pf->n[(int)face_num];
+    qp->x = pf->x[(int)face_num];
+    qp->y = pf->y[(int)face_num];
+    qp->ax = pf->ax[(int)face_num];
+    qp->ay = pf->ay[(int)face_num];
 }
 
 static char q3c_poly_intersection_check(q3c_poly *qp, q3c_coord_t xl, q3c_coord_t xr, q3c_coord_t yb, q3c_coord_t yt,
@@ -313,101 +356,30 @@ PARTUNDEF_CHECK01:
     }
 }
 
-int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, q3c_coord_t in_ra[], q3c_coord_t in_dec[],
+/* Check whether the point (ra0, dec0) is inside the polygon (n vertices ra,
+ * dec). With invocation == 0 the polygon is clipped to the faces and stored
+ * in pf, otherwise pf from a previous call with the same polygon is used.
+ * *too_large is set if the polygon does not lie within a hemisphere.
+ */
+int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, const q3c_coord_t *ra, const q3c_coord_t *dec,
                                    q3c_coord_t ra0, q3c_coord_t dec0, char *too_large, int invocation,
-                                   q3c_coord_t (*xpj)[Q3C_MAX_N_POLY_VERTEX], q3c_coord_t (*ypj)[Q3C_MAX_N_POLY_VERTEX],
-                                   q3c_coord_t (*axpj)[Q3C_MAX_N_POLY_VERTEX],
-                                   q3c_coord_t (*aypj)[Q3C_MAX_N_POLY_VERTEX], char *faces, char *multi_flag)
+                                   q3c_poly_faces *pf)
 {
-    q3c_coord_t xmin, xmax, ymin, ymax;
+    q3c_coord_t X, Y;
     q3c_ipix_t ipix;
-    q3c_coord_t points[8]; /* up to 4 (x,y) probe points from q3c_multi_face_check() */
-    char face_num, face_num0, cur_face_num, large_flag = 0;
-    q3c_coord_t x0, y0;
-
-    int face_count = -1, i;
-
+    char face_num;
     q3c_poly qp;
 
-    q3c_ang2ipix_xy(hprm, ra0, dec0, &cur_face_num, &ipix, &x0, &y0);
-
-    qp.ra = in_ra;
-    qp.dec = in_dec;
-    qp.n = n;
-
-    if (invocation == 0)
+    if (invocation == 0 && q3c_poly_to_faces(n, ra, dec, pf))
     {
-        face_num = q3c_get_facenum_poly(&qp);
-        faces[0] = face_num;
-
-        qp.x = xpj[0];
-        qp.y = ypj[0];
-        qp.ax = axpj[0];
-        qp.ay = aypj[0];
-
-        q3c_project_poly(&qp, face_num, &large_flag);
-        if (large_flag)
-        {
-            *too_large = 1;
-        }
-        q3c_prepare_poly(&qp);
-
-        q3c_get_minmax_poly(&qp, &xmin, &xmax, &ymin, &ymax);
-
-        /* Now I determine whether the poly
-         * intersect other faces or not, and if yes, I setup the array "points" to the
-         * multi_face loop.
-         */
-
-        q3c_multi_face_check(&xmin, &ymin, &xmax, &ymax, points, multi_flag);
-
-        face_num0 = face_num;
-
-        for (face_count = 0; face_count <= *multi_flag; face_count++)
-        {
-            /* This the beginning of the mega-loop over multiple faces */
-
-            if (face_count > 0)
-            /* This "if" works when we pass through the secondary faces */
-            {
-                face_num = q3c_xy2facenum(2 * points[2 * face_count - 2], 2 * points[2 * face_count - 1], face_num0);
-
-                faces[face_count] = face_num;
-
-                qp.x = xpj[face_count];
-                qp.y = ypj[face_count];
-                qp.ax = axpj[face_count];
-                qp.ay = aypj[face_count];
-
-                q3c_project_poly(&qp, faces[face_count], &large_flag);
-                if (large_flag)
-                {
-                    *too_large = 1;
-                }
-
-                q3c_prepare_poly(&qp);
-            }
-        }
+        *too_large = 1;
+        return Q3C_DISJUNCT;
     }
-
-    for (i = 0; i <= *multi_flag; i++)
+    q3c_ang2ipix_xy(hprm, ra0, dec0, &face_num, &ipix, &X, &Y);
+    q3c_face_poly(pf, face_num, &qp);
+    if (qp.n == 0)
     {
-        if (faces[i] == cur_face_num)
-        {
-            face_count = i;
-            break;
-        }
+        return Q3C_DISJUNCT;
     }
-
-    if (i == (*multi_flag + 1))
-    {
-        return 0;
-    }
-
-    qp.x = xpj[face_count];
-    qp.y = ypj[face_count];
-    qp.ax = axpj[face_count];
-    qp.ay = aypj[face_count];
-
-    return q3c_check_point_in_poly(&qp, x0, y0);
+    return q3c_check_point_in_poly(&qp, X, Y);
 }

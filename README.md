@@ -125,7 +125,10 @@ The functions installed by Q3C are:
 
 - q3c_poly_query(ra, dec, poly) -- returns true if ra, dec is within the 
   spherical polygon specified as an array of right ascensions and declinations
-  Alternatively poly can be an PostgreSQL polygon type. This function
+  Alternatively poly can be an PostgreSQL polygon type. The edges of the
+  polygon are great circle arcs, and the polygon must lie within a hemisphere
+  (its inside is then the side that does not contain the opposite
+  hemisphere). This function
   uses the index for faster queries, assuming the index on q3c_ang2ipix(ra,dec)
   was created.
 
@@ -319,7 +322,7 @@ my_db# WITH x AS MATERIALIZED (
 ```
 ## Limitations 
 
-- Querying of very large polygons occupying area with the diameter > 25 degrees or so is not supported
+- Polygons must lie within a hemisphere
 - Polygons with more than 100 vertices are not supported
 
 ## Performance issues/Slow queries

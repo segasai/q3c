@@ -80,7 +80,6 @@ typedef double q3c_coord_t;
 #define q3c_sqrt(a) sqrt(a)
 #define q3c_log(a) log(a)
 #define q3c_ceil(a) ceil(a)
-#define Q3C_HALF 0.5
 #define Q3C_COORD_FMT "%f"
 #define Q3C_PI 3.1415926535897932384626433832795028841968
 #define Q3C_2PI 6.2831853071795864769252867665590057683936
@@ -113,7 +112,6 @@ typedef long double q3c_coord_t;
 #define q3c_sqrt(a) sqrtl(a)
 #define q3c_log(a) logl(a)
 #define q3c_ceil(a) ceill(a)
-#define Q3C_HALF 0.5L
 #define Q3C_COORD_FMT "%.15Lf"
 #define Q3C_PI 3.1415926535897932384626433832795028841968L
 #define Q3C_2PI 6.2831853071795864769252867665590057683936L
@@ -217,31 +215,48 @@ struct q3c_prm_write
     q3c_ipix_t *ybits1;
 };
 
+/* quadtree square (ix, iy) of the level with n0 squares per face side */
 struct q3c_square
 {
-    q3c_ipix_t x0, y0; /* Integer coordinates of the center of the square for */
-    int nside0;        /* the nside0 segmentation */
+    q3c_ipix_t ix, iy;
+    int n0;
     char status;
 };
 
 #define SET_SQUARE(sq, x, y, n)                                                                                        \
     do                                                                                                                 \
     {                                                                                                                  \
-        sq->x0 = x;                                                                                                    \
-        sq->y0 = y;                                                                                                    \
-        sq->nside0 = n;                                                                                                \
+        sq->ix = x;                                                                                                    \
+        sq->iy = y;                                                                                                    \
+        sq->n0 = n;                                                                                                    \
     } while (0);
 
+/* polygon on a cube face */
 typedef struct
 {
     int n;
-    q3c_coord_t *ra;  /* array of RAs of vertices */
-    q3c_coord_t *dec; /* array of DECs of vertices */
-    q3c_coord_t *x;   /* array of X coords on the cube face of vertices */
-    q3c_coord_t *y;   /* array of Y coords on the cube face of vertices */
-    q3c_coord_t *ax;  /* array of x projections of the edge between vertices */
-    q3c_coord_t *ay;  /* array of y projections of the edge between vertices */
+    q3c_coord_t *x;  /* array of X coords on the cube face of vertices */
+    q3c_coord_t *y;  /* array of Y coords on the cube face of vertices */
+    q3c_coord_t *ax; /* array of x projections of the edge between vertices */
+    q3c_coord_t *ay; /* array of y projections of the edge between vertices */
 } q3c_poly;
+
+/* Maximal number of vertices of a polygon clipped to a cube face: the n
+ * original vertices, at most two crossings of the face boundary per edge and
+ * the face corners, with some margin
+ */
+#define Q3C_MAX_N_FACE_VERTEX (4 * Q3C_MAX_N_POLY_VERTEX + 8)
+
+/* A spherical polygon clipped to each of the six cube faces (see
+ * q3c_poly_to_faces()): n[f] vertices on face f, 0 if the polygon does not
+ * cover any area of it
+ */
+typedef struct
+{
+    int n[6];
+    q3c_coord_t x[6][Q3C_MAX_N_FACE_VERTEX], y[6][Q3C_MAX_N_FACE_VERTEX], ax[6][Q3C_MAX_N_FACE_VERTEX],
+        ay[6][Q3C_MAX_N_FACE_VERTEX];
+} q3c_poly_faces;
 
 typedef struct
 {
@@ -282,16 +297,10 @@ void q3c_get_nearby_split(struct q3c_prm *, q3c_coord_t, q3c_coord_t, q3c_coord_
 
 int q3c_get_nearby(struct q3c_prm *, q3c_region, void *, q3c_ipix_t *);
 
-void q3c_get_xy_minmax(q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t *,
-                       q3c_coord_t *, q3c_coord_t *, q3c_coord_t *, char *);
-
 void q3c_ang2ipix_xy(struct q3c_prm *hprm, q3c_coord_t ra, q3c_coord_t dec, char *out_face_num, q3c_ipix_t *ipix,
                      q3c_coord_t *x_out, q3c_coord_t *y_out);
 
-void q3c_get_poly_coefs(char, q3c_coord_t, q3c_coord_t, q3c_coord_t, q3c_coord_t *, q3c_coord_t *, q3c_coord_t *,
-                        q3c_coord_t *, q3c_coord_t *, q3c_coord_t *);
-
-char q3c_xy2facenum(q3c_coord_t, q3c_coord_t, char);
+char q3c_xy2facenum(q3c_coord_t x, q3c_coord_t y, char face_num0);
 
 char q3c_get_facenum(q3c_coord_t, q3c_coord_t);
 
@@ -311,13 +320,13 @@ int q3c_radial_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3
 int q3c_ellipse_query(struct q3c_prm *hprm, q3c_coord_t ra0, q3c_coord_t dec0, q3c_coord_t majax, q3c_coord_t ell,
                       q3c_coord_t PA, q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials);
 
-void q3c_init_poly(q3c_poly *qp, int n);
-
 void q3c_prepare_poly(q3c_poly *qp);
 
-void q3c_project_poly(q3c_poly *qp, char facenum, char *large_flag);
+char q3c_poly_to_faces(int n, const q3c_coord_t *ra, const q3c_coord_t *dec, q3c_poly_faces *pf);
 
-char q3c_get_facenum_poly(q3c_poly *qp);
+void q3c_face_poly(q3c_poly_faces *pf, char face_num, q3c_poly *qp);
+
+void q3c_to_face_frame(char face_num, const q3c_coord_t v[3], q3c_coord_t t[3]);
 
 int q3c_check_point_in_poly(q3c_poly *qp, q3c_coord_t x0, q3c_coord_t y0);
 
@@ -325,14 +334,12 @@ int q3c_poly_cover_check(q3c_poly *qp, q3c_coord_t xc_cur, q3c_coord_t yc_cur, q
 
 void q3c_get_minmax_poly(q3c_poly *qp, q3c_coord_t *xmin, q3c_coord_t *xmax, q3c_coord_t *ymin, q3c_coord_t *ymax);
 
-int q3c_poly_query(struct q3c_prm *hprm, q3c_poly *qp, q3c_ipix_t *out_ipix_arr_fulls,
-                   q3c_ipix_t *out_ipix_arr_partials, char *too_large);
+int q3c_poly_query(struct q3c_prm *hprm, int n, const q3c_coord_t *ra, const q3c_coord_t *dec,
+                   q3c_ipix_t *out_ipix_arr_fulls, q3c_ipix_t *out_ipix_arr_partials, char *too_large);
 
-int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, q3c_coord_t in_ra[], q3c_coord_t in_dec[],
+int q3c_check_sphere_point_in_poly(struct q3c_prm *hprm, int n, const q3c_coord_t *ra, const q3c_coord_t *dec,
                                    q3c_coord_t ra0, q3c_coord_t dec0, char *too_large, int invocation,
-                                   q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX], q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
-                                   q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX], q3c_coord_t (*)[Q3C_MAX_N_POLY_VERTEX],
-                                   char *, char *);
+                                   q3c_poly_faces *pf);
 
 char q3c_get_region_facenum(q3c_region region, void *data);
 
